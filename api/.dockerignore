@@ -1,7 +1,0 @@
-vendor
-.dockerignore
-Dockerfile
-.git
-.github
-.gitignore
-/.DS_Store

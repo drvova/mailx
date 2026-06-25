@@ -78,9 +78,9 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
+import { ApiError } from '../api/api.ts'
 import { useRoute } from 'vue-router'
 import tooltip from '@preline/tooltip'
-import axios from 'axios'
 import { subscriptionApi } from '../api/subscription.ts'
 import events from '../events.ts'
 
@@ -107,8 +107,8 @@ const getSubscription = async () => {
         const res = await subscriptionApi.get()
         sub.value = res.data
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
         }
     }
 }
@@ -124,9 +124,9 @@ const updateSubscription = async () => {
         error.value = ''
         await getSubscription()
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             success.value = ''
-            error.value = err.response?.data.error || err.message
+            error.value = err.data?.error || err.message || err.message
         }
     } finally {
         syncing.value = false
@@ -146,8 +146,8 @@ const rotateSessionId = async () => {
         await getSubscription()
         await updateSubscription()
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
         }
     } finally {
         syncing.value = false

@@ -151,9 +151,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ApiError } from '../api/api.ts'
 import overlay from '@preline/overlay'
 import select from '@preline/select'
-import axios from 'axios'
 import { aliasApi } from '../api/alias.ts'
 import events from '../events.ts'
 import tooltip from '@preline/tooltip'
@@ -222,10 +222,10 @@ const postAlias = async () => {
         close()
     } catch (err) {
         loading.value = false
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
         }

@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { aliasApi } from '../api/alias'
-import axios from 'axios'
+import { ApiError } from '../api/api.ts'
 import { ref } from 'vue'
 
 const error = ref('')
@@ -33,7 +33,7 @@ const exportAliases = async () => {
         link.remove()
         URL.revokeObjectURL(url)
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }

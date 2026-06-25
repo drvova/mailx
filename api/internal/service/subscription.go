@@ -9,7 +9,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"ivpn.net/email/api/internal/model"
 )
@@ -70,12 +69,10 @@ func (s *Service) PostSubscription(ctx context.Context, userID string, preauth m
 	err = s.Store.PostSubscription(ctx, sub)
 	if err != nil {
 		log.Printf("error posting subscription: %s", err.Error())
-		var mysqlErr *mysql.MySQLError
-		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+		if isUniqueConstraintError(err) {
 			return model.ErrDuplicateSubscription
-		} else {
-			return ErrPostSubscription
 		}
+		return ErrPostSubscription
 	}
 
 	return nil
@@ -162,7 +159,7 @@ func (s *Service) AddPASession(ctx context.Context, paSession model.PASession) e
 
 	err = s.Cache.Set(ctx, "pasession_"+paSession.ID, string(data), s.Cfg.API.PreauthTTL)
 	if err != nil {
-		log.Println("failed to set pre-auth session in Redis:", err)
+		log.Println("failed to set pre-auth session in cache:", err)
 		return err
 	}
 
@@ -172,7 +169,7 @@ func (s *Service) AddPASession(ctx context.Context, paSession model.PASession) e
 func (s *Service) GetPASession(ctx context.Context, id string) (model.PASession, error) {
 	data, err := s.Cache.Get(ctx, "pasession_"+id)
 	if err != nil {
-		log.Println("failed to get pre-auth session from Redis:", err)
+		log.Println("failed to get pre-auth session from cache:", err)
 		return model.PASession{}, err
 	}
 
@@ -204,13 +201,13 @@ func (s *Service) RotatePASessionId(ctx context.Context, id string) (string, err
 
 	err = s.Cache.Set(ctx, "pasession_"+newID, string(data), 15*time.Minute)
 	if err != nil {
-		log.Println("failed to set rotated pre-auth session in Redis:", err)
+		log.Println("failed to set rotated pre-auth session in cache:", err)
 		return "", err
 	}
 
 	err = s.Cache.Del(ctx, "pasession_"+id)
 	if err != nil {
-		log.Println("failed to delete old pre-auth session from Redis:", err)
+		log.Println("failed to delete old pre-auth session from cache:", err)
 		return "", err
 	}
 

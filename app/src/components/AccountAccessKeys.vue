@@ -63,7 +63,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import axios from 'axios'
+import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import AccessKeysCreate from './AccessKeysCreate.vue'
 import events from '../events.ts'
@@ -84,7 +84,7 @@ const getList = async () => {
         list.value = res.data
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }
@@ -98,7 +98,7 @@ const deleteAccessKey = async (id: string) => {
         list.value = list.value.filter((cred: any) => cred.id !== id)
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }

@@ -6,7 +6,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/go-sql-driver/mysql"
 	"ivpn.net/email/api/internal/model"
 )
 
@@ -214,12 +213,10 @@ func (s *Service) PostAlias(ctx context.Context, alias model.Alias, format strin
 		alias, err = s.Store.PostAlias(ctx, alias)
 		if err != nil {
 			log.Printf("error creating standard alias: %s", err.Error())
-			var mysqlErr *mysql.MySQLError
-			if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			if isUniqueConstraintError(err) {
 				continue
-			} else {
-				return model.Alias{}, ErrPostAlias
 			}
+			return model.Alias{}, ErrPostAlias
 		}
 		break
 	}

@@ -106,7 +106,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
-import axios from 'axios'
+import { ApiError } from '../api/api.ts'
 import { aliasApi } from '../api/alias'
 import { settingsApi } from '../api/settings.ts'
 import AliasRow from './AliasRow.vue'
@@ -176,7 +176,7 @@ const getList = async () => {
         error.value = ''
         renderRow()
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }
@@ -189,7 +189,7 @@ const getSettings = async () => {
         recipients.value = res.data.recipients
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }
@@ -201,7 +201,7 @@ const deleteAlias = async (payload: any) => {
         error.value = ''
         fetch()
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }

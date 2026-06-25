@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import axios from 'axios'
+import { ApiError } from '../api/api.ts'
 import { settingsApi } from '../api/settings.ts'
 import { logApi } from '../api/log.ts'
 import FailedDeliveryLog from './FailedDeliveryLog.vue'
@@ -83,7 +83,7 @@ const getSettings = async () => {
         settings.value = res.data
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }
@@ -96,7 +96,7 @@ const getLogs = async () => {
         loaded.value = true
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }

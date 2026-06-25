@@ -32,8 +32,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
-import axios from 'axios'
 import ApexCharts from 'apexcharts'
 
 interface Message {
@@ -66,8 +66,8 @@ const getStats = async () => {
         error.value = ''
         initChart()
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
         }
     }
 }

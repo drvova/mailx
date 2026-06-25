@@ -55,8 +55,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ApiError } from '../api/api.ts'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
 import { userApi } from '../api/user.ts'
 import Footer from './Footer.vue'
 
@@ -99,10 +99,10 @@ const resetPassword = async () => {
         apiError.value = ''
     } catch (err) {
         apiSuccess.value = ''
-        if (axios.isAxiosError(err)) {
-            apiError.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            apiError.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 apiError.value = 'Too many requests, please try again later.'
             }
         }

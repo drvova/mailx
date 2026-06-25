@@ -29,8 +29,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
-import axios from 'axios'
 import events from '../events.ts'
 
 const email = ref('')
@@ -68,11 +68,11 @@ const changeEmail = async () => {
         error.value = ''
         email.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             success.value = ''
-            error.value = err.response?.data.error || err.message
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
         }

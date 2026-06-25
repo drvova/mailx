@@ -124,8 +124,8 @@
 
 <script setup lang="ts">
 import { onMounted, onUpdated, ref } from 'vue'
+import { ApiError } from '../api/api.ts'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
 import { userApi } from '../api/user.ts'
 import { startAuthentication, browserSupportsWebAuthn } from '@simplewebauthn/browser'
 import tabs from '@preline/tabs'
@@ -202,14 +202,14 @@ const login = async () => {
             redirectAfterLogin()
         }
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
 
-            if (err.response?.data.code === 70001) {
+            if (err.data?.code === 70001) {
                 error.value = ''
                 otpRequired.value = true
             }
@@ -232,10 +232,10 @@ const loginWithPasskey = async () => {
         var res = await userApi.loginBegin(data)
         startAuth(data, res)
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
         }
@@ -255,10 +255,10 @@ const startAuth = async (data: any, res: any) => {
             redirectAfterLogin()
         }
     } catch (err: Error) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
         } else {

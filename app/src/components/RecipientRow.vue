@@ -152,6 +152,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ApiError } from '../api/api.ts'
 import tooltip from '@preline/tooltip'
 import RecipientVerify from './RecipientVerify.vue'
 import RecipientEdit from './RecipientEdit.vue'
@@ -160,7 +161,6 @@ import RecipientDelete from './RecipientDelete.vue'
 import { recipientApi } from '../api/recipient.ts'
 import events from '../events.ts'
 import dropdown from '@preline/dropdown'
-import axios from 'axios'
 
 const props = defineProps(['recipient', 'recipients'])
 const recipient = ref(props.recipient)
@@ -181,10 +181,10 @@ const updateRecipient = async () => {
     try {
         await recipientApi.update(payload)
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            var errMsg = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            var errMsg = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 errMsg = 'Too many requests, please try again later.'
             }
 
@@ -208,10 +208,10 @@ const deletePgpKey = async () => {
         await recipientApi.update(payload)
         events.emit('recipient.update', {})
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            var errMsg = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            var errMsg = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 errMsg = 'Too many requests, please try again later.'
             }
 

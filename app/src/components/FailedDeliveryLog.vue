@@ -36,8 +36,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ApiError } from '../api/api.ts'
 import overlay from '@preline/overlay'
-import axios from 'axios'
 import { logApi } from '../api/log.ts'
 
 const props = defineProps(['log'])
@@ -51,8 +51,8 @@ const getLog = async () => {
         log_text.value = res.data
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
         }
     }
 }

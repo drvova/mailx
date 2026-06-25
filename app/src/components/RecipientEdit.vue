@@ -41,8 +41,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ApiError } from '../api/api.ts'
 import overlay from '@preline/overlay'
-import axios from 'axios'
 import { recipientApi } from '../api/recipient.ts'
 
 const props = defineProps(['recipient'])
@@ -69,9 +69,9 @@ const updateRecipient = async () => {
         error.value = ''
         success.value = res.data.message
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            const errorMsg = err.response?.data.error || err.message
-            error.value = err.response?.status === 429
+        if (err instanceof ApiError) {
+            const errorMsg = err.data?.error || err.message || err.message
+            error.value = err.status === 429
                 ? 'Too many requests, please try again later.'
                 : errorMsg
         }

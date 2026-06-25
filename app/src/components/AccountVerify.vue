@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import axios from 'axios'
+import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import events from '../events.ts'
 
@@ -63,7 +63,7 @@ const getUser = async () => {
         const response = await userApi.get()
         res.value = response.data
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }
@@ -81,11 +81,11 @@ const confirmEmail = async () => {
         confirmSuccess.value = response.data.message
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             confirmSuccess.value = ''
-            error.value = err.response?.data.error || err.message
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
         }
@@ -98,11 +98,11 @@ const sendOtp = async () => {
         resendSuccess.value = response.data.message
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             resendSuccess.value = ''
-            error.value = err.response?.data.error || err.message
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
         }

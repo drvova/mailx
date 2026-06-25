@@ -37,21 +37,6 @@ type DBConfig struct {
 	Password string
 }
 
-type RedisConfig struct {
-	Addr                  string
-	Addrs                 []string
-	MasterName            string
-	Username              string
-	Password              string
-	FailoverUsername      string
-	FailoverPassword      string
-	TLSEnabled            bool
-	CertFile              string
-	KeyFile               string
-	CACertFile            string
-	TLSInsecureSkipVerify bool // Optional: Only for testing, use false in production
-}
-
 type SMTPClientConfig struct {
 	Host         string
 	Port         string
@@ -78,7 +63,6 @@ type ServiceConfig struct {
 type Config struct {
 	API        APIConfig
 	DB         DBConfig
-	Redis      RedisConfig
 	SMTPClient SMTPClientConfig
 	Service    ServiceConfig
 }
@@ -138,7 +122,6 @@ func New() (Config, error) {
 	}
 
 	dbHosts := strings.Split(os.Getenv("DB_HOSTS"), ",")
-	redisAddrs := strings.Split(os.Getenv("REDIS_ADDRESSES"), ",")
 	apiTrustedProxies := strings.Split(os.Getenv("API_TRUSTED_PROXIES"), ",")
 	apiAllowIPs := strings.Split(os.Getenv("API_ALLOW_IPS"), ",")
 
@@ -177,20 +160,6 @@ func New() (Config, error) {
 			User:     os.Getenv("DB_USER"),
 			Password: os.Getenv("DB_PASSWORD"),
 		},
-		Redis: RedisConfig{
-			Addr:                  os.Getenv("REDIS_ADDR"),
-			Addrs:                 redisAddrs,
-			MasterName:            os.Getenv("REDIS_MASTER_NAME"),
-			Username:              os.Getenv("REDIS_USERNAME"),
-			Password:              os.Getenv("REDIS_PASSWORD"),
-			FailoverUsername:      os.Getenv("REDIS_FAILOVER_USERNAME"),
-			FailoverPassword:      os.Getenv("REDIS_FAILOVER_PASSWORD"),
-			TLSEnabled:            os.Getenv("REDIS_TLS_ENABLED") == "true",
-			CertFile:              os.Getenv("REDIS_CERT_FILE"),
-			KeyFile:               os.Getenv("REDIS_KEY_FILE"),
-			CACertFile:            os.Getenv("REDIS_CA_CERT_FILE"),
-			TLSInsecureSkipVerify: os.Getenv("REDIS_TLS_INSECURE_SKIP_VERIFY") == "true",
-		},
 		SMTPClient: SMTPClientConfig{
 			Host:         os.Getenv("SMTP_CLIENT_HOST"),
 			Port:         os.Getenv("SMTP_CLIENT_PORT"),
@@ -202,7 +171,6 @@ func New() (Config, error) {
 			Report:       os.Getenv("SMTP_CLIENT_REPORT"),
 			TokenSecret:  os.Getenv("TOKEN_SECRET"),
 		},
-
 		Service: ServiceConfig{
 			OTPExpiration:       otpExp,
 			MaxCredentials:      maxCredentials,

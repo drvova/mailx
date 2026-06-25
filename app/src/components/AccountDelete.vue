@@ -60,8 +60,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
-import axios from 'axios'
 import overlay from '@preline/overlay'
 
 const req = ref({ otp: '' })
@@ -86,10 +86,10 @@ const deleteAccount = async () => {
         alert('Account is deleted successfully. You will be logged out.')
         userApi.clearSession()
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
         }
@@ -101,10 +101,10 @@ const deleteAccountRequest = async () => {
         const res = await userApi.deleteRequest()
         otp.value = res.data.otp
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
         }

@@ -66,8 +66,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeMount } from 'vue'
+import { ApiError } from '../api/api.ts'
 import { recipientApi } from '../api/recipient.ts'
-import axios from 'axios'
 import overlay from '@preline/overlay'
 import select from '@preline/select'
 import events from '../events.ts'
@@ -89,8 +89,8 @@ const deleteRecipient = async () => {
         events.emit('recipient.reload', {})
         close()
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
         }
     }
 }

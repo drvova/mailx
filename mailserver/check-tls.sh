@@ -7,7 +7,7 @@
 #   - Certificate expiry (warns at <14 days)
 #   - SAN match: cert must be valid for the MX hostname
 
-VIRTUAL_CF="${1:-docker-data/dms/config/postfix-virtual.cf}"
+VIRTUAL_CF="${1:-data/config/postfix-virtual.cf}"
 SMTP_PORT=25
 TIMEOUT=10
 WARN_DAYS=14

@@ -37,7 +37,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import axios from 'axios'
+import { ApiError } from '../api/api.ts'
 import { domainApi } from '../api/domain.ts'
 import DomainCreate from './DomainCreate.vue'
 import DomainRow from './DomainRow.vue'
@@ -65,8 +65,8 @@ const getList = async () => {
         error.value = ''
         renderRow()
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
         }
     } finally {
         loaded.value = true

@@ -277,8 +277,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, getCurrentInstance } from 'vue'
+import { ApiError } from '../api/api.ts'
 import overlay from '@preline/overlay'
-import axios from 'axios'
 import { domainApi } from '../api/domain.ts'
 import events from '../events.ts'
 import tooltip from '@preline/tooltip'
@@ -315,8 +315,8 @@ const getConfig = async () => {
             tooltip.autoInit()
         }, 0)
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
         }
     }
 }
@@ -341,12 +341,12 @@ const postDomain = async () => {
             tooltip.autoInit()
         }, 0)
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            if (err.response?.status === 429) {
+        if (err instanceof ApiError) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             } else {
                 ownershipPending.value = true
-                error.value = err.response?.data.error || err.message
+                error.value = err.data?.error || err.message || err.message
             }
         }
     }
@@ -358,8 +358,8 @@ const verifyDns = async () => {
         step2Error.value = ''
         close()
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            step2Error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            step2Error.value = err.data?.error || err.message || err.message
         }
     }
 }

@@ -37,8 +37,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ApiError } from '../api/api.ts'
 import { domainApi } from '../api/domain.ts'
-import axios from 'axios'
 import overlay from '@preline/overlay'
 import events from '../events.ts'
 
@@ -54,8 +54,8 @@ const deleteDomain = async () => {
         events.emit('domain.reload', {})
         close()
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
         }
     }
 }

@@ -41,8 +41,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
-import axios from 'axios'
 
 const password = ref('')
 const passwordConfirm = ref('')
@@ -79,11 +79,11 @@ const changePassword = async () => {
         password.value = ''
         passwordConfirm.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             success.value = ''
-            error.value = err.response?.data.error || err.message
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
         }

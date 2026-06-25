@@ -84,8 +84,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
-import axios from 'axios'
 import overlay from '@preline/overlay'
 import QRious from 'qrious'
 import events from '../events.ts'
@@ -140,7 +140,7 @@ const totpEnable = async () => {
         resEnable.value = res.data
         generateQRCode(resEnable.value.uri)
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }
@@ -160,12 +160,12 @@ const totpEnableConfirm = async () => {
         isEnabled.value = true
         codeError.value = false
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             resConfirm.value = { backup: '' }
             isEnabled.value = false
-            error.value = err.response?.data.error || err.message
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
         }

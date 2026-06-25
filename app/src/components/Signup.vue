@@ -106,8 +106,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUpdated } from 'vue'
+import { ApiError } from '../api/api.ts'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
 import { userApi } from '../api/user.ts'
 import { subscriptionApi } from '../api/subscription.ts'
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser'
@@ -166,10 +166,10 @@ const register = async () => {
         window.location.href = '/signup-complete'
     } catch (err) {
         apiSuccess.value = ''
-        if (axios.isAxiosError(err)) {
-            apiError.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            apiError.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 apiError.value = 'Too many requests, please try again later.'
             }
         }
@@ -196,10 +196,10 @@ const registerWithPasskey = async () => {
         localStorage.setItem('email', data.email)
         window.location.href = '/account'
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            apiError.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            apiError.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 apiError.value = 'Too many requests, please try again later.'
             }
         }
@@ -220,10 +220,10 @@ const rotateSessionId = async () => {
         })
         rotateSessionError.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            rotateSessionError.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            rotateSessionError.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 rotateSessionError.value = 'Too many requests, please try again later.'
             }
         }

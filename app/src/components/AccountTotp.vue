@@ -18,8 +18,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
-import axios from 'axios'
 import AccountTotpEnable from './AccountTotpEnable.vue'
 import AccountTotpDisable from './AccountTotpDisable.vue'
 import events from '../events.ts'
@@ -35,7 +35,7 @@ const getUser = async () => {
         const response = await userApi.get()
         res.value = response.data
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }

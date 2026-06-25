@@ -66,7 +66,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import axios from 'axios'
+import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser'
 
@@ -85,7 +85,7 @@ const getList = async () => {
         list.value = res.data
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }
@@ -99,7 +99,7 @@ const deleteCred = async (id: string) => {
         list.value = list.value.filter((cred: any) => cred.id !== id)
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }
@@ -110,10 +110,10 @@ const addPasskey = async () => {
         var res = await userApi.registerAdd()
         startAddPasskey(res)
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
         }
@@ -127,10 +127,10 @@ const startAddPasskey = async (res: any) => {
         error.value = ''
         getList()
     } catch (err: any) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 error.value = 'Too many requests, please try again later.'
             }
         } else {

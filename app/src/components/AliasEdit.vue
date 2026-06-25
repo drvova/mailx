@@ -82,9 +82,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ApiError } from '../api/api.ts'
 import overlay from '@preline/overlay'
 import select from '@preline/select'
-import axios from 'axios'
 import { aliasApi } from '../api/alias.ts'
 import events from '../events.ts'
 
@@ -108,7 +108,7 @@ const updateAlias = async () => {
         events.emit('alias.update', {})
         close()
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             success.value = ''
             error.value = err.message
         }

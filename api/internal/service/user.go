@@ -11,7 +11,6 @@ import (
 
 	"slices"
 
-	"github.com/go-sql-driver/mysql"
 	"ivpn.net/email/api/internal/client/mailer"
 	"ivpn.net/email/api/internal/model"
 	"ivpn.net/email/api/internal/utils"
@@ -177,12 +176,10 @@ func (s *Service) PostUser(ctx context.Context, user model.User, subID string, s
 	user, err = s.Store.PostUser(ctx, user)
 	if err != nil {
 		log.Printf("error creating user: %s", err.Error())
-		var mysqlErr *mysql.MySQLError
-		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+		if isUniqueConstraintError(err) {
 			return model.ErrDuplicateEmail
-		} else {
-			return ErrPostUser
 		}
+		return ErrPostUser
 	}
 
 	err = s.PostSubscription(ctx, user.ID, preauth)

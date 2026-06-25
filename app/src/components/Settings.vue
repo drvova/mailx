@@ -134,7 +134,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import axios from 'axios'
+import { ApiError } from '../api/api.ts'
 import { settingsApi } from '../api/settings.ts'
 import { recipientApi } from '../api/recipient.ts'
 import { logApi } from '../api/log.ts'
@@ -166,7 +166,7 @@ const getSettings = async () => {
         domains.value = [...new Set([...envDomains, ...customDomains])]
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     } finally {
@@ -186,7 +186,7 @@ const saveSettings = async () => {
         success.value = res.data.message
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             success.value = ''
             error.value = err.message
         }
@@ -201,7 +201,7 @@ const getRecipients = async () => {
             .map((recipient: { email: string }) => recipient.email)
         error.value = ''
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             error.value = err.message
         }
     }
@@ -215,7 +215,7 @@ const deleteAllLogs = async () => {
         error.value = ''
         success.value = res.data.message
     } catch (err) {
-        if (axios.isAxiosError(err)) {
+        if (err instanceof ApiError) {
             success.value = ''
             error.value = err.message
         }

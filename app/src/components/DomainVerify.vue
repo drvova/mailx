@@ -174,9 +174,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { ApiError } from '../api/api.ts'
 import overlay from '@preline/overlay'
 import { domainApi } from '../api/domain.ts'
-import axios from 'axios'
 import events from '../events.ts'
 import tooltip from '@preline/tooltip'
 
@@ -200,8 +200,8 @@ const getConfig = async () => {
             tooltip.autoInit()
         }, 0)
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
         }
     }
 }
@@ -212,8 +212,8 @@ const verifyDomain = async () => {
         error.value = ''
         close()
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            error.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            error.value = err.data?.error || err.message || err.message
         }
     }
 }

@@ -4,9 +4,9 @@ This document contains an overview of how email moves through the system: **SMTP
 
 ## Components
 
-- **Mailserver**: docker-mailserver (Postfix) accepts inbound SMTP and hands messages to the API.
+- **Mailserver**: Postfix accepts inbound SMTP and hands messages to the API.
 - **Email API**: HTTPS service that receives raw messages and triggers outbound delivery.
-- **DB + Redis**: dependencies required by the API.
+- **DB**: SQLite database required by the API.
 - **SMTP relay**: where the API delivers outbound email (can be an external provider, or the mailserver itself).
 
 ## Ports
@@ -67,4 +67,4 @@ Mailserver:
 API:
 - Set `PSK` (must match mailserver).
 - Set `SMTP_CLIENT_*` for outbound delivery.
-- Ensure DB/Redis are reachable (as defined in [api/compose.yml](api/compose.yml)).
+- Ensure DB is reachable (as defined in api/.env).

@@ -46,7 +46,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import axios from 'axios'
+import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import Footer from './Footer.vue'
 
@@ -76,10 +76,10 @@ const initiatePasswordReset = async () => {
         apiError.value = ''
     } catch (err) {
         apiSuccess.value = ''
-        if (axios.isAxiosError(err)) {
-            apiError.value = err.response?.data.error || err.message
+        if (err instanceof ApiError) {
+            apiError.value = err.data?.error || err.message || err.message
 
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 apiError.value = 'Too many requests, please try again later.'
             }
         }

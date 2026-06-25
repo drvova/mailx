@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"ivpn.net/email/api/config"
 	"ivpn.net/email/api/internal/cron"
 	"ivpn.net/email/api/internal/repository"
@@ -12,6 +13,7 @@ import (
 )
 
 func Run() error {
+	godotenv.Load(".env")
 	cfg, err := config.New()
 	if err != nil {
 		return err
@@ -22,16 +24,13 @@ func Run() error {
 		return err
 	}
 
-	redis, err := repository.NewRedis(cfg.Redis)
-	if err != nil {
-		return err
-	}
+	cache := repository.NewMemCache()
 
 	cron.New(db.Client)
 
-	service := service.New(cfg, db, redis)
+	service := service.New(cfg, db, cache)
 
-	err = api.Start(cfg.API, service, redis)
+	err = api.Start(cfg.API, service, cache)
 	if err != nil {
 		return err
 	}

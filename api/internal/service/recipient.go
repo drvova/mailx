@@ -6,7 +6,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/go-sql-driver/mysql"
 	"ivpn.net/email/api/internal/client/mailer"
 	"ivpn.net/email/api/internal/model"
 	"ivpn.net/email/api/internal/utils"
@@ -104,12 +103,10 @@ func (s *Service) PostRecipient(ctx context.Context, recipient model.Recipient) 
 	recipient, err = s.Store.PostRecipient(ctx, recipient)
 	if err != nil {
 		log.Printf("error creating recipient: %s", err.Error())
-		var mysqlErr *mysql.MySQLError
-		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+		if isUniqueConstraintError(err) {
 			return model.ErrDuplicateRecipient
-		} else {
-			return ErrPostRecipient
 		}
+		return ErrPostRecipient
 	}
 
 	otp, err := utils.CreateOTP()
