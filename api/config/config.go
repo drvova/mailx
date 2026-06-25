@@ -131,11 +131,19 @@ func New() (Config, error) {
 		return Config{}, err
 	}
 
+	apiPort := os.Getenv("API_PORT")
+	if apiPort == "" {
+		apiPort = os.Getenv("PORT")
+	}
+	if apiPort == "" {
+		apiPort = "3000"
+	}
+
 	return Config{
 		API: APIConfig{
 			FQDN:               os.Getenv("FQDN"),
 			Name:               os.Getenv("API_NAME"),
-			Port:               os.Getenv("API_PORT"),
+			Port:               apiPort,
 			ApiAllowOrigin:     os.Getenv("API_ALLOW_ORIGIN"),
 			ApiTrustedProxies:  apiTrustedProxies,
 			ApiAllowIPs:        apiAllowIPs,

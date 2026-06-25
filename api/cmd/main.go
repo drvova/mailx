@@ -13,7 +13,7 @@ import (
 )
 
 func Run() error {
-	godotenv.Load(".env")
+	godotenv.Load(".env") // ignore error — Zeabur injects env vars directly
 	cfg, err := config.New()
 	if err != nil {
 		return err
