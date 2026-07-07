@@ -4,6 +4,7 @@ import QuickActions from './components/QuickActions.vue'
 import Recipients from './components/Recipients.vue'
 import Domains from './components/Domains.vue'
 import Wildcards from './components/Wildcards.vue'
+import TempMail from './components/TempMail.vue'
 import Stats from './components/Stats.vue'
 import Diagnostics from './components/Diagnostics.vue'
 import Settings from './components/Settings.vue'
@@ -39,6 +40,11 @@ const dashboardChildren: RouteRecordRaw[] = [
         path: 'wildcard',
         name: `${AppName}: Wildcard`,
         component: Wildcards,
+    },
+    {
+        path: 'inbox',
+        name: `${AppName}: Temp Mail`,
+        component: TempMail,
     },
     {
         path: 'recipients',

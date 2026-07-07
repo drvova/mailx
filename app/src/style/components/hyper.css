@@ -1,0 +1,205 @@
+/* ── Hyperstudio dark theme — ported from free-ai design system ──
+   Scoped under .hyper so the rest of the app keeps its own styling. */
+
+.hyper {
+    --hy-bg: oklch(0.168 0 0);
+    --hy-surface: oklch(0.213 0 0);
+    --hy-border: oklch(1 0 0 / 0.06);
+    --hy-border-strong: oklch(1 0 0 / 0.12);
+    --hy-text: oklch(0.931 0 0);
+    --hy-muted: oklch(0.583 0 0);
+    --hy-dim: oklch(0.485 0 0);
+    --hy-accent: oklch(0.659 0.192 40.1);
+    --hy-accent-text: oklch(0.827 0.113 55.9);
+    --hy-accent-text-strong: oklch(0.969 0 0);
+    --hy-accent-text-glow: 0 0 10px oklch(0.692 0.189 44.5 / 0.34);
+    --hy-accent-muted: oklch(0.659 0.192 40.1 / 0.1);
+    --hy-danger: oklch(0.673 0.215 25.0);
+    --hy-amber: oklch(0.666 0.157 58.3);
+    --hy-radius: 6px;
+    --hy-radius-sm: 4px;
+    --hy-font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+    --hy-font-mono: "JetBrains Mono", "Roboto Mono", "Consolas", monospace;
+    --hy-shell-bg: linear-gradient(180deg, oklch(0.244 0 0) 0%, oklch(0.213 0 0) 100%);
+    --hy-inset-bg: linear-gradient(180deg, oklch(0.178 0 0) 0%, oklch(0.209 0 0) 100%);
+    --hy-sk-border: oklch(1 0 0 / 0.08);
+    --hy-raised-shadow:
+        0 1px 0.5px oklch(1 0 0 / 0.1) inset,
+        0 1px 1px oklch(1 0 0 / 0.21) inset,
+        0 10px 10px -9px oklch(0 0 0 / 0.44),
+        0 20px 20px -14px oklch(0 0 0 / 0.38), 0 0 6px oklch(0 0 0 / 0.38);
+    --hy-inset-shadow:
+        0 0.5px 0 oklch(1 0 0 / 0.31), 0 2px 6px oklch(0 0 0 / 0.56) inset;
+    --hy-accent-glow:
+        0 0 0 1px oklch(0.659 0.192 40.1 / 0.18), 0 0 16px oklch(0.659 0.192 40.1 / 0.16);
+    --hy-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --hy-press-scale: 0.96;
+
+    background: var(--hy-bg);
+    color: var(--hy-text);
+    font-family: var(--hy-font-sans);
+    border-radius: var(--hy-radius);
+    -webkit-font-smoothing: antialiased;
+}
+
+.hyper *:focus-visible {
+    outline: 2px solid var(--hy-accent);
+    outline-offset: 2px;
+    border-radius: var(--hy-radius-sm);
+}
+
+/* ── Button ── */
+.hy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 0 18px;
+    border: 1px solid var(--hy-sk-border);
+    border-radius: var(--hy-radius);
+    background: var(--hy-shell-bg);
+    box-shadow: var(--hy-raised-shadow);
+    color: var(--hy-text);
+    font-family: var(--hy-font-sans);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: box-shadow 200ms var(--hy-ease), background 200ms var(--hy-ease),
+        border-color 200ms var(--hy-ease), color 200ms var(--hy-ease),
+        transform 100ms var(--hy-ease);
+}
+.hy-btn:hover { box-shadow: var(--hy-raised-shadow), var(--hy-accent-glow); }
+.hy-btn:active { transform: scale(var(--hy-press-scale)); }
+.hy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.hy-btn--primary {
+    border-color: var(--hy-accent);
+    background: linear-gradient(180deg, oklch(0.659 0.192 40.1) 0%, oklch(0.574 0.182 38.6) 100%);
+    color: var(--hy-accent-text-strong);
+    text-shadow: var(--hy-accent-text-glow);
+}
+.hy-btn--primary:hover {
+    background: linear-gradient(180deg, oklch(0.777 0.155 57.3) 0%, oklch(0.692 0.189 44.5) 48%, oklch(0.576 0.173 40.5) 100%);
+}
+
+.hy-btn--ghost {
+    border-color: var(--hy-sk-border);
+    background: transparent;
+    box-shadow: none;
+}
+.hy-btn--ghost:hover {
+    border-color: var(--hy-border-strong);
+    background: var(--hy-inset-bg);
+    box-shadow: var(--hy-inset-shadow);
+}
+
+.hy-btn--danger {
+    border-color: var(--hy-danger);
+    background: transparent;
+    box-shadow: none;
+    color: var(--hy-danger);
+}
+.hy-btn--danger:hover { background: oklch(0.673 0.215 25.0 / 0.12); }
+
+.hy-btn--sm { min-height: 32px; padding: 0 12px; font-size: 0.82rem; }
+
+/* ── Select / input ── */
+.hy-select {
+    height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--hy-sk-border);
+    border-radius: var(--hy-radius);
+    background: var(--hy-surface);
+    box-shadow: var(--hy-inset-shadow);
+    color: var(--hy-text);
+    font-family: var(--hy-font-mono);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: border-color 150ms var(--hy-ease), box-shadow 150ms var(--hy-ease);
+}
+.hy-select:hover { border-color: var(--hy-border-strong); }
+
+/* ── Panels ── */
+.hy-card {
+    border: 1px solid var(--hy-border);
+    border-radius: var(--hy-radius);
+    background: var(--hy-surface);
+    box-shadow: var(--hy-raised-shadow);
+    overflow: hidden;
+}
+
+.hy-label {
+    color: var(--hy-dim);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.hy-mono { font-family: var(--hy-font-mono); }
+.hy-muted { color: var(--hy-muted); }
+.hy-dim { color: var(--hy-dim); }
+.hy-accent-text { color: var(--hy-accent-text); }
+
+/* ── List rows ── */
+.hy-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: var(--hy-radius-sm);
+    background: transparent;
+    color: var(--hy-muted);
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 120ms var(--hy-ease), box-shadow 120ms var(--hy-ease), color 120ms var(--hy-ease);
+}
+.hy-row:hover, .hy-row--active {
+    background: var(--hy-inset-bg);
+    box-shadow: var(--hy-inset-shadow);
+    color: var(--hy-text);
+}
+
+.hy-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border: 1px solid var(--hy-border-strong);
+    border-radius: 99px;
+    color: var(--hy-amber);
+    font-family: var(--hy-font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+}
+
+.hy-unread {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 auto;
+    border-radius: 99px;
+    background: var(--hy-accent);
+    box-shadow: 0 0 6px oklch(0.659 0.192 40.1 / 0.6);
+}
+
+.hy-scroll {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--hy-accent) transparent;
+}
+.hy-scroll::-webkit-scrollbar { width: 6px; }
+.hy-scroll::-webkit-scrollbar-track { background: transparent; }
+.hy-scroll::-webkit-scrollbar-thumb { background: var(--hy-accent); }
+
+.hy-error { color: var(--hy-danger); font-size: 0.8rem; }
+
+.hy-reader-frame {
+    width: 100%;
+    border: none;
+    background: oklch(0.97 0 0);
+    border-radius: var(--hy-radius-sm);
+}

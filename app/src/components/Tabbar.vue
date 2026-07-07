@@ -8,6 +8,9 @@
                 <router-link v-bind:class="{ 'active': route == '/account/wildcard' }" to="/account/wildcard" title="Wildcard">
                     <i class="icon scan icon-primary"></i>
                 </router-link>
+                <router-link v-bind:class="{ 'active': route == '/account/inbox' }" to="/account/inbox" title="Temp Mail">
+                    <i class="icon inbox icon-primary"></i>
+                </router-link>
                 <router-link v-bind:class="{ 'active': route == '/account/recipients' }" to="/account/recipients" title="Recipients">
                     <i class="icon inbox icon-primary"></i>
                 </router-link>

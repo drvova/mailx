@@ -15,6 +15,10 @@
                     <i class="icon scan icon-primary"></i>
                     Wildcard
                 </router-link>
+                <router-link v-bind:class="{ 'active': route == '/account/inbox' }" to="/account/inbox">
+                    <i class="icon inbox icon-primary"></i>
+                    Temp Mail
+                </router-link>
                 <router-link v-bind:class="{ 'active': route == '/account/recipients' }" to="/account/recipients">
                     <i class="icon inbox icon-primary"></i>
                     Recipients
