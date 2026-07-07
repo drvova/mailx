@@ -18,6 +18,7 @@ type Service interface {
 	SubscriptionService
 	SettingsService
 	ProcessorService
+	InboxService
 	SessionService
 	CredentialService
 	LogService

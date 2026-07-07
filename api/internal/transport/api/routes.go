@@ -86,6 +86,9 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	v1.Put("/recipient/delete/:id", h.DeleteRecipient)
 
 	v1.Get("/alias/:id", h.GetAlias)
+	v1.Get("/alias/:id/inbox", h.GetInboxMessages)
+	v1.Get("/inbox/message/:id", h.GetInboxMessage)
+	v1.Delete("/inbox/message/:id", h.DeleteInboxMessage)
 	v1.Get("/aliases", h.GetAliases)
 	v1.Get("/aliases/export", h.ExportAliases)
 	v1.Post("/alias", limiter.New(), h.PostAlias)

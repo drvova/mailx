@@ -14,6 +14,7 @@ type Store interface {
 	UserStore
 	SubscriptionStore
 	MessageStore
+	InboxStore
 	SettingsStore
 	SessionStore
 	CredentialStore

@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -203,12 +204,24 @@ func (h *Handler) PostAlias(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validate recipients
-	rcps, err := h.Service.GetVerifiedRecipients(c.Context(), req.Recipients, userID)
-	if err != nil || len(rcps) == 0 {
+	// Inbox aliases are receive-only stored mailboxes: no catch-all format
+	isInbox := req.Type == "inbox"
+	if isInbox && req.Format == model.AliasFormatCatchAll {
 		return c.Status(400).JSON(fiber.Map{
-			"error": ErrUnverifiedRcp,
+			"error": ErrInvalidRequest,
 		})
+	}
+
+	// Validate recipients (relay aliases forward, so verified recipients are required)
+	recipients := ""
+	if !isInbox {
+		rcps, err := h.Service.GetVerifiedRecipients(c.Context(), req.Recipients, userID)
+		if err != nil || len(rcps) == 0 {
+			return c.Status(400).JSON(fiber.Map{
+				"error": ErrUnverifiedRcp,
+			})
+		}
+		recipients = model.GetEmails(rcps)
 	}
 
 	// Validate catch-all suffix
@@ -229,8 +242,18 @@ func (h *Handler) PostAlias(c *fiber.Ctx) error {
 		UserID:      userID,
 		Description: req.Description,
 		Enabled:     req.Enabled,
-		Recipients:  model.GetEmails(rcps),
+		Recipients:  recipients,
 		FromName:    req.FromName,
+	}
+
+	if isInbox {
+		alias.Type = model.AliasInbox
+		ttl := req.TTLHours
+		if ttl == 0 {
+			ttl = 24
+		}
+		expires := time.Now().Add(time.Duration(ttl) * time.Hour)
+		alias.ExpiresAt = &expires
 	}
 
 	alias, err = h.Service.PostAlias(c.Context(), alias, req.Format, domain, req.CatchAllSuffix)
@@ -268,18 +291,31 @@ func (h *Handler) UpdateAlias(c *fiber.Ctx) error {
 		})
 	}
 
-	rcps, err := h.Service.GetVerifiedRecipients(c.Context(), req.Recipients, userID)
-	if err != nil || len(rcps) == 0 {
+	stored, err := h.Service.GetAlias(c.Context(), c.Params("id"), userID)
+	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"error": ErrInvalidRequest,
 		})
+	}
+
+	// Relay aliases forward mail, so verified recipients are required.
+	// Inbox aliases store mail and have none.
+	recipients := ""
+	if stored.Type != model.AliasInbox {
+		rcps, err := h.Service.GetVerifiedRecipients(c.Context(), req.Recipients, userID)
+		if err != nil || len(rcps) == 0 {
+			return c.Status(400).JSON(fiber.Map{
+				"error": ErrInvalidRequest,
+			})
+		}
+		recipients = model.GetEmails(rcps)
 	}
 
 	alias := model.Alias{
 		UserID:      userID,
 		Description: req.Description,
 		Enabled:     req.Enabled,
-		Recipients:  model.GetEmails(rcps),
+		Recipients:  recipients,
 		FromName:    req.FromName,
 	}
 	alias.ID = c.Params("id")

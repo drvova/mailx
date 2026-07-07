@@ -33,11 +33,13 @@ type SubscriptionReq struct {
 type AliasReq struct {
 	Description    string `json:"description"`
 	Enabled        bool   `json:"enabled"`
-	Recipients     string `json:"recipients" validate:"required"`
+	Recipients     string `json:"recipients"`
 	FromName       string `json:"from_name"`
 	Format         string `json:"format"`
 	Domain         string `json:"domain" validate:"required"`
 	CatchAllSuffix string `json:"catch_all_suffix" validate:"omitempty,alphanum,min=6,max=12"`
+	Type           string `json:"type" validate:"omitempty,oneof=relay inbox"`
+	TTLHours       int    `json:"ttl_hours" validate:"omitempty,min=1,max=720"`
 }
 
 type RecipientReq struct {

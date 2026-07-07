@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"strings"
+	"time"
 
 	"ivpn.net/email/api/internal/client/mailer"
 	"ivpn.net/email/api/internal/model"
@@ -296,8 +297,8 @@ func (s *Service) FindRecipients(from string, to string, msgType model.MessageTy
 		return []model.Recipient{}, model.Alias{Name: name}, 0, err
 	}
 
-	// Handle disabled alias
-	if !alias.Enabled {
+	// Handle disabled or expired alias
+	if !alias.Enabled || (alias.ExpiresAt != nil && alias.ExpiresAt.Before(time.Now())) {
 		err = s.SaveMessage(context.Background(), alias, model.Block)
 		if err != nil {
 			log.Println("error saving message", err)
@@ -332,6 +333,11 @@ func (s *Service) FindRecipients(from string, to string, msgType model.MessageTy
 
 			return []model.Recipient{}, alias, 0, ErrDisabledDomain
 		}
+	}
+
+	// Inbox alias: mail is stored, not relayed. No recipients required.
+	if alias.Type == model.AliasInbox {
+		return nil, alias, model.Inbox, nil
 	}
 
 	// Handle Reply | Send

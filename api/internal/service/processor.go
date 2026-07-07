@@ -140,6 +140,24 @@ func (s *Service) ProcessMessage(data []byte) error {
 			continue
 		}
 
+		// Inbox alias: store the message, nothing is relayed
+		if relayType == model.Inbox {
+			g.Go(func() error {
+				err := s.StoreInboxMessage(context.Background(), alias, msg, data)
+				if err != nil {
+					log.Println("error storing inbox message", err)
+					if errors.Is(err, ErrInboxMessageSize) {
+						// Permanent failure: drop oversize mail, no postfix retry
+						return nil
+					}
+					// Transient failure (DB): propagate so postfix retries
+					return err
+				}
+				return nil
+			})
+			continue
+		}
+
 		settings, err := s.GetSettings(context.Background(), alias.UserID)
 		if err != nil {
 			log.Println("error getting settings", err)

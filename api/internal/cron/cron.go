@@ -58,6 +58,18 @@ func New(db *gorm.DB) {
 		return
 	}
 
+	err = gocron.Every(1).Hour().Do(jobs.DeleteExpiredInboxAliases, db)
+	if err != nil {
+		log.Println("Error scheduling job:", err)
+		return
+	}
+
+	err = gocron.Every(1).Hour().Do(jobs.DeleteOldInboxMessages, db)
+	if err != nil {
+		log.Println("Error scheduling job:", err)
+		return
+	}
+
 	err = gocron.Every(1).Hour().Do(jobs.DeleteOldLogs, db)
 	if err != nil {
 		log.Println("Error scheduling job:", err)

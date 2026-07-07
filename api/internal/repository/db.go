@@ -77,6 +77,7 @@ func migrate(db *gorm.DB) error {
 		&model.Recipient{},
 		&model.Alias{},
 		&model.Message{},
+		&model.InboxMessage{},
 		&model.Settings{},
 		&model.Session{},
 		&model.Credential{},

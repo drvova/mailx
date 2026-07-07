@@ -14,6 +14,7 @@ const (
 	Reply      MessageType = 2
 	Send       MessageType = 3
 	FailBounce MessageType = 4
+	Inbox      MessageType = 5
 )
 
 type Message struct {
