@@ -103,6 +103,6 @@
     }
 
     .logo {
-        @apply block bg-[url("../../assets/mailX-5.svg")] dark:bg-[url("../../assets/mailX-3.svg")] bg-no-repeat w-24 sm:w-28 h-9 bg-[center] bg-contain;
+        @apply block bg-[url("../../assets/freethemail-light.png")] dark:bg-[url("../../assets/freethemail-dark.png")] bg-no-repeat w-36 sm:w-40 h-9 bg-[center_left] bg-contain;
     }
 }

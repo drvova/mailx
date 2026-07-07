@@ -6,7 +6,7 @@
             </div>
             <div class="pt-1.5">
                 <p>
-                    Mailx beta ends May 19. To keep access, follow  <a target="_blank" :href="resyncUrl">this link</a> and sync with your IVPN account.
+                    FreeTheMail beta ends May 19. To keep access, follow  <a target="_blank" :href="resyncUrl">this link</a> and sync with your IVPN account.
                 </p>
             </div>
         </footer>
@@ -32,7 +32,7 @@
             <div>
                 <h4>This account has been replaced and is scheduled for deletion.</h4>
                 <p>
-                    A new Mailx signup was completed for your IVPN account, so this account will be deleted in 48 hours. Export any data you need before then.
+                    A new FreeTheMail signup was completed for your IVPN account, so this account will be deleted in 48 hours. Export any data you need before then.
                 </p>
             </div>
         </footer>

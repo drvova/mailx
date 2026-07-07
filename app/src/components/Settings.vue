@@ -76,13 +76,13 @@
                 >
             </div>
             <hr>
-            <h4>Mailx Header</h4>
+            <h4>FreeTheMail Header</h4>
             <p>
-                Add Mailx header in forwarded messages - `Sent to &lt;alias&gt; from &lt;sender&gt;`.
+                Add FreeTheMail header in forwarded messages - `Sent to &lt;alias&gt; from &lt;sender&gt;`.
             </p>
             <div v-if="loaded" class="mb-8">
                 <label for="remove-header">
-                    Add Mailx header:
+                    Add FreeTheMail header:
                 </label>
                 <input
                     @change="saveSettings"
@@ -118,7 +118,7 @@
             <hr>
             <p> 
                 <strong>Note:</strong><br>
-                If you use Mailx browser extension, in the extension go to "Settings" &gt; "Refresh Defaults" after saving to apply the new settings.
+                If you use FreeTheMail browser extension, in the extension go to "Settings" &gt; "Refresh Defaults" after saving to apply the new settings.
             </p>
             <hr>
             <div class="mb-6">

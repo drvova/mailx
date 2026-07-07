@@ -20,7 +20,7 @@ const logout = async () => {
 
 // --- Hero -------------------------------------------------------------------
 const heroFeatures = [
-    'Forward emails through isolated aliases with Mailx.',
+    'Forward emails through isolated aliases with FreeTheMail.',
     'Send and reply without exposing your primary email address.',
     'Supports PGP encryption, domain choice, multiple',
     'recipients, and catch-all aliases.',
@@ -41,7 +41,7 @@ const sendInstructions = [
 
 // --- Feature Set ------------------------------------------------------------
 const aliasFeatureItems = [
-    'Create aliases via Mailx browser extension',
+    'Create aliases via FreeTheMail browser extension',
     'Use preset domains or your own for aliases',
     'Send and reply from any alias',
     'Generate aliases on-the-fly with wildcards',
@@ -56,16 +56,16 @@ const statsFeatureItems = [
 
 // --- Constraints ------------------------------------------------------------
 const constraints = [
-    "Mailx is not an email provider, it can't replace your primary email",
-    'Messages are visible to Mailx servers during relay (use PGP)',
+    "FreeTheMail is not an email provider, it can't replace your primary email",
+    'Messages are visible to FreeTheMail servers during relay (use PGP)',
     'No IMAP/POP3 access. Email forwarding only.',
     'Not designed for protection against targeted surveillance',
 ]
 
 // --- Pricing ----------------------------------------------------------------
 const pricingPlans = [
-    { plan: 'IVPN_PLUS',      price: '$80',  features: ['IVPN 5 Devices',  'MailX', 'modDNS'] },
-    { plan: 'IVPN_PRO_Suite', price: '$100', features: ['IVPN 10 Devices', 'MailX', 'modDNS', 'Portmaster'] },
+    { plan: 'IVPN_PLUS',      price: '$80',  features: ['IVPN 5 Devices',  'FreeTheMail', 'modDNS'] },
+    { plan: 'IVPN_PRO_Suite', price: '$100', features: ['IVPN 10 Devices', 'FreeTheMail', 'modDNS', 'Portmaster'] },
 ]
 </script>
 
@@ -101,7 +101,7 @@ const pricingPlans = [
             <div class="hero-content">
                 <div class="hero-text">
                     <h1 class="hero-title">
-                        RESIST_EMAIL_<br>SURVEILLANCE
+                        Resist email<br>surveillance.
                     </h1>
                     <div class="hero-features">
                         <div v-for="text in heroFeatures" :key="text" class="feature-item">
@@ -129,14 +129,14 @@ const pricingPlans = [
                         <img 
                             src="../assets/landing-screenshot-light2.png" 
                             srcset="../assets/landing-screenshot-light2.png 1x, ../assets/landing-screenshot-light2@2x.png 2x"
-                            alt="Mailx Application Screenshot"
+                            alt="FreeTheMail Application Screenshot"
                             class="screenshot-image light-only"
                         />
                         <!-- Dark mode screenshot -->
                         <img 
                             src="../assets/landing-screenshot-dark2.png" 
                             srcset="../assets/landing-screenshot-dark2.png 1x, ../assets/landing-screenshot-dark2@2x.png 2x"
-                            alt="Mailx Application Screenshot"
+                            alt="FreeTheMail Application Screenshot"
                             class="screenshot-image dark-only"
                         />
                     </div>
@@ -150,7 +150,7 @@ const pricingPlans = [
                 <!-- Title and Subtitle -->
                 <div class="section-header">
                     <h2 class="how-it-works-title">HOW_IT_WORKS</h2>
-                    <p class="how-it-works-subtitle">Mailx generates unique aliases for each service and sender.</p>
+                    <p class="how-it-works-subtitle">FreeTheMail generates unique aliases for each service and sender.</p>
                 </div>
 
                 <!-- Flow Diagrams -->
@@ -177,7 +177,7 @@ const pricingPlans = [
                                     <span class="flow-label">Sender</span>
                                 </div>
 
-                                <!-- Step 2: Mailx -->
+                                <!-- Step 2: FreeTheMail -->
                                 <div class="flow-step">
                                     <div class="flow-icon-row">
                                         <img src="../assets/icons/flow-icon-server-light.svg" class="flow-icon light-only" />
@@ -189,7 +189,7 @@ const pricingPlans = [
                                             <span class="flow-arrow-char">&gt;</span>
                                         </div>
                                     </div>
-                                    <span class="flow-label">Mailx Alias</span>
+                                    <span class="flow-label">FreeTheMail Alias</span>
                                 </div>
 
                                 <!-- Step 3: Inbox -->
@@ -232,7 +232,7 @@ const pricingPlans = [
                                     <span class="flow-label">Your Inbox</span>
                                 </div>
 
-                                <!-- Step 2: Mailx -->
+                                <!-- Step 2: FreeTheMail -->
                                 <div class="flow-step">
                                     <div class="flow-icon-row">
                                         <img src="../assets/icons/flow-icon-server-light.svg" class="flow-icon light-only" />
@@ -244,7 +244,7 @@ const pricingPlans = [
                                             <span class="flow-arrow-char">&gt;</span>
                                         </div>
                                     </div>
-                                    <span class="flow-label">Mailx</span>
+                                    <span class="flow-label">FreeTheMail</span>
                                 </div>
 
                                 <!-- Step 3: Recipient -->
@@ -392,7 +392,7 @@ const pricingPlans = [
                                 <img src="../assets/icons/trust-open-source-dark.svg" class="verifiable-privacy-icon dark-only" />
                                 <h3 class="verifiable-privacy-card-title">OPEN_SOURCE</h3>
                             </div>
-                            <p class="verifiable-privacy-card-text">The entire Mailx project is open-source. Our implementation is public and available for review.</p>
+                            <p class="verifiable-privacy-card-text">The entire FreeTheMail project is open-source. Our implementation is public and available for review.</p>
                         </div>
                         <a href="https://github.com/ivpn/mailx" target="_blank" class="verifiable-privacy-card-link">./VIEW_SOURCE</a>
                     </div>
@@ -404,7 +404,7 @@ const pricingPlans = [
                                 <img src="../assets/icons/trust-audit-dark.svg" class="verifiable-privacy-icon dark-only" />
                                 <h3 class="verifiable-privacy-card-title">SECURITY_AUDIT</h3>
                             </div>
-                            <p class="verifiable-privacy-card-text">Mailx has undergone a third-party security audit to validate our claims and architecture.</p>
+                            <p class="verifiable-privacy-card-text">FreeTheMail has undergone a third-party security audit to validate our claims and architecture.</p>
                         </div>
                         <a href="https://www.ivpn.net/resources/IVP-07-report.pdf" class="verifiable-privacy-card-link">./READ_AUDIT</a>
                     </div>
@@ -443,8 +443,8 @@ const pricingPlans = [
                     <div class="comp-services-architecture">
                         <div class="comp-arch-desktop">
                             <div class="comp-arch-left">
-                                <img src="../assets/icons/comp-mailx-light.svg" alt="MailX" class="light-only comp-logo-mailx" />
-                                <img src="../assets/icons/comp-mailx-dark.svg" alt="MailX" class="dark-only comp-logo-mailx" />
+                                <img src="../assets/icons/comp-mailx-light.svg" alt="FreeTheMail" class="light-only comp-logo-mailx" />
+                                <img src="../assets/icons/comp-mailx-dark.svg" alt="FreeTheMail" class="dark-only comp-logo-mailx" />
                                 <img src="../assets/icons/comp-arrow-left-light.svg" class="light-only comp-arrow-side comp-arrow-side-left" />
                                 <img src="../assets/icons/comp-arrow-left-dark.svg" class="dark-only comp-arrow-side comp-arrow-side-left" />
                             </div>
@@ -491,8 +491,8 @@ const pricingPlans = [
                             <div class="comp-arch-mobile-bottom">
                                 <div></div>
                                 <div>
-                                    <img src="../assets/icons/comp-mobile-left-light.svg" alt="MailX" class="light-only comp-mobile-side" />
-                                    <img src="../assets/icons/comp-mobile-left-dark.svg" alt="MailX" class="dark-only comp-mobile-side" />
+                                    <img src="../assets/icons/comp-mobile-left-light.svg" alt="FreeTheMail" class="light-only comp-mobile-side" />
+                                    <img src="../assets/icons/comp-mobile-left-dark.svg" alt="FreeTheMail" class="dark-only comp-mobile-side" />
                                 </div>
                                 <div class="comp-arch-mobile-center">
                                     <img src="../assets/icons/comp-mobile-vertical-light.svg" class="light-only comp-arrow-mobile-center-down" />
@@ -513,7 +513,7 @@ const pricingPlans = [
                         <div class="comp-services-card">
                             <img src="../assets/icons/comp-signin-light.svg" class="comp-services-card-icon light-only" />
                             <img src="../assets/icons/comp-signin-dark.svg" class="comp-services-card-icon dark-only" />
-                            <p class="comp-services-card-text">Sign up to Mailx without sharing your IVPN account ID</p>
+                            <p class="comp-services-card-text">Sign up to FreeTheMail without sharing your IVPN account ID</p>
                         </div>
 
                         <div class="comp-services-card">
@@ -597,7 +597,7 @@ const pricingPlans = [
         <!-- Section 9: Footer Strip -->
         <section class="landing-footer-strip-section">
             <div class="landing-footer-strip">
-                <span class="landing-footer-strip-text">2026 Mailx</span>
+                <span class="landing-footer-strip-text">2026 FreeTheMail</span>
                 <span class="landing-footer-strip-divider" aria-hidden="true"></span>
                 <a
                     href="/privacy"
@@ -688,7 +688,7 @@ const pricingPlans = [
 
 .landing-logo {
     @apply block bg-no-repeat bg-contain bg-center;
-    @apply bg-[url("../assets/mailX-5.svg")] dark:bg-[url("../assets/mailX-3.svg")];
+    @apply bg-[url("../assets/freethemail-light.png")] dark:bg-[url("../assets/freethemail-dark.png")];
     /* Desktop/Tablet: 118px x 25px, Mobile: 98px x 20px */
     @apply w-[98px] h-5 md:w-[118px] md:h-[25px];
 }
@@ -781,11 +781,17 @@ const pricingPlans = [
 }
 
 .hero-title {
-    @apply font-bold uppercase;
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
+    @apply text-[#1c1c1c] dark:text-[#fffeff];
     /* Responsive font sizes: 60px desktop, 52px tablet, 42px mobile */
-    @apply text-[42px] leading-[46px] md:text-[52px] md:leading-[52px] lg:text-[60px] lg:leading-[60px];
+    @apply text-[42px] leading-[46px] md:text-[52px] md:leading-[54px] lg:text-[64px] lg:leading-[66px];
     @apply m-0;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+}
+
+.landing-page .hero-title,
+.landing-page .hero-title * {
+    font-family: var(--font-serif);
 }
 
 .hero-features {
