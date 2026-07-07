@@ -1,5 +1,7 @@
 # ExecPlan: Temp Inbox Aliases (AdGuard-Mail-style stored email)
 
+> STATUS: Phases 1-5 implemented in commit 99b359b. Phase 6 (frontend app/wxt) pending.
+
 ## Goal
 
 Add a second alias kind: **inbox**. A relay alias forwards mail to a verified
