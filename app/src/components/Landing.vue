@@ -34,11 +34,6 @@ const constraints = [
     'Not designed for protection against targeted surveillance',
 ]
 
-// --- Pricing ----------------------------------------------------------------
-const pricingPlans = [
-    { plan: 'IVPN_PLUS',      price: '$80',  features: ['IVPN 5 Devices',  'FreeTheMail', 'modDNS'] },
-    { plan: 'IVPN_PRO_Suite', price: '$100', features: ['IVPN 10 Devices', 'FreeTheMail', 'modDNS', 'Portmaster'] },
-]
 </script>
 
 <template>
@@ -244,28 +239,11 @@ const pricingPlans = [
                     <h2 class="section-title">Get access</h2>
                 </div>
 
-                <div class="get-access-cards">
-                    <div v-for="plan in pricingPlans" :key="plan.plan" class="get-access-card">
-                        <div class="get-access-card-header">
-                            <div class="get-access-card-info">
-                                <div class="get-access-plan">{{ plan.plan }}</div>
-                                <p class="get-access-price">
-                                    <span class="get-access-price-value">{{ plan.price }}</span>
-                                    <span class="get-access-price-unit">/YEAR</span>
-                                </p>
-                            </div>
-                            <a :href="signupUrl" class="get-access-signup" target="_blank">./SIGNUP</a>
-                        </div>
+                <p class="get-access-text">Included with IVPN subscriptions. One account for aliases, wildcards, temp inboxes and forwarding — no separate billing.</p>
 
-                        <div class="get-access-divider"></div>
-
-                        <div class="get-access-features">
-                            <div v-for="feature in plan.features" :key="feature" class="get-access-feature">
-                                <span class="get-access-feature-bullet">&gt;</span>
-                                <p class="get-access-feature-text">{{ feature }}</p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="get-access-actions">
+                    <a :href="signupUrl" class="cta-btn cta-primary" target="_blank">./SIGNUP</a>
+                    <a href="https://github.com/ivpn/mailx" target="_blank" class="cta-btn cta-secondary">./VIEW_SOURCE</a>
                 </div>
             </div>
         </section>
@@ -502,16 +480,31 @@ const pricingPlans = [
 .cta-btn {
     @apply flex items-center justify-center;
     @apply px-4 py-[13px];
-    @apply font-medium text-sm leading-4;
-    @apply transition-colors;
+    @apply font-semibold text-sm leading-4;
     @apply whitespace-nowrap;
     /* Full width on mobile */
     @apply w-full md:w-auto;
+    border-radius: var(--radius);
+    transition: box-shadow 200ms var(--ease-smooth), background 200ms var(--ease-smooth),
+        border-color 200ms var(--ease-smooth), color 200ms var(--ease-smooth),
+        transform 100ms var(--ease-smooth);
+}
+
+.cta-btn:active {
+    transform: scale(var(--press-scale));
 }
 
 .cta-primary {
-    @apply bg-[#ee5d1f] dark:bg-[#ee5d1f];
-    @apply text-[#fffeff] dark:text-[#0a0a0a];
+    @apply text-[#fffeff] dark:text-[#fffeff];
+    border: 1px solid var(--accent);
+    background: var(--accent-grad);
+    box-shadow: var(--raised-shadow);
+    text-shadow: var(--accent-text-glow);
+}
+
+.cta-primary:hover {
+    background: var(--accent-grad-hover);
+    box-shadow: var(--raised-shadow), var(--accent-glow);
 }
 
 .cta-primary:hover {
@@ -520,9 +513,14 @@ const pricingPlans = [
 
 .cta-secondary {
     @apply px-[15px] py-[12px];
-    @apply border border-solid;
-    @apply border-[#ee5d1f] dark:border-[#ee5d1f];
-    @apply text-[#ee5d1f] dark:text-[#ee5d1f];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
+    border: 1px solid var(--sk-border);
+    background: transparent;
+}
+
+.cta-secondary:hover {
+    background: var(--inset-bg);
+    box-shadow: var(--inset-shadow);
 }
 
 .cta-secondary:hover {
@@ -592,11 +590,11 @@ img.dark-only {
     @apply m-0;
 }
 
-.how-it-works-subtitle {
-    @apply text-[#8e3510] dark:text-[#ffb37d];
-    @apply text-base leading-4;
-    @apply m-0;
-    @apply max-w-[587px];
+.landing-page .how-it-works-subtitle {
+    @apply text-light-neutral-11 dark:text-dark-neutral-11;
+    @apply text-base m-0 max-w-[587px];
+    font-family: var(--font-sans);
+    line-height: 1.65;
 }
 
 /* Flow Diagrams */
@@ -652,10 +650,11 @@ img.dark-only {
     @apply m-0;
 }
 
-.feature-card-text {
-    @apply text-black dark:text-[#fffeff];
-    @apply text-sm leading-5;
-    @apply m-0;
+.landing-page .feature-card-text {
+    @apply text-light-neutral-11 dark:text-dark-neutral-11;
+    @apply text-sm m-0;
+    font-family: var(--font-sans);
+    line-height: 1.65;
 }
 
 /* Section 4: Feature Set */
@@ -711,10 +710,11 @@ img.dark-only {
     @apply text-[#ee5d1f] dark:text-[#f76c1d];
 }
 
-.verifiable-privacy-card-text {
-    @apply m-0;
-    @apply text-sm leading-5;
-    @apply text-black dark:text-[#fffeff];
+.landing-page .verifiable-privacy-card-text {
+    @apply text-sm m-0;
+    @apply text-light-neutral-11 dark:text-dark-neutral-11;
+    font-family: var(--font-sans);
+    line-height: 1.65;
 }
 
 .verifiable-privacy-card-link {
@@ -806,115 +806,6 @@ img.dark-only {
 
 /* .section-container / .section-header / .section-command / .section-title cover this section */
 
-.get-access-cards {
-    @apply w-full;
-    @apply bg-[#fffeff] dark:bg-[#0a0a0a];
-    @apply border border-solid;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-    @apply flex flex-col;
-    @apply pb-px md:pb-0;
-}
-
-.get-access-card {
-    @apply flex flex-col gap-[25px];
-    @apply p-6;
-    @apply border-b border-solid;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-    @apply mb-[-1px];
-}
-
-.get-access-card:last-child {
-    @apply border-b-0;
-}
-
-.get-access-card-header {
-    @apply flex items-start gap-3;
-}
-
-.get-access-card-info {
-    @apply flex-1 min-w-0;
-    @apply flex flex-col gap-2;
-}
-
-.get-access-plan {
-    @apply text-sm leading-[14px];
-    @apply text-[#8e3510] dark:text-[#ffb37d];
-}
-
-.get-access-price {
-    @apply m-0;
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
-    @apply leading-none;
-}
-
-.get-access-price-value {
-    @apply text-[32px] leading-8;
-    @apply font-medium;
-}
-
-.get-access-price-unit {
-    @apply text-[18px] leading-8;
-    @apply font-medium;
-}
-
-.get-access-signup {
-    @apply h-9;
-    @apply border border-solid;
-    @apply border-[#ee5d1f] dark:border-[#ee5d1f];
-    @apply text-[#ee5d1f] dark:text-[#ee5d1f];
-    @apply pl-3 pr-4;
-    @apply text-sm leading-4 font-medium;
-    @apply flex items-center justify-center;
-    @apply whitespace-nowrap;
-    @apply no-underline;
-}
-
-.get-access-signup:hover {
-    @apply opacity-80;
-}
-
-.get-access-divider {
-    @apply border-b border-dashed;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-}
-
-.get-access-features {
-    @apply flex flex-col gap-3;
-}
-
-.get-access-feature {
-    @apply flex items-center gap-2;
-}
-
-.get-access-feature-bullet {
-    @apply text-[16px] leading-5;
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
-    @apply w-5 h-5;
-    @apply shrink-0;
-    @apply flex items-center justify-center;
-}
-
-.get-access-feature-text {
-    @apply m-0;
-    @apply text-sm leading-5;
-    @apply text-black dark:text-[#fffeff];
-}
-
-@media (min-width: 768px) {
-    .get-access-cards {
-        @apply border-y border-x-0;
-        @apply pr-px;
-        @apply flex-row;
-    }
-
-    .get-access-card {
-        @apply flex-1;
-        @apply self-stretch;
-        @apply border-y-0 border-x;
-        @apply mb-0 mr-[-1px];
-    }
-}
-
 /* Section 9: Footer Strip */
 .landing-footer-strip-section {
     @apply w-full;
@@ -957,5 +848,15 @@ img.dark-only {
     font-weight: 600;
     letter-spacing: -0.02em;
     text-transform: none;
+}
+.landing-page .get-access-text {
+    @apply text-light-neutral-11 dark:text-dark-neutral-11;
+    @apply text-base m-0 max-w-[52ch];
+    font-family: var(--font-sans);
+    line-height: 1.65;
+}
+
+.get-access-actions {
+    @apply flex flex-col md:flex-row gap-3;
 }
 </style>
