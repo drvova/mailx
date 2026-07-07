@@ -13,7 +13,7 @@
 <clipPath id="bgblur_1_12_36_clip_path" transform="translate(0 0)"><path d="M485.159 37.5459L320.44 202.261L484.629 366.448L414.084 436.999L249.896 272.811L85.832 436.875L15.2832 366.327L179.348 202.263L14.7568 37.6689L85.3047 -32.877L249.896 131.714L414.61 -33.001L485.159 37.5459Z"/>
 </clipPath><radialGradient id="paint0_radial_12_36" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(249.967 -15.0403) rotate(89.9972) scale(641.539 267.627)">
 <stop stop-color="#0A0A0A"/>
-<stop offset="0.425454" stop-color="#0860AF"/>
+<stop offset="0.425454" stop-color="#8e3510"/>
 <stop offset="1" stop-color="#0A0A0A"/>
 </radialGradient>
 <linearGradient id="paint1_linear_12_36" x1="254.5" y1="-33" x2="254.5" y2="434" gradientUnits="userSpaceOnUse">

@@ -651,14 +651,14 @@ const pricingPlans = [
 /* Blue command / path badge */
 .section-command {
     @apply text-xs leading-3 px-3 py-3 w-fit;
-    @apply bg-[rgba(26,117,218,0.12)] dark:bg-[#12161b];
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply bg-[rgba(238,93,31,0.12)] dark:bg-[#12161b];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
 }
 
 /* Blue section title (32 px mobile -> 36 px desktop) */
 .section-title {
     @apply m-0 uppercase font-bold;
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     @apply text-[32px] leading-[32px] md:text-[36px] md:leading-[40px];
 }
 
@@ -706,7 +706,7 @@ const pricingPlans = [
 
 .landing-btn-signup {
     @apply px-2;
-    @apply text-[#1a75da] dark:text-[#0179ff];
+    @apply text-[#ee5d1f] dark:text-[#ee5d1f];
 }
 
 .landing-btn-signup:hover {
@@ -715,7 +715,7 @@ const pricingPlans = [
 
 .landing-btn-login {
     @apply px-3;
-    @apply bg-[#1a75da] dark:bg-[#0179ff];
+    @apply bg-[#ee5d1f] dark:bg-[#ee5d1f];
     @apply text-[#fffeff] dark:text-[#0a0a0a];
 }
 
@@ -782,7 +782,7 @@ const pricingPlans = [
 
 .hero-title {
     @apply font-bold uppercase;
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     /* Responsive font sizes: 60px desktop, 52px tablet, 42px mobile */
     @apply text-[42px] leading-[46px] md:text-[52px] md:leading-[52px] lg:text-[60px] lg:leading-[60px];
     @apply m-0;
@@ -798,7 +798,7 @@ const pricingPlans = [
 }
 
 .feature-bullet {
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     @apply text-base;
     @apply shrink-0;
     @apply flex items-center justify-center;
@@ -830,7 +830,7 @@ const pricingPlans = [
 }
 
 .cta-primary {
-    @apply bg-[#1a75da] dark:bg-[#0179ff];
+    @apply bg-[#ee5d1f] dark:bg-[#ee5d1f];
     @apply text-[#fffeff] dark:text-[#0a0a0a];
 }
 
@@ -841,8 +841,8 @@ const pricingPlans = [
 .cta-secondary {
     @apply px-[15px] py-[12px];
     @apply border border-solid;
-    @apply border-[#1a75da] dark:border-[#0179ff];
-    @apply text-[#1a75da] dark:text-[#0179ff];
+    @apply border-[#ee5d1f] dark:border-[#ee5d1f];
+    @apply text-[#ee5d1f] dark:text-[#ee5d1f];
 }
 
 .cta-secondary:hover {
@@ -907,13 +907,13 @@ img.dark-only {
 
 .how-it-works-title {
     @apply font-bold uppercase;
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     @apply text-[36px] leading-[40px];
     @apply m-0;
 }
 
 .how-it-works-subtitle {
-    @apply text-[#115190] dark:text-[#82b8ed];
+    @apply text-[#8e3510] dark:text-[#ffb37d];
     @apply text-base leading-4;
     @apply m-0;
     @apply max-w-[587px];
@@ -941,7 +941,7 @@ img.dark-only {
 }
 
 .flow-title {
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     @apply text-xs leading-3;
     @apply font-normal;
 }
@@ -975,21 +975,21 @@ img.dark-only {
 
 .flow-arrow {
     @apply flex-1;
-    @apply text-[#1a75da] dark:text-[#282727];
+    @apply text-[#ee5d1f] dark:text-[#282727];
     @apply flex items-center;
     @apply relative;
     @apply mx-2;
 }
 
 .flow-arrow-char {
-    @apply text-[#1a75da] dark:text-[#282727];
+    @apply text-[#ee5d1f] dark:text-[#282727];
     @apply text-xs;
     @apply absolute right-[-4px] top-[-4px];
     @apply leading-none;
 }
 
 .flow-label {
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     @apply text-xs leading-4;
 }
 
@@ -1006,7 +1006,7 @@ img.dark-only {
 }
 
 .instruction-number {
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     @apply text-sm leading-4;
     @apply w-5 h-5;
     @apply flex items-center justify-center;
@@ -1045,7 +1045,7 @@ img.dark-only {
 }
 
 .feature-card-title {
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     @apply text-base leading-4;
     @apply font-medium uppercase;
     @apply m-0;
@@ -1128,7 +1128,7 @@ img.dark-only {
 }
 
 .feature-set-bullet {
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     @apply text-base;
     @apply w-5 h-5;
     @apply shrink-0;
@@ -1186,7 +1186,7 @@ img.dark-only {
 .verifiable-privacy-card-title {
     @apply m-0;
     @apply text-base leading-4 font-medium uppercase;
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
 }
 
 .verifiable-privacy-card-text {
@@ -1200,7 +1200,7 @@ img.dark-only {
     @apply inline-block;
     @apply pt-2;
     @apply text-sm leading-4 font-medium;
-    @apply text-[#1a75da] dark:text-[#0179ff];
+    @apply text-[#ee5d1f] dark:text-[#ee5d1f];
     @apply no-underline;
 }
 
@@ -1249,7 +1249,7 @@ img.dark-only {
 .comp-services-subtitle {
     @apply m-0;
     @apply text-base leading-[21px];
-    @apply text-[#115190] dark:text-[#82b8ed];
+    @apply text-[#8e3510] dark:text-[#ffb37d];
     @apply max-w-[784px];
 }
 
@@ -1262,7 +1262,7 @@ img.dark-only {
 .comp-services-panel-head {
     @apply px-5 md:px-6 py-3;
     @apply text-xs leading-3;
-    @apply text-[#115190] dark:text-[#449cf8];
+    @apply text-[#8e3510] dark:text-[#f76c1d];
     @apply border-b border-dashed;
     @apply border-[#dbdfe5] dark:border-[#282727];
 }
@@ -1339,7 +1339,7 @@ img.dark-only {
 .comp-arch-core-text {
     @apply m-0;
     @apply uppercase font-bold text-center;
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     @apply text-sm leading-4;
 }
 
@@ -1432,12 +1432,12 @@ img.dark-only {
 .comp-services-footnote-text {
     @apply m-0;
     @apply text-sm leading-5;
-    @apply text-[#115190] dark:text-[#82b8ed];
+    @apply text-[#8e3510] dark:text-[#ffb37d];
 }
 
 .comp-services-link {
     @apply text-sm leading-5 font-medium;
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     @apply underline;
     @apply mx-1;
 }
@@ -1533,12 +1533,12 @@ img.dark-only {
 
 .get-access-plan {
     @apply text-sm leading-[14px];
-    @apply text-[#115190] dark:text-[#82b8ed];
+    @apply text-[#8e3510] dark:text-[#ffb37d];
 }
 
 .get-access-price {
     @apply m-0;
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     @apply leading-none;
 }
 
@@ -1555,8 +1555,8 @@ img.dark-only {
 .get-access-signup {
     @apply h-9;
     @apply border border-solid;
-    @apply border-[#1a75da] dark:border-[#0179ff];
-    @apply text-[#1a75da] dark:text-[#0179ff];
+    @apply border-[#ee5d1f] dark:border-[#ee5d1f];
+    @apply text-[#ee5d1f] dark:text-[#ee5d1f];
     @apply pl-3 pr-4;
     @apply text-sm leading-4 font-medium;
     @apply flex items-center justify-center;
@@ -1583,7 +1583,7 @@ img.dark-only {
 
 .get-access-feature-bullet {
     @apply text-[16px] leading-5;
-    @apply text-[#1a75da] dark:text-[#449cf8];
+    @apply text-[#ee5d1f] dark:text-[#f76c1d];
     @apply w-5 h-5;
     @apply shrink-0;
     @apply flex items-center justify-center;
@@ -1626,7 +1626,7 @@ img.dark-only {
 
 .landing-footer-strip-text {
     @apply text-sm leading-[14px];
-    @apply text-[#285e93];
+    @apply text-[#8e3510];
     @apply whitespace-nowrap;
 }
 

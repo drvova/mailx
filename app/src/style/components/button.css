@@ -3,22 +3,69 @@
         @apply text-accent hover:text-accent-alt text-sm focus:outline-none disabled:opacity-50 disabled:pointer-events-none py-2;
 
         &.cta {
-            @apply sm:text-base text-sm text-white bg-accent hover:bg-accent-alt py-2 px-3 inline-flex items-center gap-x-2 rounded;
+            @apply sm:text-base text-sm py-2 px-3 inline-flex items-center gap-x-2 font-semibold;
+            color: var(--accent-text-strong);
+            text-shadow: var(--accent-text-glow);
+            border: 1px solid var(--accent);
+            border-radius: var(--radius);
+            background: var(--accent-grad);
+            box-shadow: var(--raised-shadow);
+            transition: box-shadow 200ms var(--ease-smooth), background 200ms var(--ease-smooth),
+                border-color 200ms var(--ease-smooth), color 200ms var(--ease-smooth),
+                transform 100ms var(--ease-smooth);
+
+            &:hover {
+                background: var(--accent-grad-hover);
+                box-shadow: var(--raised-shadow), var(--accent-glow);
+            }
+
+            &:active {
+                transform: scale(var(--press-scale));
+            }
 
             &.delete {
-                @apply text-white hover:text-white bg-error hover:bg-error-alt;
+                @apply text-error hover:text-error;
+                text-shadow: none;
+                border-color: var(--danger);
+                background: transparent;
+                box-shadow: none;
+            }
+
+            &.delete:hover {
+                background: oklch(0.673 0.215 25.0 / 0.12);
+                box-shadow: none;
             }
 
             &.cancel {
-                @apply text-primary bg-quaternary hover:bg-quaternary-alt;
+                @apply text-primary;
+                text-shadow: none;
+                border-color: var(--sk-border);
+                background: var(--shell-bg);
+            }
+
+            &.cancel:hover {
+                background: var(--shell-bg);
+                box-shadow: var(--raised-shadow), var(--accent-glow);
             }
 
             &.plain {
-                @apply bg-tertiary hover:bg-secondary text-secondary hover:text-secondary;
+                @apply text-secondary hover:text-primary;
+                text-shadow: none;
+                border-color: var(--sk-border);
+                background: transparent;
+                box-shadow: none;
+            }
+
+            &.plain:hover {
+                background: var(--inset-bg);
+                box-shadow: var(--inset-shadow);
             }
 
             &.success {
                 @apply bg-success text-white;
+                text-shadow: none;
+                border-color: transparent;
+                background-image: none;
             }
 
             &.sm {

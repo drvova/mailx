@@ -1,4 +1,5 @@
 @import "fonts/fonts.css";
+@import "components/tokens.css";
 @import "components/color.css";
 @import "components/page.css";
 @import "components/button.css";
@@ -18,6 +19,7 @@
 
 @layer base {
     html {
-        font-family: 'Roboto Mono', monospace;
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
     }
 }

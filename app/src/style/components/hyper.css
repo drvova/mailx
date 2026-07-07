@@ -2,6 +2,26 @@
    Scoped under .hyper so the rest of the app keeps its own styling. */
 
 .hyper {
+    /* Chrome tokens shared with the app theme (tokens.css) */
+    --hy-accent: var(--accent);
+    --hy-accent-text-strong: var(--accent-text-strong);
+    --hy-accent-text-glow: var(--accent-text-glow);
+    --hy-danger: var(--danger);
+    --hy-amber: var(--amber);
+    --hy-radius: var(--radius);
+    --hy-radius-sm: var(--radius-sm);
+    --hy-font-sans: var(--font-sans);
+    --hy-font-mono: var(--font-mono);
+    --hy-shell-bg: var(--shell-bg);
+    --hy-inset-bg: var(--inset-bg);
+    --hy-sk-border: var(--sk-border);
+    --hy-raised-shadow: var(--raised-shadow);
+    --hy-inset-shadow: var(--inset-shadow);
+    --hy-accent-glow: var(--accent-glow);
+    --hy-ease: var(--ease-smooth);
+    --hy-press-scale: var(--press-scale);
+
+    /* Surface tokens, dark reference values */
     --hy-bg: oklch(0.168 0 0);
     --hy-surface: oklch(0.213 0 0);
     --hy-border: oklch(1 0 0 / 0.06);
@@ -9,37 +29,24 @@
     --hy-text: oklch(0.931 0 0);
     --hy-muted: oklch(0.583 0 0);
     --hy-dim: oklch(0.485 0 0);
-    --hy-accent: oklch(0.659 0.192 40.1);
     --hy-accent-text: oklch(0.827 0.113 55.9);
-    --hy-accent-text-strong: oklch(0.969 0 0);
-    --hy-accent-text-glow: 0 0 10px oklch(0.692 0.189 44.5 / 0.34);
-    --hy-accent-muted: oklch(0.659 0.192 40.1 / 0.1);
-    --hy-danger: oklch(0.673 0.215 25.0);
-    --hy-amber: oklch(0.666 0.157 58.3);
-    --hy-radius: 6px;
-    --hy-radius-sm: 4px;
-    --hy-font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
-    --hy-font-mono: "JetBrains Mono", "Roboto Mono", "Consolas", monospace;
-    --hy-shell-bg: linear-gradient(180deg, oklch(0.244 0 0) 0%, oklch(0.213 0 0) 100%);
-    --hy-inset-bg: linear-gradient(180deg, oklch(0.178 0 0) 0%, oklch(0.209 0 0) 100%);
-    --hy-sk-border: oklch(1 0 0 / 0.08);
-    --hy-raised-shadow:
-        0 1px 0.5px oklch(1 0 0 / 0.1) inset,
-        0 1px 1px oklch(1 0 0 / 0.21) inset,
-        0 10px 10px -9px oklch(0 0 0 / 0.44),
-        0 20px 20px -14px oklch(0 0 0 / 0.38), 0 0 6px oklch(0 0 0 / 0.38);
-    --hy-inset-shadow:
-        0 0.5px 0 oklch(1 0 0 / 0.31), 0 2px 6px oklch(0 0 0 / 0.56) inset;
-    --hy-accent-glow:
-        0 0 0 1px oklch(0.659 0.192 40.1 / 0.18), 0 0 16px oklch(0.659 0.192 40.1 / 0.16);
-    --hy-ease: cubic-bezier(0.22, 1, 0.36, 1);
-    --hy-press-scale: 0.96;
 
     background: var(--hy-bg);
     color: var(--hy-text);
     font-family: var(--hy-font-sans);
     border-radius: var(--hy-radius);
     -webkit-font-smoothing: antialiased;
+}
+
+html:not(.dark) .hyper {
+    --hy-bg: oklch(0.985 0 0);
+    --hy-surface: oklch(1 0 0);
+    --hy-border: oklch(0 0 0 / 0.07);
+    --hy-border-strong: oklch(0 0 0 / 0.14);
+    --hy-text: oklch(0.2 0 0);
+    --hy-muted: oklch(0.45 0 0);
+    --hy-dim: oklch(0.55 0 0);
+    --hy-accent-text: oklch(0.55 0.17 38);
 }
 
 .hyper *:focus-visible {
