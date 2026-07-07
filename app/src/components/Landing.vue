@@ -26,34 +26,6 @@ const heroFeatures = [
     'recipients, and catch-all aliases.',
 ]
 
-// --- How It Works -----------------------------------------------------------
-const receiveInstructions = [
-    'Create an email alias',
-    'Use alias instead of your real email address',
-    'Receive forwarded emails in your regular inbox',
-]
-
-const sendInstructions = [
-    'Create a send address for your recipient',
-    'Send or reply from your regular inbox',
-    'Recipient gets your email from the alias',
-]
-
-// --- Feature Set ------------------------------------------------------------
-const aliasFeatureItems = [
-    'Create aliases via FreeTheMail browser extension',
-    'Use preset domains or your own for aliases',
-    'Send and reply from any alias',
-    'Generate aliases on-the-fly with wildcards',
-]
-
-const statsFeatureItems = [
-    'Route forwards to one or more recipients',
-    'Encrypt forwarded messages with your PGP key',
-    'Enable 2FA to prevent unauthorized access',
-    'Review forwarding stats and delivery logs',
-]
-
 // --- Constraints ------------------------------------------------------------
 const constraints = [
     "FreeTheMail is not an email provider, it can't replace your primary email",
@@ -149,121 +121,8 @@ const pricingPlans = [
             <div class="section-container">
                 <!-- Title and Subtitle -->
                 <div class="section-header">
-                    <h2 class="how-it-works-title">HOW_IT_WORKS</h2>
+                    <h2 class="how-it-works-title">Why aliases?</h2>
                     <p class="how-it-works-subtitle">FreeTheMail generates unique aliases for each service and sender.</p>
-                </div>
-
-                <!-- Flow Diagrams -->
-                <div class="flow-diagrams">
-                    <!-- Receive Flow -->
-                    <div class="flow-card">
-                        <div class="flow-header">
-                            <span class="flow-title"># RECEIVE_FLOW</span>
-                        </div>
-                        <div class="flow-diagram">
-                            <div class="flow-steps">
-                                <!-- Step 1: Sender -->
-                                <div class="flow-step">
-                                    <div class="flow-icon-row">
-                                        <img src="../assets/icons/flow-icon-user-light.svg" class="flow-icon light-only" />
-                                        <img src="../assets/icons/flow-icon-user-dark.svg" class="flow-icon dark-only" />
-                                        <div class="flow-arrow">
-                                            <svg width="100%" height="6" viewBox="0 0 100 6" preserveAspectRatio="none">
-                                                <line x1="0" y1="3" x2="100%" y2="3" stroke="currentColor" stroke-width="1" stroke-dasharray="4 2" />
-                                            </svg>
-                                            <span class="flow-arrow-char">&gt;</span>
-                                        </div>
-                                    </div>
-                                    <span class="flow-label">Sender</span>
-                                </div>
-
-                                <!-- Step 2: FreeTheMail -->
-                                <div class="flow-step">
-                                    <div class="flow-icon-row">
-                                        <img src="../assets/icons/flow-icon-server-light.svg" class="flow-icon light-only" />
-                                        <img src="../assets/icons/flow-icon-server-dark.svg" class="flow-icon dark-only" />
-                                        <div class="flow-arrow">
-                                            <svg width="100%" height="6" viewBox="0 0 100 6" preserveAspectRatio="none">
-                                                <line x1="0" y1="3" x2="100%" y2="3" stroke="currentColor" stroke-width="1" stroke-dasharray="4 2" />
-                                            </svg>
-                                            <span class="flow-arrow-char">&gt;</span>
-                                        </div>
-                                    </div>
-                                    <span class="flow-label">FreeTheMail Alias</span>
-                                </div>
-
-                                <!-- Step 3: Inbox -->
-                                <div class="flow-step flow-step-last">
-                                    <div class="flow-icon-row">
-                                        <img src="../assets/icons/flow-icon-mail-light.svg" class="flow-icon light-only" />
-                                        <img src="../assets/icons/flow-icon-mail-dark.svg" class="flow-icon dark-only" />
-                                    </div>
-                                    <span class="flow-label">Your Inbox</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flow-instructions">
-                            <div v-for="(text, i) in receiveInstructions" :key="i" class="instruction-item">
-                                <span class="instruction-number">#{{ i + 1 }}</span>
-                                <span class="instruction-text">{{ text }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Send/Reply Flow -->
-                    <div class="flow-card">
-                        <div class="flow-header">
-                            <span class="flow-title"># SEND/REPLY_FLOW</span>
-                        </div>
-                        <div class="flow-diagram">
-                            <div class="flow-steps">
-                                <!-- Step 1: Outbox -->
-                                <div class="flow-step">
-                                    <div class="flow-icon-row">
-                                        <img src="../assets/icons/flow-icon-mail-light.svg" class="flow-icon light-only" />
-                                        <img src="../assets/icons/flow-icon-mail-dark.svg" class="flow-icon dark-only" />
-                                        <div class="flow-arrow">
-                                            <svg width="100%" height="6" viewBox="0 0 100 6" preserveAspectRatio="none">
-                                                <line x1="0" y1="3" x2="100%" y2="3" stroke="currentColor" stroke-width="1" stroke-dasharray="4 2" />
-                                            </svg>
-                                            <span class="flow-arrow-char">&gt;</span>
-                                        </div>
-                                    </div>
-                                    <span class="flow-label">Your Inbox</span>
-                                </div>
-
-                                <!-- Step 2: FreeTheMail -->
-                                <div class="flow-step">
-                                    <div class="flow-icon-row">
-                                        <img src="../assets/icons/flow-icon-server-light.svg" class="flow-icon light-only" />
-                                        <img src="../assets/icons/flow-icon-server-dark.svg" class="flow-icon dark-only" />
-                                        <div class="flow-arrow">
-                                            <svg width="100%" height="6" viewBox="0 0 100 6" preserveAspectRatio="none">
-                                                <line x1="0" y1="3" x2="100%" y2="3" stroke="currentColor" stroke-width="1" stroke-dasharray="4 2" />
-                                            </svg>
-                                            <span class="flow-arrow-char">&gt;</span>
-                                        </div>
-                                    </div>
-                                    <span class="flow-label">FreeTheMail</span>
-                                </div>
-
-                                <!-- Step 3: Recipient -->
-                                <div class="flow-step flow-step-last">
-                                    <div class="flow-icon-row">
-                                        <img src="../assets/icons/flow-icon-user-light.svg" class="flow-icon light-only" />
-                                        <img src="../assets/icons/flow-icon-user-dark.svg" class="flow-icon dark-only" />
-                                    </div>
-                                    <span class="flow-label">Recipient</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flow-instructions">
-                            <div v-for="(text, i) in sendInstructions" :key="i" class="instruction-item">
-                                <span class="instruction-number">#{{ i + 1 }}</span>
-                                <span class="instruction-text">{{ text }}</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Feature Cards -->
@@ -272,7 +131,7 @@ const pricingPlans = [
                         <div class="feature-card-header">
                             <img src="../assets/icons/feature-icon-lock-light.svg" class="feature-icon light-only" />
                             <img src="../assets/icons/feature-icon-lock-dark.svg" class="feature-icon dark-only" />
-                            <h3 class="feature-card-title">BLOCK_SPAM_AND_PHISHING</h3>
+                            <h3 class="feature-card-title">Block spam and phishing</h3>
                         </div>
                         <p class="feature-card-text">Disable or delete any alias instantly. Even if one gets compromised, your real email remains unexposed.</p>
                     </div>
@@ -281,7 +140,7 @@ const pricingPlans = [
                         <div class="feature-card-header">
                             <img src="../assets/icons/feature-icon-data-leak-light.svg" class="feature-icon light-only" />
                             <img src="../assets/icons/feature-icon-data-leak-dark.svg" class="feature-icon dark-only" />
-                            <h3 class="feature-card-title">DETECT_DATA_LEAKS</h3>
+                            <h3 class="feature-card-title">Detect data leaks</h3>
                         </div>
                         <p class="feature-card-text">One alias per service means you'll know exactly who shared your email without your consent.</p>
                     </div>
@@ -290,73 +149,9 @@ const pricingPlans = [
                         <div class="feature-card-header">
                             <img src="../assets/icons/feature-icon-users-light.svg" class="feature-icon light-only" />
                             <img src="../assets/icons/feature-icon-users-dark.svg" class="feature-icon dark-only" />
-                            <h3 class="feature-card-title">PREVENT_IDENTITY_MAPPING</h3>
+                            <h3 class="feature-card-title">Prevent identity mapping</h3>
                         </div>
                         <p class="feature-card-text">Each service gets a unique alias. Advertisers and data brokers can't connect your accounts across platforms.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 4: Feature Set -->
-        <section class="feature-set-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <div class="section-command">$ mailx --list-features</div>
-                    <h2 class="section-title">FEATURE_SET</h2>
-                </div>
-
-                <div class="feature-set-grid">
-                    <div class="feature-set-card">
-                        <div class="feature-set-preview">
-                            <div class="feature-set-preview-bg">
-                                <div class="feature-set-preview-frame">
-                                    <img
-                                        src="../assets/feature-set-alias-light.png"
-                                        alt="New alias feature preview"
-                                        class="feature-set-image light-only"
-                                    />
-                                    <img
-                                        src="../assets/feature-set-alias-dark.png"
-                                        alt="New alias feature preview"
-                                        class="feature-set-image dark-only"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="feature-set-list">
-                            <div v-for="text in aliasFeatureItems" :key="text" class="feature-set-item">
-                                <span class="feature-set-bullet">&gt;</span>
-                                <p class="feature-set-text">{{ text }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feature-set-card">
-                        <div class="feature-set-preview">
-                            <div class="feature-set-preview-bg">
-                                <div class="feature-set-preview-frame">
-                                    <img
-                                        src="../assets/feature-set-stats-light.png"
-                                        alt="Forwarding stats feature preview"
-                                        class="feature-set-image light-only"
-                                    />
-                                    <img
-                                        src="../assets/feature-set-stats-dark.png"
-                                        alt="Forwarding stats feature preview"
-                                        class="feature-set-image dark-only"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="feature-set-list">
-                            <div v-for="text in statsFeatureItems" :key="text" class="feature-set-item">
-                                <span class="feature-set-bullet">&gt;</span>
-                                <p class="feature-set-text">{{ text }}</p>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -366,9 +161,9 @@ const pricingPlans = [
         <section class="verifiable-privacy-section">
             <div class="section-container">
                 <div class="section-header">
-                    <div class="section-command">/etc/mailx/trust.cfg</div>
+                    <div class="section-command">/etc/freethemail/trust.cfg</div>
                     <h2 class="section-title">
-                        VERIFIABLE_<br class="verifiable-privacy-break">PRIVACY
+                        Verifiable privacy
                     </h2>
                 </div>
 
@@ -424,131 +219,12 @@ const pricingPlans = [
             </div>
         </section>
 
-        <!-- Section 6: Compartmentalized Services -->
-        <section class="comp-services-section">
-            <div class="comp-services-container">
-                <div class="section-header">
-                    <div class="section-command">
-                        $ cat /etc/ivpn/architecture.txt
-                    </div>
-                    <h2 class="section-title">
-                        UNLINKED_<br class="comp-services-break">ACCESS
-                    </h2>
-                    <p class="comp-services-subtitle">Additional services in the IVPN privacy stack do not receive or store your IVPN account ID. There is no shared identity layer connecting your accounts across services.</p>
-                </div>
-
-                <div class="comp-services-panel">
-                    <div class="comp-services-panel-head"># Service Architecture</div>
-
-                    <div class="comp-services-architecture">
-                        <div class="comp-arch-desktop">
-                            <div class="comp-arch-left">
-                                <img src="../assets/icons/comp-mailx-light.svg" alt="FreeTheMail" class="light-only comp-logo-mailx" />
-                                <img src="../assets/icons/comp-mailx-dark.svg" alt="FreeTheMail" class="dark-only comp-logo-mailx" />
-                                <img src="../assets/icons/comp-arrow-left-light.svg" class="light-only comp-arrow-side comp-arrow-side-left" />
-                                <img src="../assets/icons/comp-arrow-left-dark.svg" class="dark-only comp-arrow-side comp-arrow-side-left" />
-                            </div>
-
-                            <div class="comp-arch-center">
-                                <div class="comp-arch-center-top">
-                                    <img src="../assets/icons/comp-ivpn-desktop.svg" alt="IVPN" class="comp-logo-ivpn" />
-                                    <img src="../assets/icons/comp-arrow-vertical-light.svg" class="light-only comp-arrow-vertical-down" />
-                                    <img src="../assets/icons/comp-arrow-vertical-dark.svg" class="dark-only comp-arrow-vertical-down" />
-                                </div>
-
-                                <div class="comp-arch-core">
-                                    <img src="../assets/icons/comp-db-light.svg" class="light-only comp-logo-db" />
-                                    <img src="../assets/icons/comp-db-dark.svg" class="dark-only comp-logo-db" />
-                                    <p class="comp-arch-core-text">#UNLINKED ACCESS</p>
-                                </div>
-
-                                <div class="comp-arch-center-bottom">
-                                    <img src="../assets/icons/comp-arrow-vertical-light.svg" class="light-only comp-arrow-vertical-down" />
-                                    <img src="../assets/icons/comp-arrow-vertical-dark.svg" class="dark-only comp-arrow-vertical-down" />
-                                    <img src="../assets/icons/comp-portmark-light.svg" alt="Portmaster" class="light-only comp-logo-port" />
-                                    <img src="../assets/icons/comp-portmark-dark.svg" alt="Portmaster" class="dark-only comp-logo-port" />
-                                </div>
-                            </div>
-
-                            <div class="comp-arch-right">
-                                <img src="../assets/icons/comp-arrow-right-light.svg" class="light-only comp-arrow-side comp-arrow-side-right" />
-                                <img src="../assets/icons/comp-arrow-right-dark.svg" class="dark-only comp-arrow-side comp-arrow-side-right" />
-                                <img src="../assets/icons/comp-moddns-light.svg" alt="modDNS" class="light-only comp-logo-moddns" />
-                                <img src="../assets/icons/comp-moddns-dark.svg" alt="modDNS" class="dark-only comp-logo-moddns" />
-                            </div>
-                        </div>
-
-                        <div class="comp-arch-mobile">
-                            <div class="comp-arch-mobile-top">
-                                <img src="../assets/icons/comp-ivpn-mobile.svg" alt="IVPN" class="comp-logo-ivpn-mobile" />
-                                <img src="../assets/icons/comp-arrow-vertical-light.svg" class="light-only comp-arrow-vertical-mobile-down" />
-                                <img src="../assets/icons/comp-arrow-vertical-dark.svg" class="dark-only comp-arrow-vertical-mobile-down" />
-                                <img src="../assets/icons/comp-db-light.svg" class="light-only comp-logo-db" />
-                                <img src="../assets/icons/comp-db-dark.svg" class="dark-only comp-logo-db" />
-                                <p class="comp-arch-core-text comp-arch-core-text-mobile">#UNLINKED ACCESS</p>
-                            </div>
-
-                            <div class="comp-arch-mobile-bottom">
-                                <div></div>
-                                <div>
-                                    <img src="../assets/icons/comp-mobile-left-light.svg" alt="FreeTheMail" class="light-only comp-mobile-side" />
-                                    <img src="../assets/icons/comp-mobile-left-dark.svg" alt="FreeTheMail" class="dark-only comp-mobile-side" />
-                                </div>
-                                <div class="comp-arch-mobile-center">
-                                    <img src="../assets/icons/comp-mobile-vertical-light.svg" class="light-only comp-arrow-mobile-center-down" />
-                                    <img src="../assets/icons/comp-mobile-vertical-dark.svg" class="dark-only comp-arrow-mobile-center-down" />
-                                    <img src="../assets/icons/comp-portmark-light.svg" alt="Portmaster" class="light-only comp-logo-port-mobile" />
-                                    <img src="../assets/icons/comp-portmark-dark.svg" alt="Portmaster" class="dark-only comp-logo-port-mobile" />
-                                </div>
-                                <div>
-                                    <img src="../assets/icons/comp-mobile-right-light.svg" alt="modDNS" class="light-only comp-mobile-side" />
-                                    <img src="../assets/icons/comp-mobile-right-dark.svg" alt="modDNS" class="dark-only comp-mobile-side" />
-                                </div>
-                                <div></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="comp-services-cards">
-                        <div class="comp-services-card">
-                            <img src="../assets/icons/comp-signin-light.svg" class="comp-services-card-icon light-only" />
-                            <img src="../assets/icons/comp-signin-dark.svg" class="comp-services-card-icon dark-only" />
-                            <p class="comp-services-card-text">Sign up to FreeTheMail without sharing your IVPN account ID</p>
-                        </div>
-
-                        <div class="comp-services-card">
-                            <img src="../assets/icons/comp-repeat-light.svg" class="comp-services-card-icon light-only" />
-                            <img src="../assets/icons/comp-repeat-dark.svg" class="comp-services-card-icon dark-only" />
-                            <p class="comp-services-card-text">Subscription sync uses token hashes, not account identifiers</p>
-                        </div>
-
-                        <div class="comp-services-card">
-                            <img src="../assets/icons/comp-cross-light.svg" class="comp-services-card-icon light-only" />
-                            <img src="../assets/icons/comp-cross-dark.svg" class="comp-services-card-icon dark-only" />
-                            <p class="comp-services-card-text">Cross-service correlation reduced, not eliminated — see docs</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="comp-services-footnote">
-                    <img src="../assets/icons/comp-bulb-light.svg" class="comp-services-footnote-icon light-only" />
-                    <img src="../assets/icons/comp-bulb-dark.svg" class="comp-services-footnote-icon dark-only" />
-                    <p class="comp-services-footnote-text">
-                        <!-- Read more in our
-                        <a href="https://www.ivpn.net/blog/" target="_blank" class="comp-services-link">./BLOG</a>
-                        and review the -->
-                        Read more in our <a href="https://www.ivpn.net/unlinked-access/" target="_blank" class="comp-services-link">./UNLINKED-ACCESS</a> explainer and review the <a href="https://github.com/ivpn/unlinked-access" target="_blank" class="comp-services-link">./SOURCE</a> implementation.
-                    </p>
-                </div>
-            </div>
-        </section>
-
         <!-- Section 7: Constraints -->
         <section class="constraints-section">
             <div class="section-container">
                 <div class="section-header">
-                    <div class="constraints-command">/etc/mailx/limitations.txt</div>
-                    <h2 class="constraints-title">CONSTRAINTS</h2>
+                    <div class="constraints-command">/etc/freethemail/limitations.txt</div>
+                    <h2 class="constraints-title">Constraints</h2>
                 </div>
 
                 <div class="constraints-list">
@@ -564,8 +240,8 @@ const pricingPlans = [
         <section class="get-access-section">
             <div class="section-container">
                 <div class="section-header">
-                    <div class="section-command">mailx auth --init</div>
-                    <h2 class="section-title">GET_ACCESS</h2>
+                    <div class="section-command">freethemail auth --init</div>
+                    <h2 class="section-title">Get access</h2>
                 </div>
 
                 <div class="get-access-cards">
@@ -633,9 +309,7 @@ const pricingPlans = [
 <style scoped>
 /* =============================================================================
    Shared section layout helpers
-   Used across: How It Works, Feature Set, Verifiable Privacy,
-   Constraints, Get Access.
-   Comp Services uses .comp-services-container (different tablet gap).
+   Used across: How It Works, Verifiable Privacy, Constraints, Get Access.
    ========================================================================== */
 
 .section-container {
@@ -926,86 +600,7 @@ img.dark-only {
 }
 
 /* Flow Diagrams */
-.flow-diagrams {
-    @apply flex flex-col lg:flex-row gap-0;
-    @apply border border-solid;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-}
 
-.flow-card {
-    @apply flex-1;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-    @apply lg:border-r lg:last:border-r-0;
-    @apply border-b lg:border-b-0 last:border-b-0;
-}
-
-.flow-header {
-    @apply bg-[#f3f4f5] dark:bg-[#0a0a0a];
-    @apply border-b border-dashed;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-    @apply px-5 py-3;
-}
-
-.flow-title {
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
-    @apply text-xs leading-3;
-    @apply font-normal;
-}
-
-.flow-diagram {
-    @apply bg-[#fafbfc] dark:bg-[#0f0f11];
-    @apply p-5;
-}
-
-.flow-steps {
-    @apply flex items-center gap-1;
-}
-
-.flow-step {
-    @apply flex-1;
-    @apply flex flex-col gap-[10px];
-}
-
-.flow-step-last {
-    @apply flex-none;
-}
-
-.flow-icon-row {
-    @apply flex items-center gap-0;
-}
-
-.flow-icon {
-    @apply w-5 h-5;
-    @apply shrink-0;
-}
-
-.flow-arrow {
-    @apply flex-1;
-    @apply text-[#ee5d1f] dark:text-[#282727];
-    @apply flex items-center;
-    @apply relative;
-    @apply mx-2;
-}
-
-.flow-arrow-char {
-    @apply text-[#ee5d1f] dark:text-[#282727];
-    @apply text-xs;
-    @apply absolute right-[-4px] top-[-4px];
-    @apply leading-none;
-}
-
-.flow-label {
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
-    @apply text-xs leading-4;
-}
-
-.flow-instructions {
-    @apply bg-[#fafbfc] dark:bg-[#0f0f11];
-    @apply border-t border-solid;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-    @apply p-5;
-    @apply flex flex-col gap-4;
-}
 
 .instruction-item {
     @apply flex gap-2 items-start;
@@ -1064,88 +659,9 @@ img.dark-only {
 }
 
 /* Section 4: Feature Set */
-.feature-set-section {
-    @apply w-full;
-    @apply bg-[#f3f4f5] dark:bg-[rgba(255,255,255,0.02)];
-    @apply py-6 md:py-[52px] lg:py-[72px];
-    @apply border border-solid;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-}
 
 /* .section-container / .section-header / .section-command / .section-title cover this section */
 
-.feature-set-grid {
-    @apply w-full;
-    @apply flex flex-col md:flex-row;
-    @apply pb-px md:pb-0;
-}
-
-.feature-set-card {
-    @apply flex-1;
-    @apply border border-solid;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-    @apply -mb-px md:mb-0 md:-mr-px;
-    @apply overflow-hidden;
-    @apply flex flex-col;
-}
-
-.feature-set-preview {
-    @apply bg-white dark:bg-[#0a0a0a];
-    @apply border-b;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-    @apply px-4 pt-4 md:px-6 md:pt-6;
-    @apply flex items-end justify-center;
-    @apply relative;
-}
-
-.feature-set-preview::after {
-    content: none;
-}
-
-.feature-set-preview-bg {
-    @apply bg-[#f3f4f5] dark:bg-[#141212];
-    @apply p-[6px];
-    @apply w-full max-w-[450px];
-}
-
-.feature-set-preview-frame {
-    @apply bg-white dark:bg-[#191919];
-    @apply border border-solid;
-    @apply border-[#dbdfe5] dark:border-[#262626];
-    @apply p-[2px];
-    @apply overflow-hidden;
-}
-
-.feature-set-image {
-    @apply w-full h-auto;
-    @apply block;
-}
-
-.feature-set-list {
-    /* @apply border border-solid;
-    @apply border-[#dbdfe5] dark:border-[#282727]; */
-    @apply p-4 md:p-6;
-    @apply flex flex-col;
-    @apply gap-3 md:gap-4;
-}
-
-.feature-set-item {
-    @apply flex gap-2 items-start;
-}
-
-.feature-set-bullet {
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
-    @apply text-base;
-    @apply w-5 h-5;
-    @apply shrink-0;
-    @apply flex items-center justify-center;
-}
-
-.feature-set-text {
-    @apply m-0;
-    @apply text-sm leading-5;
-    @apply text-black dark:text-[#fffeff];
-}
 
 /* Section 5: Verifiable Privacy */
 .verifiable-privacy-section {
@@ -1230,223 +746,6 @@ img.dark-only {
     @apply order-4;
 }
 
-/* Section 6: Compartmentalized Services */
-.comp-services-section {
-    @apply w-full;
-    @apply bg-[#f3f4f5] dark:bg-[rgba(255,255,255,0.02)];
-    @apply py-6 md:py-[52px] lg:py-[72px];
-    @apply md:border md:border-solid;
-    @apply md:border-[#dbdfe5] md:dark:border-[#282727];
-}
-
-.comp-services-container {
-    @apply w-full;
-    @apply max-w-[1060px] mx-auto;
-    @apply px-4 md:px-8;
-    @apply flex flex-col gap-8 md:gap-[42px] lg:gap-8;
-}
-
-/* .section-header / .section-command / .section-title cover this section */
-
-.comp-services-break {
-    @apply md:hidden;
-}
-
-.comp-services-subtitle {
-    @apply m-0;
-    @apply text-base leading-[21px];
-    @apply text-[#8e3510] dark:text-[#ffb37d];
-    @apply max-w-[784px];
-}
-
-.comp-services-panel {
-    @apply border border-solid;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-    @apply border-b-0 md:border-b lg:border-b;
-}
-
-.comp-services-panel-head {
-    @apply px-5 md:px-6 py-3;
-    @apply text-xs leading-3;
-    @apply text-[#8e3510] dark:text-[#f76c1d];
-    @apply border-b border-dashed;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-}
-
-.comp-services-architecture {
-    @apply border-b border-solid;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-    @apply bg-[#fffeff] dark:bg-[#0a0a0a];
-    @apply px-5 py-5 md:px-6 md:py-[42px];
-}
-
-.comp-arch-desktop {
-    @apply hidden md:flex;
-    @apply items-center justify-center;
-}
-
-.comp-arch-left,
-.comp-arch-right {
-    @apply flex items-center gap-3;
-    @apply pt-[18px];
-}
-
-.comp-arch-center {
-    @apply flex flex-col items-center;
-}
-
-.comp-arch-center-top,
-.comp-arch-center-bottom {
-    @apply flex flex-col items-center;
-    @apply gap-6;
-}
-
-.comp-logo-mailx {
-    @apply w-[88px] h-[19px];
-}
-
-.comp-logo-moddns {
-    @apply w-[92px] h-[18px];
-}
-
-.comp-logo-ivpn {
-    @apply w-[61px] h-[21px];
-}
-
-.comp-logo-port {
-    @apply w-[128px] h-[26px];
-}
-
-.comp-arrow-side {
-    @apply w-8 h-[6px];
-}
-
-.comp-arrow-side-left {
-    @apply rotate-0;
-}
-
-.comp-arrow-side-right {
-    @apply rotate-180;
-}
-
-.comp-arrow-vertical-down {
-    @apply w-8 h-[6px] rotate-[270deg];
-}
-
-.comp-arch-core {
-    @apply flex flex-col items-center;
-    @apply gap-3 py-7 px-3;
-}
-
-.comp-logo-db {
-    @apply w-7 h-7;
-}
-
-.comp-arch-core-text {
-    @apply m-0;
-    @apply uppercase font-bold text-center;
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
-    @apply text-sm leading-4;
-}
-
-.comp-arch-mobile {
-    @apply flex md:hidden;
-    @apply flex-col items-center;
-    @apply w-full;
-    @apply gap-4;
-}
-
-.comp-arch-mobile-top {
-    @apply flex flex-col items-center;
-    @apply gap-6;
-}
-
-.comp-logo-ivpn-mobile {
-    @apply w-[51px] h-[18px];
-}
-
-.comp-logo-port-mobile {
-    @apply w-[128px] h-[26px];
-}
-
-.comp-arrow-vertical-mobile {
-    @apply w-8 h-[6px] rotate-90;
-}
-
-.comp-arrow-vertical-mobile-down {
-    @apply w-8 h-[6px] rotate-[270deg];
-}
-
-.comp-arch-core-text-mobile {
-    @apply text-center;
-}
-
-.comp-arch-mobile-bottom {
-    @apply flex items-start justify-between;
-    @apply w-full;
-}
-
-.comp-mobile-side {
-    @apply w-[96px] h-[60px];
-}
-
-.comp-arch-mobile-center {
-    @apply flex flex-col items-center;
-    @apply gap-12;
-    @apply pt-8;
-}
-
-.comp-arrow-mobile-center-down {
-    @apply w-[72px] h-[6px] rotate-[270deg];
-}
-
-.comp-logo-port-mobile {
-    @apply w-[128px] h-[26px];
-}
-
-.comp-services-cards {
-    @apply flex flex-col md:flex-row;
-}
-
-.comp-services-card {
-    @apply flex-1;
-    @apply flex flex-col gap-4;
-    @apply px-4 py-5 md:p-6;
-    @apply border-[#dbdfe5] dark:border-[#282727];
-    @apply border-b md:border-b-0 md:border-r md:last:border-r-0;
-}
-
-.comp-services-card-icon {
-    @apply w-6 h-6;
-}
-
-.comp-services-card-text {
-    @apply m-0;
-    @apply text-sm leading-5;
-    @apply text-black dark:text-[#fffeff];
-}
-
-.comp-services-footnote {
-    @apply flex items-start md:items-center gap-2;
-}
-
-.comp-services-footnote-icon {
-    @apply w-4 h-4;
-    @apply mt-[2px] md:mt-0;
-}
-
-.comp-services-footnote-text {
-    @apply m-0;
-    @apply text-sm leading-5;
-    @apply text-[#8e3510] dark:text-[#ffb37d];
-}
-
-.comp-services-link {
-    @apply text-sm leading-5 font-medium;
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
-    @apply underline;
-    @apply mx-1;
-}
 
 /* Section 7: Constraints */
 .constraints-section {
@@ -1649,5 +948,14 @@ img.dark-only {
     @apply w-0 h-2;
     @apply border-l border-solid;
     @apply border-[#b6c1ce] dark:border-[#2d3d4d];
+}
+.landing-page .section-title,
+.landing-page .how-it-works-title,
+.landing-page .constraints-title {
+    @apply text-[#1c1c1c] dark:text-[#fffeff];
+    font-family: var(--font-serif);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-transform: none;
 }
 </style>
