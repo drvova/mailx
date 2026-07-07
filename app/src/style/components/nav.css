@@ -3,9 +3,16 @@
 
         a {
             @apply text-primary hover:text-primary py-4 font-medium text-sm w-full cursor-pointer px-6 flex flex-row items-center gap-x-2;
+            transition: background 150ms var(--ease-smooth), box-shadow 150ms var(--ease-smooth), color 150ms var(--ease-smooth);
+
+            &:hover {
+                background-image: var(--inset-bg);
+            }
 
             &.active {
                 @apply border-accent border-r-2 bg-tertiary;
+                background-image: var(--inset-bg);
+                box-shadow: var(--inset-shadow);
             }
         }
     }
@@ -18,9 +25,12 @@
 
         a {
             @apply p-0 text-primary hover:text-primary font-medium text-base cursor-pointer flex flex-row items-center justify-center rounded-md w-10 h-10;
+            transition: background 150ms var(--ease-smooth), box-shadow 150ms var(--ease-smooth);
 
             &.active {
                 @apply border-none bg-tertiary;
+                background-image: var(--inset-bg);
+                box-shadow: var(--inset-shadow);
 
                 i {
                     @apply icon-accent;

@@ -5,7 +5,10 @@
         thead {
 
             th {
-                @apply px-4 py-3 text-start text-sm font-normal text-tertiary;
+                @apply px-4 py-3 text-start font-medium text-tertiary uppercase;
+                font-family: var(--font-mono);
+                font-size: 0.68rem;
+                letter-spacing: 0.1em;
 
                 &:first-child {
                     @apply text-start px-0 pr-4;
@@ -22,6 +25,14 @@
         }
 
         tbody {
+
+            > tr {
+                transition: background-color 120ms var(--ease-smooth);
+            }
+
+            > tr:hover {
+                @apply bg-light-gray-2 dark:bg-dark-gray-2;
+            }
 
             td {
                 @apply px-4 py-4 whitespace-nowrap text-start text-sm text-primary;
