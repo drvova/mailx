@@ -73,7 +73,7 @@
         <hr>
 
         <h2>Contact Us</h2>
-        <p>If you have any questions about these Terms, please contact us at <a href="mailto:mailx@ivpn.net">mailx@ivpn.net</a>.</p>
+        <p>If you have any questions about these Terms, please contact us at <a href="mailto:support@freethemail.net">support@freethemail.net</a>.</p>
         <p>This document constitutes the entire Terms and Conditions for your use of the FreeTheMail email forwarding service operated by Privatus GmbH.</p>
         <p>Privatus GmbH<br>
         Baarerstrasse 82<br>

@@ -24,7 +24,7 @@
             <h2>Support</h2>
             <p class="mt-0">
                 Support:
-                <a href="mailto:mailx@ivpn.net">Email</a> /
+                <a href="mailto:support@freethemail.net">Email</a> /
                 <a href="/faq">FAQ</a>
             </p>
         </div>

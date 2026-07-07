@@ -100,7 +100,7 @@ function injectButton(input: HTMLInputElement) {
     backgroundSize: '16px',
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center',
-    backgroundColor: '#2c2c2c',
+    backgroundColor: 'oklch(0.293 0 0)',
     transition: 'transform 0.2s ease',
   })
 

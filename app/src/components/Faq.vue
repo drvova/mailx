@@ -37,7 +37,7 @@
 
         <h2>Account: What happens if my account expires?</h2>
         <p>Your FreeTheMail account enters limited access mode. Existing aliases continue to forward email as normal with no time limit. You cannot create new aliases, wildcard aliases, or recipients.</p>
-        <p>To restore full access, you need to add time to your IVPN account.</p>
+        <p>To restore full access, renew your subscription.</p>
         <p>You can delete your account at any time, including in limited access mode. Deleting your account permanently removes all aliases, recipients, and associated data.</p>
 
         <h2>Aliases: How do I delete an alias?</h2>

@@ -38,7 +38,7 @@ func dbConfigFromEnv() config.DBConfig {
 
 func runSendTemplateManaged(args []string) error {
 	fs := flag.NewFlagSet("send-template-managed", flag.ContinueOnError)
-	tmpl := fs.String("template", "", "Template filename (e.g. expiring_beta.tmpl)")
+	tmpl := fs.String("template", "", "Template filename (e.g. expiring_sub.tmpl)")
 	subject := fs.String("subject", "", "Email subject")
 
 	if err := fs.Parse(args); err != nil {
@@ -92,7 +92,7 @@ func runSendTemplateManaged(args []string) error {
 
 func runSendTemplate(args []string) error {
 	fs := flag.NewFlagSet("send-template", flag.ContinueOnError)
-	tmpl := fs.String("template", "", "Template filename (e.g. expiring_beta.tmpl)")
+	tmpl := fs.String("template", "", "Template filename (e.g. expiring_sub.tmpl)")
 	to := fs.String("to", "", "Comma-separated list of recipient email addresses")
 	subject := fs.String("subject", "", "Email subject")
 

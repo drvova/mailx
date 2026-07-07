@@ -27,7 +27,7 @@
                 </div>
                 <div class="pt-1.5">
                     <p>
-                        FreeTheMail beta ends May 19. To keep access, follow  <a target="_blank" :href="resyncUrl">this link</a> and sync with your IVPN account.
+                        FreeTheMail beta ends May 19. To keep access, follow  <a target="_blank" :href="resyncUrl">this link</a> and sync with your subscription account.
                     </p>
                 </div>
             </footer>
@@ -40,7 +40,7 @@
                 <div>
                     <h4>Limited Access Mode</h4>
                     <p>
-                        Existing aliases forward normally. New aliases are disabled. Add time to your <a target="_blank" :href="activateUrl">IVPN account</a> to restore access.
+                        Existing aliases forward normally. New aliases are disabled. Add time to your <a target="_blank" :href="activateUrl">subscription provider account</a> to restore access.
                     </p>
                 </div>
             </footer>
@@ -53,7 +53,7 @@
                 <div>
                     <h4>This account has been replaced and is scheduled for deletion.</h4>
                     <p>
-                        A new FreeTheMail signup was completed for your IVPN account, so this account will be deleted in 48 hours. Export any data you need before then.
+                        A new FreeTheMail signup was completed for your subscription account, so this account will be deleted in 48 hours. Export any data you need before then.
                     </p>
                 </div>
             </footer>
@@ -66,7 +66,7 @@
                 <div>
                     <h4>Out of sync</h4>
                     <p>
-                        Your last account status update was {{ updatedAtDate() }}. <a target="_blank" :href="resyncUrl">Sync with IVPN</a>
+                        Your last account status update was {{ updatedAtDate() }}. <a target="_blank" :href="resyncUrl">Sync with subscription provider</a>
                     </p>
                 </div>
             </footer>

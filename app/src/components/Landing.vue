@@ -81,7 +81,7 @@ const constraints = [
                     <a :href="signupUrl" class="cta-btn cta-primary" target="_blank">
                         ./GET_ACCESS
                     </a>
-                    <a href="https://github.com/ivpn/mailx" target="_blank" class="cta-btn cta-secondary">
+                    <a href="https://github.com/freethemail/freethemail" target="_blank" class="cta-btn cta-secondary">
                         ./VIEW_SOURCE
                     </a>
                 </div>
@@ -170,9 +170,9 @@ const constraints = [
                                 <img src="../assets/icons/trust-accountable-dark.svg" class="verifiable-privacy-icon dark-only" />
                                 <h3 class="verifiable-privacy-card-title">ACCOUNTABLE_OPERATORS</h3>
                             </div>
-                            <p class="verifiable-privacy-card-text">Built by the public team behind IVPN, with a 15-year history in operating privacy services.</p>
+                            <p class="verifiable-privacy-card-text">Built in the open by a team with a long history of operating privacy services.</p>
                         </div>
-                        <a href="https://www.ivpn.net/en/team/" target="_blank" class="verifiable-privacy-card-link">./MEET_TEAM</a>
+                        <a href="https://github.com/freethemail" target="_blank" class="verifiable-privacy-card-link">./MEET_TEAM</a>
                     </div>
 
                     <div class="verifiable-privacy-card trust-card-open-source">
@@ -184,7 +184,7 @@ const constraints = [
                             </div>
                             <p class="verifiable-privacy-card-text">The entire FreeTheMail project is open-source. Our implementation is public and available for review.</p>
                         </div>
-                        <a href="https://github.com/ivpn/mailx" target="_blank" class="verifiable-privacy-card-link">./VIEW_SOURCE</a>
+                        <a href="https://github.com/freethemail/freethemail" target="_blank" class="verifiable-privacy-card-link">./VIEW_SOURCE</a>
                     </div>
 
                     <div class="verifiable-privacy-card trust-card-security">
@@ -196,7 +196,7 @@ const constraints = [
                             </div>
                             <p class="verifiable-privacy-card-text">FreeTheMail has undergone a third-party security audit to validate our claims and architecture.</p>
                         </div>
-                        <a href="https://www.ivpn.net/resources/IVP-07-report.pdf" class="verifiable-privacy-card-link">./READ_AUDIT</a>
+                        <a href="https://github.com/freethemail/freethemail#security-audit" class="verifiable-privacy-card-link">./READ_AUDIT</a>
                     </div>
 
                     <div class="verifiable-privacy-card trust-card-no-tracking">
@@ -239,11 +239,11 @@ const constraints = [
                     <h2 class="section-title">Get access</h2>
                 </div>
 
-                <p class="get-access-text">Included with IVPN subscriptions. One account for aliases, wildcards, temp inboxes and forwarding — no separate billing.</p>
+                <p class="get-access-text">One account for aliases, wildcards, temp inboxes and forwarding — open source and independently audited.</p>
 
                 <div class="get-access-actions">
                     <a :href="signupUrl" class="cta-btn cta-primary" target="_blank">./SIGNUP</a>
-                    <a href="https://github.com/ivpn/mailx" target="_blank" class="cta-btn cta-secondary">./VIEW_SOURCE</a>
+                    <a href="https://github.com/freethemail/freethemail" target="_blank" class="cta-btn cta-secondary">./VIEW_SOURCE</a>
                 </div>
             </div>
         </section>
@@ -272,7 +272,7 @@ const constraints = [
                     ./FAQ
                 </a>
                 <a
-                    href="https://github.com/ivpn/mailx/blob/main/LICENSE.md"
+                    href="https://github.com/freethemail/freethemail/blob/main/LICENSE.md"
                     target="_blank"
                     class="landing-footer-strip-text landing-footer-strip-link"
                 >
@@ -303,20 +303,20 @@ const constraints = [
 /* Blue command / path badge */
 .section-command {
     @apply text-xs leading-3 px-3 py-3 w-fit;
-    @apply bg-[rgba(238,93,31,0.12)] dark:bg-[#12161b];
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
+    @apply bg-[oklch(0.659_0.192_40.23/0.12)] dark:bg-[oklch(0.198_0.012_254.108)];
+    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
 }
 
 /* Blue section title (32 px mobile -> 36 px desktop) */
 .section-title {
     @apply m-0 uppercase font-bold;
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
+    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
     @apply text-[32px] leading-[32px] md:text-[36px] md:leading-[40px];
 }
 
 .landing-page {
     @apply w-full;
-    @apply bg-white dark:bg-[#0a0a0a];
+    @apply bg-white dark:bg-[oklch(0.145_0_0)];
     @apply min-h-screen;
 
     * {
@@ -358,7 +358,7 @@ const constraints = [
 
 .landing-btn-signup {
     @apply px-2;
-    @apply text-[#ee5d1f] dark:text-[#ee5d1f];
+    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.659_0.192_40.23)];
 }
 
 .landing-btn-signup:hover {
@@ -367,8 +367,8 @@ const constraints = [
 
 .landing-btn-login {
     @apply px-3;
-    @apply bg-[#ee5d1f] dark:bg-[#ee5d1f];
-    @apply text-[#fffeff] dark:text-[#0a0a0a];
+    @apply bg-[oklch(0.659_0.192_40.23)] dark:bg-[oklch(0.659_0.192_40.23)];
+    @apply text-[oklch(0.998_0.002_325.59)] dark:text-[oklch(0.145_0_0)];
 }
 
 .landing-btn-login:hover {
@@ -433,7 +433,7 @@ const constraints = [
 }
 
 .hero-title {
-    @apply text-[#1c1c1c] dark:text-[#fffeff];
+    @apply text-[oklch(0.226_0_0)] dark:text-[oklch(0.998_0.002_325.59)];
     /* Responsive font sizes: 60px desktop, 52px tablet, 42px mobile */
     @apply text-[42px] leading-[46px] md:text-[52px] md:leading-[54px] lg:text-[64px] lg:leading-[66px];
     @apply m-0;
@@ -456,7 +456,7 @@ const constraints = [
 }
 
 .feature-bullet {
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
+    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
     @apply text-base;
     @apply shrink-0;
     @apply flex items-center justify-center;
@@ -464,7 +464,7 @@ const constraints = [
 }
 
 .feature-text {
-    @apply text-black dark:text-[#fffeff];
+    @apply text-black dark:text-[oklch(0.998_0.002_325.59)];
     @apply text-base leading-[21px] md:leading-4;
     @apply m-0;
     @apply flex-1;
@@ -495,7 +495,7 @@ const constraints = [
 }
 
 .cta-primary {
-    @apply text-[#fffeff] dark:text-[#fffeff];
+    @apply text-[oklch(0.998_0.002_325.59)] dark:text-[oklch(0.998_0.002_325.59)];
     border: 1px solid var(--accent);
     background: var(--accent-grad);
     box-shadow: var(--raised-shadow);
@@ -513,7 +513,7 @@ const constraints = [
 
 .cta-secondary {
     @apply px-[15px] py-[12px];
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
+    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
     border: 1px solid var(--sk-border);
     background: transparent;
 }
@@ -537,15 +537,15 @@ const constraints = [
 
 .screenshot-container {
     @apply w-full;
-    @apply bg-[#f3f4f5] dark:bg-[#141212];
+    @apply bg-[oklch(0.967_0.002_247.839)] dark:bg-[oklch(0.185_0.003_17.454)];
     @apply p-2;
 }
 
 .screenshot-border {
     @apply w-full;
-    @apply bg-white dark:bg-[#191919];
+    @apply bg-white dark:bg-[oklch(0.213_0_0)];
     @apply border border-solid;
-    @apply border-[#dbdfe5] dark:border-[#262626];
+    @apply border-[oklch(0.902_0.009_258.337)] dark:border-[oklch(0.269_0_0)];
     @apply p-1;
     @apply overflow-hidden;
 }
@@ -577,7 +577,7 @@ img.dark-only {
 /* Section 3: How It Works */
 .how-it-works-section {
     @apply w-full;
-    @apply bg-white dark:bg-[#0a0a0a];
+    @apply bg-white dark:bg-[oklch(0.145_0_0)];
     @apply py-[72px];
 }
 
@@ -585,7 +585,7 @@ img.dark-only {
 
 .how-it-works-title {
     @apply font-bold uppercase;
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
+    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
     @apply text-[36px] leading-[40px];
     @apply m-0;
 }
@@ -605,7 +605,7 @@ img.dark-only {
 }
 
 .instruction-number {
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
+    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
     @apply text-sm leading-4;
     @apply w-5 h-5;
     @apply flex items-center justify-center;
@@ -613,7 +613,7 @@ img.dark-only {
 }
 
 .instruction-text {
-    @apply text-black dark:text-[#fffeff];
+    @apply text-black dark:text-[oklch(0.998_0.002_325.59)];
     @apply text-sm leading-5;
     @apply flex-1;
 }
@@ -621,7 +621,7 @@ img.dark-only {
 /* Feature Cards */
 .feature-cards {
     @apply border border-solid;
-    @apply border-[#dbdfe5] dark:border-[#282727];
+    @apply border-[oklch(0.902_0.009_258.337)] dark:border-[oklch(0.274_0.001_17.247)];
     @apply flex flex-col lg:flex-row;
 }
 
@@ -629,7 +629,7 @@ img.dark-only {
     @apply flex-1;
     @apply p-6;
     @apply flex flex-col gap-4;
-    @apply border-[#dbdfe5] dark:border-[#282727];
+    @apply border-[oklch(0.902_0.009_258.337)] dark:border-[oklch(0.274_0.001_17.247)];
     @apply border-b lg:border-b-0 lg:border-r;
     @apply last:border-b-0 lg:last:border-r-0;
 }
@@ -644,7 +644,7 @@ img.dark-only {
 }
 
 .feature-card-title {
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
+    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
     @apply text-base leading-4;
     @apply font-medium uppercase;
     @apply m-0;
@@ -665,7 +665,7 @@ img.dark-only {
 /* Section 5: Verifiable Privacy */
 .verifiable-privacy-section {
     @apply w-full;
-    @apply bg-white dark:bg-[#050607];
+    @apply bg-white dark:bg-[oklch(0.121_0.004_245.473)];
     @apply py-6 md:py-[52px] lg:py-[72px];
 }
 
@@ -684,7 +684,7 @@ img.dark-only {
 .verifiable-privacy-card {
     @apply w-full md:w-1/2;
     @apply border border-solid;
-    @apply border-[#dbdfe5] dark:border-[#282727];
+    @apply border-[oklch(0.902_0.009_258.337)] dark:border-[oklch(0.274_0.001_17.247)];
     @apply -mb-px md:mb-0 md:-mr-px;
     @apply px-4 py-5 md:p-6;
     @apply flex flex-col gap-4;
@@ -707,7 +707,7 @@ img.dark-only {
 .verifiable-privacy-card-title {
     @apply m-0;
     @apply text-base leading-4 font-medium uppercase;
-    @apply text-[#ee5d1f] dark:text-[#f76c1d];
+    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
 }
 
 .landing-page .verifiable-privacy-card-text {
@@ -722,7 +722,7 @@ img.dark-only {
     @apply inline-block;
     @apply pt-2;
     @apply text-sm leading-4 font-medium;
-    @apply text-[#ee5d1f] dark:text-[#ee5d1f];
+    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.659_0.192_40.23)];
     @apply no-underline;
 }
 
@@ -750,16 +750,16 @@ img.dark-only {
 /* Section 7: Constraints */
 .constraints-section {
     @apply w-full;
-    @apply bg-[#fffeff] dark:bg-[#0a0a0a];
+    @apply bg-[oklch(0.998_0.002_325.59)] dark:bg-[oklch(0.145_0_0)];
     @apply py-6 md:py-[52px] lg:py-[72px];
 }
 
 /* .section-container / .section-header cover this section */
 
 .constraints-command {
-    @apply bg-[rgba(195,31,31,0.05)] dark:bg-[rgba(214,64,64,0.05)];
-    @apply lg:bg-[rgba(195,31,31,0.1)] lg:dark:bg-[rgba(214,64,64,0.05)];
-    @apply text-[#c31f1f] dark:text-[#d64040];
+    @apply bg-[oklch(0.526_0.198_27.445/0.05)] dark:bg-[oklch(0.591_0.187_24.961/0.05)];
+    @apply lg:bg-[oklch(0.526_0.198_27.445/0.1)] lg:dark:bg-[oklch(0.591_0.187_24.961/0.05)];
+    @apply text-[oklch(0.526_0.198_27.445)] dark:text-[oklch(0.591_0.187_24.961)];
     @apply text-xs leading-3;
     @apply px-3 py-3;
     @apply w-fit;
@@ -768,7 +768,7 @@ img.dark-only {
 .constraints-title {
     @apply m-0;
     @apply uppercase font-bold;
-    @apply text-[#c31f1f] dark:text-[#d64040];
+    @apply text-[oklch(0.526_0.198_27.445)] dark:text-[oklch(0.591_0.187_24.961)];
     @apply text-[32px] leading-[32px] md:text-[36px] md:leading-[40px];
 }
 
@@ -781,7 +781,7 @@ img.dark-only {
 }
 
 .constraints-bullet {
-    @apply text-[#c31f1f] dark:text-[#d64040];
+    @apply text-[oklch(0.526_0.198_27.445)] dark:text-[oklch(0.591_0.187_24.961)];
     @apply text-base;
     @apply w-6 h-6;
     @apply shrink-0;
@@ -791,17 +791,17 @@ img.dark-only {
 .constraints-text {
     @apply m-0;
     @apply flex-1;
-    @apply text-[#8d1719] dark:text-[#eb7676];
+    @apply text-[oklch(0.417_0.153_26.335)] dark:text-[oklch(0.701_0.145_21.468)];
     @apply text-sm leading-5 md:text-base md:leading-4;
 }
 
 /* Section 8: Get Access */
 .get-access-section {
     @apply w-full;
-    @apply bg-[#f3f4f5] dark:bg-[rgba(255,255,255,0.02)];
+    @apply bg-[oklch(0.967_0.002_247.839)] dark:bg-[oklch(1_0_0/0.02)];
     @apply py-6 md:py-[52px] lg:py-[72px];
     @apply md:border md:border-solid;
-    @apply md:border-[#dbdfe5] md:dark:border-[#282727];
+    @apply md:border-[oklch(0.902_0.009_258.337)] md:dark:border-[oklch(0.274_0.001_17.247)];
 }
 
 /* .section-container / .section-header / .section-command / .section-title cover this section */
@@ -809,7 +809,7 @@ img.dark-only {
 /* Section 9: Footer Strip */
 .landing-footer-strip-section {
     @apply w-full;
-    @apply bg-[#ffffff] dark:bg-[#050607];
+    @apply bg-[oklch(1_0_0)] dark:bg-[oklch(0.121_0.004_245.473)];
 }
 
 .landing-footer-strip {
@@ -822,7 +822,7 @@ img.dark-only {
 
 .landing-footer-strip-text {
     @apply text-sm leading-[14px];
-    @apply text-[#8e3510];
+    @apply text-[oklch(0.45_0.13_40.121)];
     @apply whitespace-nowrap;
 }
 
@@ -838,12 +838,12 @@ img.dark-only {
     @apply hidden md:block;
     @apply w-0 h-2;
     @apply border-l border-solid;
-    @apply border-[#b6c1ce] dark:border-[#2d3d4d];
+    @apply border-[oklch(0.806_0.022_252.529)] dark:border-[oklch(0.353_0.035_248.846)];
 }
 .landing-page .section-title,
 .landing-page .how-it-works-title,
 .landing-page .constraints-title {
-    @apply text-[#1c1c1c] dark:text-[#fffeff];
+    @apply text-[oklch(0.226_0_0)] dark:text-[oklch(0.998_0.002_325.59)];
     font-family: var(--font-serif);
     font-weight: 600;
     letter-spacing: -0.02em;

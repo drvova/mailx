@@ -9,7 +9,7 @@
         <h1>Privacy Policy</h1>
         <p class="text-sm">Last updated: 21 Nov 2025</p>
 
-        <p>FreeTheMail is developed and operated by the team behind IVPN. All services we offer to customers are built for privacy. Internally, we know what exactly that means. If a choice needs to be made between one practice that deepens a user’s privacy, and another that would diminish it but accelerate our growth, we’ll always take the slower, more private option.</p>
+        <p>FreeTheMail is developed and operated by the FreeTheMail team. All services we offer to customers are built for privacy. Internally, we know what exactly that means. If a choice needs to be made between one practice that deepens a user’s privacy, and another that would diminish it but accelerate our growth, we’ll always take the slower, more private option.</p>
         <p>We are committed to being transparent about how we collect, use, and protect your data after you sign up to the FreeTheMail service. Below we offer a concise and human-readable summary of our policies.</p>
 
         <h2>What data don’t you log?</h2>
@@ -39,9 +39,9 @@
         <p>Delivered emails are immediately removed from the Postfix queues. Undelivered emails are stored in a deferred queue. After 5 days, Postfix stops attempting delivery and discards the emails from the deferred queue.</p>
         <p>The Postfix server is configured with the <a href="https://docker-mailserver.github.io/docker-mailserver/latest/config/environment/#log_level" target="_blank">"info" log level</a>, which means it records general information about email activity (such as when messages are sent or received). These logs are kept for 7 days to support system maintenance and troubleshooting.</p>
 
-        <h2>I’ve signed up to the service through my IVPN subscription. Can you associate my FreeTheMail account with my IVPN Account ID?</h2>
+        <h2>I’ve signed up through my subscription provider. Can you associate my FreeTheMail account with it?</h2>
 
-        <p>When your sign up through the IVPN service, a temporary FreeTheMail signup link is generated in the IVPN database. Once the FreeTheMail signup is completed, the link and corresponding identifiers are removed from the IVPN database to prevent any association between FreeTheMail and IVPN accounts.</p>
+        <p>When you sign up through a subscription provider, a temporary FreeTheMail signup link is generated in its database. Once the FreeTheMail signup is completed, the link and corresponding identifiers are removed from the provider's database to prevent any association between the two accounts.</p>
 
         <h2>What information is retained when I stop using your service?</h2>
 
@@ -49,7 +49,7 @@
 
         <h2>Are there any ways to verify your claims regarding privacy?</h2>
 
-        <p>The entire project is open source with repositories available on <a href="https://github.com/ivpn/mailx">GitHub</a> for customers to verify our privacy practices.</p>
+        <p>The entire project is open source with repositories available on <a href="https://github.com/freethemail/freethemail">GitHub</a> for customers to verify our privacy practices.</p>
 
         <h2>User Rights</h2>
 
@@ -59,7 +59,7 @@
         <h2>Changes to policy</h2>
 
         <p>Privatus GmbH, operator of FreeTheMail reserves the right to change this privacy policy at any time. In such cases, we will take every reasonable step to ensure that these changes are brought to your attention by posting all changes prominently on the FreeTheMail website for a reasonable period of time, before the new policy becomes effective as well as emailing our existing customers.</p>
-        <p>If you have any questions or concerns about our privacy practices, contact us at mailx@ivpn.net.</p>
+        <p>If you have any questions or concerns about our privacy practices, contact us at support@freethemail.net.</p>
 
         <br>
         

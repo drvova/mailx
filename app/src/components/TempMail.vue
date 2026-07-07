@@ -244,7 +244,7 @@ const formatSize = (bytes: number) => {
 
 // Sanitized server-side; sandbox="" blocks scripts as a second layer.
 const frameDoc = (html: string) =>
-    '<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:system-ui,sans-serif;font-size:14px;line-height:1.6;color:#1a1a1a;margin:12px;word-break:break-word}a{color:#b45320}</style></head><body>' + html + '</body></html>'
+    '<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:system-ui,sans-serif;font-size:14px;line-height:1.6;color:oklch(0.218 0 0);margin:12px;word-break:break-word}a{color:oklch(0.556 0.141 44.92)}</style></head><body>' + html + '</body></html>'
 
 // Auto-refresh: temp inboxes exist to wait for incoming mail (Doherty threshold)
 let pollTimer: number | undefined

@@ -57,7 +57,7 @@
             </nav>
             <p class="px-5 mt-0 pl-6 text-sm">
                 Support:
-                <a href="mailto:mailx@ivpn.net">Email</a> /
+                <a href="mailto:support@freethemail.net">Email</a> /
                 <a href="/faq">FAQ</a>
             </p>
         </div>
