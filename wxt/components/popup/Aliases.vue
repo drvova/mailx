@@ -14,6 +14,9 @@
                     <button class="cta sm text-nowrap" data-hs-overlay="#modal-create-alias">
                         New Alias
                     </button>
+                    <button class="cta sm plain text-nowrap" :disabled="tempCreating" @click="createTempEmail" title="Generate a 24h self-destructing inbox and copy its address">
+                        {{ tempLabel }}
+                    </button>
                 </div>
             </header>
             <p v-if="isLoading" class="text-secondary py-4">Loading...</p>
@@ -64,6 +67,33 @@ const error = ref<string | null>(null)
 const copyText = ref('Click to copy')
 const search = ref('')
 const searchQuery = ref('')
+const tempCreating = ref(false)
+const tempLabel = ref('Temp Email')
+
+const createTempEmail = async () => {
+    tempCreating.value = true
+    try {
+        const res = await api.createAlias(props.apiToken, {
+            type: 'inbox',
+            ttl_hours: 24,
+            domain: props.defaults.domain,
+            format: 'random',
+            enabled: true,
+        })
+        const name = res.alias?.name
+        if (name) {
+            await navigator.clipboard.writeText(name)
+            tempLabel.value = 'Copied!'
+        }
+        await fetchAliases()
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : 'Failed to create temp email'
+        console.error('Create temp email error:', err)
+    } finally {
+        tempCreating.value = false
+        setTimeout(() => { tempLabel.value = 'Temp Email' }, 1800)
+    }
+}
 
 const truncatedDescription = (alias: Alias) => {
     const desc = alias.description

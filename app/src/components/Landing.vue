@@ -22,8 +22,8 @@ const logout = async () => {
 const heroFeatures = [
     'Forward emails through isolated aliases with FreeTheMail.',
     'Send and reply without exposing your primary email address.',
-    'Supports PGP encryption, domain choice, multiple',
-    'recipients, and catch-all aliases.',
+    'Generate self-destructing temp inboxes for one-off signups.',
+    'PGP encryption, custom domains, wildcards, and catch-all.',
 ]
 
 // --- Constraints ------------------------------------------------------------

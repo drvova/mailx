@@ -92,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { aliasApi } from '../api/alias.ts'
 import { inboxApi } from '../api/inbox.ts'
@@ -246,5 +246,25 @@ const formatSize = (bytes: number) => {
 const frameDoc = (html: string) =>
     '<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:system-ui,sans-serif;font-size:14px;line-height:1.6;color:#1a1a1a;margin:12px;word-break:break-word}a{color:#b45320}</style></head><body>' + html + '</body></html>'
 
-onMounted(getInboxes)
+// Auto-refresh: temp inboxes exist to wait for incoming mail (Doherty threshold)
+let pollTimer: number | undefined
+
+const refreshMessages = async () => {
+    if (document.hidden || !selectedInbox.value) return
+    try {
+        const response = await inboxApi.getMessages(selectedInbox.value.id)
+        messages.value = response.data || []
+        messagesLoaded.value = true
+    } catch (err) {
+        // Poll errors stay off the banner; manual actions surface errors
+        console.warn('inbox poll failed:', err)
+    }
+}
+
+onMounted(() => {
+    getInboxes()
+    pollTimer = window.setInterval(refreshMessages, 15000)
+})
+
+onUnmounted(() => window.clearInterval(pollTimer))
 </script>

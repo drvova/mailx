@@ -1,6 +1,6 @@
 {
-  "name": "Mailx",
-  "description": "Audited, Open-Source Email Aliasing Service",
+  "name": "FreeTheMail",
+  "description": "Audited, open-source email aliasing and temp inboxes",
   "private": true,
   "version": "0.1.15",
   "type": "module",
