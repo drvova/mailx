@@ -29,7 +29,7 @@
                                     id="accesskey_name"
                                     type="text"
                                 >
-                                <p v-if="nameError" class="error">Required</p>
+                                <p v-if="nameError" class="error" role="alert">Required</p>
                             </div>
                             <div class="mb-5">
                                 <label for="accesskey_expires_at">
@@ -54,7 +54,7 @@
                                     Cancel
                                 </button>
                             </nav>
-                            <p v-if="error" class="error px-5">Error: {{ error }}</p>
+                            <p v-if="error" class="error px-5" role="alert">Error: {{ error }}</p>
                         </footer>
                     </div>
                     <div v-else>

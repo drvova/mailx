@@ -19,7 +19,7 @@
                     type="text"
                     pattern="[0-9]*"
                 >
-                <p v-if="otpError" class="error">Required</p>
+                <p v-if="otpError" class="error" role="alert">Required</p>
             </div>
             <div class="flex flex-row gap-2">
                 <button @click="confirmEmail" class="cta">
@@ -29,7 +29,7 @@
                     Resend OTP
                 </button>
             </div>
-            <p v-if="error" class="error my-5">Error: {{ error }}</p>
+            <p v-if="error" class="error my-5" role="alert">Error: {{ error }}</p>
             <p v-if="resendSuccess && !error && !confirmSuccess" class="success my-5">{{ resendSuccess }}</p>
             
         </div>

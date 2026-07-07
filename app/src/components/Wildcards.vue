@@ -8,6 +8,7 @@
                 </button>
             </div>
         </header>
+        <SkeletonRows v-if="!loaded && !error" :rows="5" :cols="6" />
         <div v-if="!list.length && loaded" class="card-empty">
             <span class="bg-secondary rounded flex items-center justify-center p-2 mb-5">
                 <i class="icon at icon-accent text-2xl"></i>
@@ -76,9 +77,9 @@
                     </tbody>
                 </table>
             </div>
-            <p v-if="error" class="error">Error: {{ error }}</p>
             <Pagination v-if="list.length" :list.sync="list" :limit="limit" :page="page" :total="total" :key="rowKey" @onUpdatePage="onUpdatePage" />
         </div>
+        <p v-if="error" class="error" role="alert">Error: {{ error }}</p>
     </div>
     <AliasCreate v-if="recipients.length && settings.id && loaded" :recipients.sync="recipients" :settings.sync="settings" :catchAll=true :label="'New Wildcard Alias'" />
 </template>
@@ -91,6 +92,7 @@ import { settingsApi } from '../api/settings.ts'
 import AliasRow from './AliasRow.vue'
 import AliasCreate from './AliasCreate.vue'
 import Pagination from './Pagination.vue'
+import SkeletonRows from './SkeletonRows.vue'
 import events from '../events.ts'
 import { RouterLink } from 'vue-router'
 

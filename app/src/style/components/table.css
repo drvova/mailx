@@ -96,3 +96,12 @@
         @apply flex flex-col overflow-x-auto;
     }
 }
+@layer components {
+    .sk-bar {
+        @apply inline-block h-3.5 align-middle;
+        border-radius: var(--radius-sm);
+        background: var(--inset-bg);
+        border: 1px solid var(--sk-border);
+        animation: sk-pulse 1.6s ease-in-out infinite;
+    }
+}

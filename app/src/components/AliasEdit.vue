@@ -56,7 +56,7 @@
                                     {{ recipient }}
                                 </option>
                             </select>
-                            <p v-if="errorRecipients" class="error pt-3">{{ errorRecipients }}</p>
+                            <p v-if="errorRecipients" class="error pt-3" role="alert">{{ errorRecipients }}</p>
                         </div>
                     </article>
                     <footer>
@@ -72,7 +72,7 @@
                                 Cancel
                             </button>
                         </nav>
-                        <p v-if="error" class="error px-5">Error: {{ error }}</p>
+                        <p v-if="error" class="error px-5" role="alert">Error: {{ error }}</p>
                     </footer>
                 </div>
             </div>

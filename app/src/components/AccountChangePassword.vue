@@ -33,8 +33,8 @@
                 Change Password
             </button>
         </div>
-        <p v-if="passwordError" class="error">Error: {{ passwordError }}</p>
-        <p v-if="error" class="error">Error: {{ error }}</p>
+        <p v-if="passwordError" class="error" role="alert">Error: {{ passwordError }}</p>
+        <p v-if="error" class="error" role="alert">Error: {{ error }}</p>
         <p v-if="success" class="success">{{ success }}</p>
     </div>
 </template>

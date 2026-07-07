@@ -26,18 +26,19 @@
                 </button>
             </div>
         </div>
-        <div v-if="!list.length && loaded" class="card-empty">
+        <SkeletonRows v-if="!loaded && !error" :rows="5" :cols="6" />
+        <div v-if="!list.length && loaded && !loading" class="card-empty">
             <span class="bg-secondary rounded flex items-center justify-center p-2 mb-5">
                 <i class="icon at icon-accent text-2xl"></i>
             </span>
             <h4 class="mb-6">
-                <span v-if="!searchQuery && !loading">You have no aliases yet</span>
-                <span v-if="searchQuery || loading">No aliases found</span>
+                <span v-if="!searchQuery">You have no aliases yet</span>
+                <span v-else>No aliases found</span>
             </h4>
             <p v-if="!recipients.length" class="text-tertiary mb-6">
                 To get started, first <router-link to="/account/profile">verify</router-link> your primary email address.
             </p>
-            <button v-if="!searchQuery && !loading && recipients.length" class="cta" data-hs-overlay="#modal-create-alias-false">
+            <button v-if="!searchQuery && recipients.length" class="cta" data-hs-overlay="#modal-create-alias-false">
                 New Alias
             </button>
         </div>
@@ -97,9 +98,9 @@
                     </tbody>
                 </table>
             </div>
-            <p v-if="error" class="error">Error: {{ error }}</p>
             <Pagination v-if="list.length" :list.sync="list" :limit="limit" :page="page" :total="total" :key="rowKey" @onUpdatePage="onUpdatePage" />
         </div>
+        <p v-if="error" class="error" role="alert">Error: {{ error }}</p>
     </div>
     <AliasCreate v-if="recipients.length && settings.id && loaded" :recipients.sync="recipients" :settings.sync="settings" :catchAll=false :label="'New Alias'" />
 </template>
@@ -112,6 +113,7 @@ import { settingsApi } from '../api/settings.ts'
 import AliasRow from './AliasRow.vue'
 import AliasCreate from './AliasCreate.vue'
 import Pagination from './Pagination.vue'
+import SkeletonRows from './SkeletonRows.vue'
 import events from '../events.ts'
 import { RouterLink } from 'vue-router'
 
@@ -172,13 +174,14 @@ const getList = async () => {
         list.value = res.data.aliases
         total.value = res.data.total
         loaded.value = true
-        loading.value = false
         error.value = ''
         renderRow()
     } catch (err) {
         if (err instanceof ApiError) {
             error.value = err.message
         }
+    } finally {
+        loading.value = false
     }
 }
 

@@ -12,7 +12,7 @@
             <AccountTotpEnable v-if="!res.totp_enabled" />
             <AccountTotpDisable v-if="res.totp_enabled" />
         </div>
-        <p v-if="error" class="error">Error: {{ error }}</p>
+        <p v-if="error" class="error" role="alert">Error: {{ error }}</p>
     </div>
 </template>
 

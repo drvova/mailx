@@ -30,7 +30,7 @@
                         </div>
                     </article>
                     <footer>
-                        <p v-if="error" class="error px-5">Error: {{ error }}</p>
+                        <p v-if="error" class="error px-5" role="alert">Error: {{ error }}</p>
                         <p v-if="success" class="success px-5">{{ success }}</p>
                     </footer>
                 </div>

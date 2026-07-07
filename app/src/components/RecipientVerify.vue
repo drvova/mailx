@@ -26,7 +26,7 @@
                                 type="text"
                                 pattern="[0-9]*"
                             >
-                            <p v-if="otpError" class="error">Required</p>
+                            <p v-if="otpError" class="error" role="alert">Required</p>
                         </div>
                     </article>
                     <footer>
@@ -41,7 +41,7 @@
                                 Cancel
                             </button>
                         </nav>
-                        <p v-if="error" class="error px-5">Error: {{ error }}</p>
+                        <p v-if="error" class="error px-5" role="alert">Error: {{ error }}</p>
                         <p v-if="resendSuccess && !error" class="success px-5">{{ resendSuccess }}</p>
                     </footer>
                 </div>

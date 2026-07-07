@@ -30,7 +30,7 @@
                                 type="text"
                                 pattern="[0-9]*"
                             >
-                            <p v-if="codeError" class="error">Required</p>
+                            <p v-if="codeError" class="error" role="alert">Required</p>
                         </div>
                     </article>
                     <footer>
@@ -42,7 +42,7 @@
                                 Cancel
                             </button>
                         </nav>
-                        <p v-if="error" class="error px-5">Error: {{ error }}</p>
+                        <p v-if="error" class="error px-5" role="alert">Error: {{ error }}</p>
                     </footer>
                 </div>
             </div>

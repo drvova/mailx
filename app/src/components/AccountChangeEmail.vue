@@ -21,8 +21,8 @@
                 </button>
             </div>
         </div>
-        <p v-if="emailError" class="error mb-3">Error: {{ emailError }}</p>
-        <p v-if="error" class="error mb-3">Error: {{ error }}</p>
+        <p v-if="emailError" class="error mb-3" role="alert">Error: {{ emailError }}</p>
+        <p v-if="error" class="error mb-3" role="alert">Error: {{ error }}</p>
         <p v-if="success" class="success text-sm mb-3">{{ success }}</p>
     </div>
 </template>

@@ -21,15 +21,15 @@
                                     :disabled="!!rotateSessionError"
                                     @keypress.enter.prevent
                                 >
-                                <p v-if="emailAuthnError" class="error">Required</p>
+                                <p v-if="emailAuthnError" class="error" role="alert">Required</p>
                             </div>
                             <div class="flex items-center w-full">
                                 <button @click="registerWithPasskey" :disabled="isLoading || !!rotateSessionError" class="cta full">
                                     Sign Up with Passkey
                                 </button>
                             </div>
-                            <p v-if="apiError" class="error mt-6">Error: {{ apiError }}</p>
-                            <p v-if="rotateSessionError" class="error mt-5">Error: {{ rotateSessionError }}</p>
+                            <p v-if="apiError" class="error mt-6" role="alert">Error: {{ apiError }}</p>
+                            <p v-if="rotateSessionError" class="error mt-5" role="alert">Error: {{ rotateSessionError }}</p>
                         </div>
                     </div>
                     <div
@@ -53,7 +53,7 @@
                                     :disabled="!!rotateSessionError"
                                     @keypress.enter.prevent
                                 >
-                                <p v-if="emailError" class="error">Required</p>
+                                <p v-if="emailError" class="error" role="alert">Required</p>
                             </div>
                             <div class="mb-7">
                                 <input
@@ -66,7 +66,7 @@
                                     :disabled="!!rotateSessionError"
                                     @keypress.enter.prevent
                                 >
-                                <p v-if="passwordError" class="error">Required</p>
+                                <p v-if="passwordError" class="error" role="alert">Required</p>
                             </div>
                             <p class="text-sm mb-5">Must be 12+ characters and contain uppercase, lowercase, number, and special character (e.g. -_+=~!@#$%^&*(),;.?":{}|<>)</p>
                             <div class="flex items-center w-full">
@@ -74,8 +74,8 @@
                                     Sign Up
                                 </button>
                             </div>
-                            <p v-if="apiError" class="error mt-5">Error: {{ apiError }}</p>
-                            <p v-if="rotateSessionError" class="error mt-5">Error: {{ rotateSessionError }}</p>
+                            <p v-if="apiError" class="error mt-5" role="alert">Error: {{ apiError }}</p>
+                            <p v-if="rotateSessionError" class="error mt-5" role="alert">Error: {{ rotateSessionError }}</p>
                         </div>
                     </div>
                 </div>

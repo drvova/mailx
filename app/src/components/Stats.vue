@@ -25,7 +25,7 @@
                     <p class="m-0">Sends</p>
                 </div>
             </div>
-            <p v-if="error" class="error">Error: {{ error }}</p>
+            <p v-if="error" class="error" role="alert">Error: {{ error }}</p>
         </div>
     </div>
 </template>

@@ -8,7 +8,7 @@
             <div class="flex justify-start items-center gap-x-3 mb-3">
                 <AccessKeysCreate />
             </div>
-            <p v-if="error" class="error mt-6 mb-4">Error: {{ error }}</p>
+            <p v-if="error" class="error mt-6 mb-4" role="alert">Error: {{ error }}</p>
         </div>
         <div v-if="list.length" class="table-container">
             <table>

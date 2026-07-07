@@ -36,8 +36,8 @@
                             Update password
                         </button>
                     </div>
-                    <p v-if="passwordError" class="error mt-5">Error: {{ passwordError }}</p>
-                    <p v-if="apiError" class="error mt-5">Error: {{ apiError }}</p>
+                    <p v-if="passwordError" class="error mt-5" role="alert">Error: {{ passwordError }}</p>
+                    <p v-if="apiError" class="error mt-5" role="alert">Error: {{ apiError }}</p>
                 </div>
                 <div v-if="apiSuccess">
                     <p class="success mb-5">{{ apiSuccess }}</p>

@@ -27,7 +27,7 @@
                                     id="alias_catch_all_suffix"
                                     type="text"
                                 >
-                                <p v-if="errorCatchAllSuffix" class="error">Wildcard suffix must be between 6 and 12 characters</p>
+                                <p v-if="errorCatchAllSuffix" class="error" role="alert">Wildcard suffix must be between 6 and 12 characters</p>
                                 <p class="text-primary mb-1">
                                     *+{{ alias.catch_all_suffix }}@{{ alias.domain }}
                                 </p>
@@ -69,7 +69,7 @@
                                         {{ recipient }}
                                     </option>
                                 </select>
-                                <p v-if="errorRecipients" class="error pt-3">{{ errorRecipients }}</p>
+                                <p v-if="errorRecipients" class="error pt-3" role="alert">{{ errorRecipients }}</p>
                             </div>
                             <div class="hs-accordion-group">
                                 <div class="hs-accordion" id="alias-accordion-one">
@@ -141,7 +141,7 @@
                                 Cancel
                             </button>
                         </nav>
-                        <p v-if="error" class="error px-5">Error: {{ error }}</p>
+                        <p v-if="error" class="error px-5" role="alert">Error: {{ error }}</p>
                     </footer>
                 </div>
             </div>

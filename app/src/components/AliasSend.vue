@@ -35,7 +35,7 @@
                                 v-model="toEmail"
                                 type="text"
                             >
-                            <p v-if="emailError" class="error">Valid email required</p>
+                            <p v-if="emailError" class="error" role="alert">Valid email required</p>
                         </div>
                         <div v-bind:class="{ 'hidden': generatedEmail == '' }" class="mb-5">
                             <p>Send message to this email:</p>

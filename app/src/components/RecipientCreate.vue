@@ -29,7 +29,7 @@
                                 placeholder="name@example.net"
                                 type="text"
                             >
-                            <p v-if="emailError" class="error">Required</p>
+                            <p v-if="emailError" class="error" role="alert">Required</p>
                         </div>
                     </article>
                     <footer>
@@ -41,7 +41,7 @@
                                 Cancel
                             </button>
                         </nav>
-                        <p v-if="error" class="error px-5">Error: {{ error }}</p>
+                        <p v-if="error" class="error px-5" role="alert">Error: {{ error }}</p>
                         <p class="px-5">
                             Note: Unverified recipient email addresses are automatically deleted 7 days after creation. You can add up to 10 recipients.
                         </p>

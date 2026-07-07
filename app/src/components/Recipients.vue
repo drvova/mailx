@@ -6,6 +6,7 @@
                 <RecipientCreate />
             </div>
         </header>
+        <SkeletonRows v-if="!loaded && !error" :rows="4" :cols="5" />
         <div v-if="!list.length && loaded" class="card-empty">
             <span class="bg-secondary rounded flex items-center justify-center p-2 mb-5">
                 <i class="icon inbox icon-accent text-2xl"></i>
@@ -32,9 +33,9 @@
                         <RecipientRow v-for="recipient in list" :recipient="recipient" :recipients="list" :key="rowKey" />
                     </tbody>
                 </table>
-                <p v-if="error" class="error">Error: {{ error }}</p>
             </div>
         </div>
+        <p v-if="error" class="error" role="alert">Error: {{ error }}</p>
     </div>
 </template>
 
@@ -44,6 +45,7 @@ import { ApiError } from '../api/api.ts'
 import { recipientApi } from '../api/recipient.ts'
 import RecipientRow from './RecipientRow.vue'
 import RecipientCreate from './RecipientCreate.vue'
+import SkeletonRows from './SkeletonRows.vue'
 import events from '../events.ts'
 
 const recipient = {

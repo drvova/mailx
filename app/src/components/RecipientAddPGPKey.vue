@@ -20,7 +20,7 @@
                             placeholder="Starts with '-----BEGIN PGP PUBLIC KEY BLOCK-----'"
                         >
                         </textarea>
-                        <p v-if="pgpError" class="error">Required</p>
+                        <p v-if="pgpError" class="error" role="alert">Required</p>
                     </article>
                     <footer>
                         <nav>
@@ -31,7 +31,7 @@
                                 Cancel
                             </button>
                         </nav>
-                        <p v-if="error" class="error px-5">Error: {{ error }}</p>
+                        <p v-if="error" class="error px-5" role="alert">Error: {{ error }}</p>
                     </footer>
                 </div>
             </div>

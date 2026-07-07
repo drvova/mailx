@@ -21,7 +21,7 @@
             </div>
         </header>
 
-        <p v-if="error" class="hy-error mb-4">{{ error }}</p>
+        <p v-if="error" class="hy-error mb-4" role="alert">{{ error }}</p>
 
         <div v-if="loaded && !inboxes.length" class="hy-card p-10 text-center">
             <p class="hy-muted m-0">No temp inboxes yet. Generate one and use it anywhere you don't trust with your real address.</p>
@@ -31,18 +31,14 @@
             <!-- Inbox list -->
             <div class="hy-card p-2 hy-scroll max-h-[70vh]">
                 <p class="hy-label px-3 pt-2 pb-1 m-0">Inboxes</p>
-                <button v-for="inbox in inboxes" :key="inbox.id"
-                    class="hy-row" :class="{ 'hy-row--active': inbox.id === selectedInbox?.id }"
-                    @click="selectInbox(inbox)">
-                    <span class="flex-1 min-w-0">
+                <div v-for="inbox in inboxes" :key="inbox.id"
+                    class="hy-row" :class="{ 'hy-row--active': inbox.id === selectedInbox?.id }">
+                    <button type="button" class="hy-row__select" @click="selectInbox(inbox)">
                         <span class="hy-mono text-xs block truncate">{{ inbox.name }}</span>
                         <span class="hy-dim text-xs block mt-0.5">{{ expiresIn(inbox.expires_at) }}</span>
-                    </span>
-                    <span class="hy-badge" @click.stop="copy(inbox.name)" role="button" tabindex="0"
-                        @keydown.enter.stop="copy(inbox.name)" :title="'Copy ' + inbox.name">
-                        {{ copied === inbox.name ? 'copied' : 'copy' }}
-                    </span>
-                </button>
+                    </button>
+                    <CopyButton class="hy-badge" :text="inbox.name" :label="'Copy ' + inbox.name + ' to clipboard'" />
+                </div>
             </div>
 
             <!-- Message list -->
@@ -96,6 +92,8 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { aliasApi } from '../api/alias.ts'
 import { inboxApi } from '../api/inbox.ts'
+import { useClipboard } from '../composables/useClipboard.ts'
+import CopyButton from './CopyButton.vue'
 
 interface InboxAlias {
     id: string
@@ -136,8 +134,9 @@ const newTTL = ref(24)
 const creating = ref(false)
 const loaded = ref(false)
 const messagesLoaded = ref(false)
-const copied = ref('')
 const error = ref('')
+
+const { copy } = useClipboard()
 
 const handle = (err: unknown) => {
     error.value = err instanceof ApiError ? (err.data?.error || err.message) : String(err)
@@ -214,13 +213,6 @@ const deleteMsg = async (id: number) => {
     } catch (err) {
         handle(err)
     }
-}
-
-const copy = async (text: string) => {
-    if (!text) return
-    await navigator.clipboard.writeText(text)
-    copied.value = text
-    setTimeout(() => { if (copied.value === text) copied.value = '' }, 1500)
 }
 
 const expiresIn = (expiresAt?: string) => {

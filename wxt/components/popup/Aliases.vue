@@ -31,7 +31,7 @@
                         <p class="m-0">{{ truncatedDescription(alias) }}</p>
                     </div>
                     <div class="hs-tooltip">
-                        <button class="hs-tooltip-toggle plain" @click="copyAlias(alias.name)">
+                        <button class="hs-tooltip-toggle plain" :aria-label="'Copy ' + alias.name + ' to clipboard'" @click="copyAlias(alias.name)">
                             <i class="icon icon-secondary copy text-xs"></i>
                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0"
                                 role="tooltip">
@@ -39,7 +39,7 @@
                             </span>
                         </button>
                     </div>
-                    <button @click="deleteAlias(alias.id)">
+                    <button :aria-label="'Delete ' + alias.name" @click="deleteAlias(alias.id)">
                         <i class="icon icon-secondary trash text-xs"></i>
                     </button>
                 </div>

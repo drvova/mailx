@@ -32,6 +32,7 @@
                         {{ copyText }}: {{ alias.name }}
                     </span>
                 </p>
+                <span class="sr-only" role="status">{{ copyText === 'Copied' ? 'Copied to clipboard' : '' }}</span>
             </div>
         </td>
         <td>
@@ -67,7 +68,7 @@
         </td>
         <td>
             <div class="hs-dropdown [--offset:0]">
-                <button v-bind:id="'hs-dropdown-alias-edit-' + alias.id">
+                <button v-bind:id="'hs-dropdown-alias-edit-' + alias.id" aria-label="Alias actions">
                     <i class="icon icon-secondary more text-lg"></i>
                 </button>
                 <div
@@ -131,7 +132,7 @@
                 </div>
                 <div>
                     <div class="hs-dropdown [--offset:0] mb-3">
-                        <button class="py-0" v-bind:id="'hs-dropdown-alias-edit-' + alias.id">
+                        <button class="py-0" v-bind:id="'hs-dropdown-alias-edit-' + alias.id" aria-label="Alias actions">
                             <i class="icon icon-secondary more text-lg"></i>
                         </button>
                         <div

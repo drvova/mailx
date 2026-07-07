@@ -21,14 +21,14 @@
                                     autocomplete="false"
                                     @keypress.enter.prevent
                                 >
-                                <p v-if="emailAuthnError" class="error">Required</p>
+                                <p v-if="emailAuthnError" class="error" role="alert">Required</p>
                             </div>
                             <div class="flex items-center w-full">
                                 <button :disabled="isLoading" @click="loginWithPasskey" class="cta full">
                                     Log in with Passkey
                                 </button>
                             </div>
-                            <p v-if="error" class="error mt-6">Error: {{ error }}</p>
+                            <p v-if="error" class="error mt-6" role="alert">Error: {{ error }}</p>
                         </div>
                     </div>
                     <div id="tabs-with-underline-2" v-bind:class="{ 'hidden': passkeySupported && !signupSuccess }" role="tabpanel"
@@ -49,7 +49,7 @@
                                     class="email"
                                     @keypress.enter.prevent
                                 >
-                                <p v-if="emailError" class="error">Required</p>
+                                <p v-if="emailError" class="error" role="alert">Required</p>
                             </div>
                             <div class="mb-5">
                                 <input
@@ -62,7 +62,7 @@
                                     class="password"
                                     @keypress.enter.prevent
                                 >
-                                <p v-if="passwordError" class="error mb-2">Required</p>
+                                <p v-if="passwordError" class="error mb-2" role="alert">Required</p>
                                 <p class="text-right">
                                     <router-link to="/forgot-password">
                                         <button class="plain-alt">Forgot password?</button>
@@ -79,14 +79,14 @@
                                     id="otp"
                                     type="text"
                                 >
-                                <p v-if="otpError" class="error">Required</p>
+                                <p v-if="otpError" class="error" role="alert">Required</p>
                             </div>
                             <div class="flex items-center w-full" v-bind:class="{ 'mb-6': !passkeySupported }">
                                 <button :disabled="isLoading" @click="login" class="cta full">
                                     Log in
                                 </button>
                             </div>
-                            <p v-if="error" class="error mt-5">Error: {{ error }}</p>
+                            <p v-if="error" class="error mt-5" role="alert">Error: {{ error }}</p>
                         </div>
                     </div>
                 </div>

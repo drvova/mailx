@@ -6,6 +6,7 @@
                 <DomainCreate />
             </div>
         </header>
+        <SkeletonRows v-if="!loaded && !error" :rows="4" :cols="5" />
         <div v-if="!list.length && loaded" class="card-empty">
             <span class="bg-secondary rounded flex items-center justify-center p-2 mb-5">
                 <i class="icon global icon-accent text-2xl"></i>
@@ -29,9 +30,9 @@
                         <DomainRow v-for="domain in list" :domain="domain" :key="rowKey" />
                     </tbody>
                 </table>
-                <p v-if="error" class="error">Error: {{ error }}</p>
             </div>
         </div>
+        <p v-if="error" class="error" role="alert">Error: {{ error }}</p>
     </div>
 </template>
 
@@ -41,6 +42,7 @@ import { ApiError } from '../api/api.ts'
 import { domainApi } from '../api/domain.ts'
 import DomainCreate from './DomainCreate.vue'
 import DomainRow from './DomainRow.vue'
+import SkeletonRows from './SkeletonRows.vue'
 import events from '../events.ts'
 
 const domain = {

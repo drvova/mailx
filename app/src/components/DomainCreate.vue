@@ -86,7 +86,7 @@
                                         placeholder="example.net"
                                         type="text"
                                     >
-                                    <p v-if="nameError" class="error">Required</p>
+                                    <p v-if="nameError" class="error" role="alert">Required</p>
                                 </template>
                             </div>
                         </article>
@@ -99,7 +99,7 @@
                                     Cancel
                                 </button>
                             </nav>
-                            <p v-if="error" class="error px-5">Error: {{ error }}</p>
+                            <p v-if="error" class="error px-5" role="alert">Error: {{ error }}</p>
                         </footer>
                     </template>
 
@@ -266,7 +266,7 @@
                                     Cancel
                                 </button>
                             </nav>
-                            <p v-if="step2Error" class="error px-5">Error: {{ error || step2Error }}</p>
+                            <p v-if="step2Error" class="error px-5" role="alert">Error: {{ error || step2Error }}</p>
                         </footer>
                     </template>
                 </div>

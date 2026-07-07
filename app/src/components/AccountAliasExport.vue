@@ -9,7 +9,7 @@
             class="cta mb-4">
             Export Aliases
         </button>
-        <p v-if="error" class="error">Error: {{ error }}</p>
+        <p v-if="error" class="error" role="alert">Error: {{ error }}</p>
     </div>
 </template>
 

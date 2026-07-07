@@ -18,7 +18,7 @@
                             placeholder="Email Address"
                             class="email"
                         >
-                        <p v-if="emailError" class="error">Required</p>
+                        <p v-if="emailError" class="error" role="alert">Required</p>
                     </div>
                     <p class="text-sm mb-5">
                         Please enter your registered email address. You will be sent instructions on how to reset your password.
@@ -28,7 +28,7 @@
                             Send reset instructions
                         </button>
                     </div>
-                    <p v-if="apiError" class="error mt-6">Error: {{ apiError }}</p>
+                    <p v-if="apiError" class="error mt-6" role="alert">Error: {{ apiError }}</p>
                 </div>
                 <div v-if="apiSuccess">
                     <p>If an account with the specified email address exists we will send an email with further instructions on how to reset your password.</p>

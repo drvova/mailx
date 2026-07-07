@@ -172,6 +172,20 @@ html:not(.dark) .hyper {
     color: var(--hy-text);
 }
 
+/* Inner select button for rows that also carry secondary actions
+   (avoids nesting interactive elements inside a button) */
+.hy-row__select {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
 .hy-badge {
     display: inline-flex;
     align-items: center;
