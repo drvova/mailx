@@ -165,6 +165,23 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	// Admin bulk operations
 	admin.Post("/users/bulk", h.AdminBulkUpdateUsers)
 
+	// Admin inbox moderation
+	admin.Get("/inbox", h.AdminGetInboxMessages)
+	admin.Delete("/inbox/message/:id", h.AdminDeleteInboxMessage)
+	admin.Delete("/inbox/purge/:id", h.AdminPurgeInbox)
+
+	// Admin TOTP and password management
+	admin.Delete("/user/:id/totp", h.AdminDisableTotp)
+	admin.Post("/user/reset-password", h.AdminResetPassword)
+
+	// Admin settings override
+	admin.Get("/user/:id/settings", h.AdminGetSettings)
+	admin.Put("/user/settings", h.AdminUpdateSettings)
+
+	// Admin CSV export
+	admin.Get("/export/users", h.AdminExportUsers)
+	admin.Get("/export/aliases", h.AdminExportAliases)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

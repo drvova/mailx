@@ -2,18 +2,26 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"ivpn.net/email/api/internal/model"
+	"ivpn.net/email/api/internal/utils"
 )
 
 type SystemStats struct {
-	TotalUsers   int64 `json:"total_users"`
-	ActiveUsers  int64 `json:"active_users"`
-	TotalAliases int64 `json:"total_aliases"`
-	TotalDomains int64 `json:"total_domains"`
-	TotalLogs    int64 `json:"total_logs"`
-	ActivePlans  int   `json:"active_plans"`
+	TotalUsers          int64 `json:"total_users"`
+	ActiveUsers         int64 `json:"active_users"`
+	SuspendedUsers      int64 `json:"suspended_users"`
+	AdminUsers          int64 `json:"admin_users"`
+	TotalAliases        int64 `json:"total_aliases"`
+	TotalDomains        int64 `json:"total_domains"`
+	TotalRecipients     int64 `json:"total_recipients"`
+	TotalLogs           int64 `json:"total_logs"`
+	TotalInboxMessages  int64 `json:"total_inbox_messages"`
+	TotalSubscriptions  int64 `json:"total_subscriptions"`
+	ActiveSubscriptions int64 `json:"active_subscriptions"`
+	ActivePlans         int   `json:"active_plans"`
 }
 
 type AdminStore interface {
@@ -50,6 +58,19 @@ type AdminStore interface {
 	GetSuspendedUserCount(context.Context) (int64, error)
 	GetAdminCount(context.Context) (int64, error)
 	AdminBulkUpdateUsers(context.Context, []string, bool) error
+	GetAllInboxMessagesAdmin(context.Context, int, int) ([]model.InboxMessage, int64, error)
+	AdminDeleteInboxMessage(context.Context, uint) error
+	AdminPurgeInboxByUser(context.Context, string) error
+	AdminDisableTotp(context.Context, string) error
+	AdminResetPassword(context.Context, string, string) error
+	AdminGetSettings(context.Context, string) (model.Settings, error)
+	AdminUpdateSettings(context.Context, string, map[string]interface{}) error
+	GetInboxMessageCount(context.Context) (int64, error)
+	GetRecipientCountAll(context.Context) (int64, error)
+	GetSubscriptionCount(context.Context) (int64, error)
+	GetActiveSubscriptionCount(context.Context) (int64, error)
+	AdminExportUsers(context.Context) ([]model.User, error)
+	AdminExportAliases(context.Context) ([]model.Alias, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -59,18 +80,30 @@ func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
 func (s *Service) GetSystemStats(ctx context.Context) (any, error) {
 	totalUsers, _ := s.Store.GetUserCount(ctx)
 	activeUsers, _ := s.Store.GetActiveUserCount(ctx)
+	suspendedUsers, _ := s.Store.GetSuspendedUserCount(ctx)
+	adminUsers, _ := s.Store.GetAdminCount(ctx)
 	totalAliases, _ := s.Store.GetAliasCountAll(ctx)
 	totalDomains, _ := s.Store.GetDomainCountAll(ctx)
+	totalRecipients, _ := s.Store.GetRecipientCountAll(ctx)
 	totalLogs, _ := s.Store.GetLogCount(ctx)
+	totalInbox, _ := s.Store.GetInboxMessageCount(ctx)
+	totalSubs, _ := s.Store.GetSubscriptionCount(ctx)
+	activeSubs, _ := s.Store.GetActiveSubscriptionCount(ctx)
 	plans, _ := s.Store.GetActivePlans(ctx)
 
 	return SystemStats{
-		TotalUsers:   totalUsers,
-		ActiveUsers:  activeUsers,
-		TotalAliases: totalAliases,
-		TotalDomains: totalDomains,
-		TotalLogs:    totalLogs,
-		ActivePlans:  len(plans),
+		TotalUsers:          totalUsers,
+		ActiveUsers:         activeUsers,
+		SuspendedUsers:      suspendedUsers,
+		AdminUsers:          adminUsers,
+		TotalAliases:        totalAliases,
+		TotalDomains:        totalDomains,
+		TotalRecipients:     totalRecipients,
+		TotalLogs:           totalLogs,
+		TotalInboxMessages:  totalInbox,
+		TotalSubscriptions:  totalSubs,
+		ActiveSubscriptions: activeSubs,
+		ActivePlans:         len(plans),
 	}, nil
 }
 
@@ -195,4 +228,45 @@ func (s *Service) AdminUpdateSubscription(ctx context.Context, userID string, ti
 
 func (s *Service) AdminBulkUpdateUsers(ctx context.Context, userIDs []string, isActive bool) error {
 	return s.Store.AdminBulkUpdateUsers(ctx, userIDs, isActive)
+}
+
+func (s *Service) GetAllInboxMessagesAdmin(ctx context.Context, limit, offset int) ([]model.InboxMessage, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.GetAllInboxMessagesAdmin(ctx, limit, offset)
+}
+
+func (s *Service) AdminDeleteInboxMessage(ctx context.Context, msgID uint) error {
+	return s.Store.AdminDeleteInboxMessage(ctx, msgID)
+}
+
+func (s *Service) AdminPurgeInboxByUser(ctx context.Context, userID string) error {
+	return s.Store.AdminPurgeInboxByUser(ctx, userID)
+}
+
+func (s *Service) AdminDisableTotp(ctx context.Context, userID string) error {
+	return s.Store.AdminDisableTotp(ctx, userID)
+}
+
+func (s *Service) AdminResetPassword(ctx context.Context, userID string, passwordPlain string) error {
+	hash, err := utils.HashPassword(passwordPlain)
+	if err != nil {
+		return fmt.Errorf("password hash failed")
+	}
+	return s.Store.AdminResetPassword(ctx, userID, hash)
+}
+
+func (s *Service) AdminGetSettings(ctx context.Context, userID string) (model.Settings, error) {
+	return s.Store.AdminGetSettings(ctx, userID)
+}
+
+func (s *Service) AdminUpdateSettings(ctx context.Context, userID string, updates map[string]interface{}) error {
+	return s.Store.AdminUpdateSettings(ctx, userID, updates)
+}
+
+func (s *Service) AdminExportUsers(ctx context.Context) ([]model.User, error) {
+	return s.Store.AdminExportUsers(ctx)
+}
+
+func (s *Service) AdminExportAliases(ctx context.Context) ([]model.Alias, error) {
+	return s.Store.AdminExportAliases(ctx)
 }

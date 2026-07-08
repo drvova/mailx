@@ -31,9 +31,15 @@ export const billingApi = {
 export interface SystemStats {
     total_users: number
     active_users: number
+    suspended_users: number
+    admin_users: number
     total_aliases: number
     total_domains: number
+    total_recipients: number
     total_logs: number
+    total_inbox_messages: number
+    total_subscriptions: number
+    active_subscriptions: number
     active_plans: number
 }
 
@@ -94,6 +100,19 @@ export const adminApi = {
     updateSubscription: async (data: { user_id: string; tier?: string; is_active: boolean; active_until?: string }) => api.put('/admin/subscription', data),
     // Bulk operations
     bulkUpdateUsers: async (userIds: string[], isActive: boolean) => api.post('/admin/users/bulk', { user_ids: userIds, is_active: isActive }),
+    // Inbox moderation
+    inboxMessages: async () => (await api.get('/admin/inbox')).data as { messages: AdminInboxMessage[]; total: number },
+    deleteInboxMessage: async (id: number) => api.delete(`/admin/inbox/message/${id}`),
+    purgeInbox: async (userId: string) => api.delete(`/admin/inbox/purge/${userId}`),
+    // TOTP and password management
+    disableTotp: async (userId: string) => api.delete(`/admin/user/${userId}/totp`),
+    resetPassword: async (userId: string, password: string) => api.post('/admin/user/reset-password', { user_id: userId, password }),
+    // Settings override
+    getSettings: async (userId: string) => (await api.get(`/admin/user/${userId}/settings`)).data as AdminSettings,
+    updateSettings: async (data: { user_id: string; domain?: string; recipient?: string; from_name?: string; alias_format?: string; log_issues?: boolean; remove_header?: boolean }) => api.put('/admin/user/settings', data),
+    // CSV export
+    exportUsers: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/users`,
+    exportAliases: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/aliases`,
 }
 
 export interface AdminAlias {
@@ -145,4 +164,27 @@ export interface AdminCredential {
     id: string
     user_id: string
     created_at: string
+}
+
+export interface AdminInboxMessage {
+    id: number
+    user_id: string
+    alias_id: string
+    from: string
+    from_name: string
+    subject: string
+    read: boolean
+    size: number
+    created_at: string
+}
+
+export interface AdminSettings {
+    id: string
+    user_id: string
+    domain: string
+    recipient: string
+    from_name: string
+    alias_format: string
+    log_issues: boolean
+    remove_header: boolean
 }

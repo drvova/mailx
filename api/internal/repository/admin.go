@@ -264,3 +264,74 @@ func (d *Database) GetAdminCount(ctx context.Context) (int64, error) {
 func (d *Database) AdminBulkUpdateUsers(ctx context.Context, userIDs []string, isActive bool) error {
 	return d.Client.Model(&model.User{}).Where("id IN ?", userIDs).Update("is_active", isActive).Error
 }
+
+func (d *Database) GetAllInboxMessagesAdmin(ctx context.Context, limit, offset int) ([]model.InboxMessage, int64, error) {
+	var msgs []model.InboxMessage
+	var total int64
+	d.Client.Model(&model.InboxMessage{}).Count(&total)
+	err := d.Client.Select("id", "created_at", "user_id", "alias_id", "from", "from_name", "subject", "read", "size").
+		Order("created_at desc").Limit(limit).Offset(offset).Find(&msgs).Error
+	return msgs, total, err
+}
+
+func (d *Database) AdminDeleteInboxMessage(ctx context.Context, msgID uint) error {
+	return d.Client.Where("id = ?", msgID).Delete(&model.InboxMessage{}).Error
+}
+
+func (d *Database) AdminPurgeInboxByUser(ctx context.Context, userID string) error {
+	return d.Client.Where("user_id = ?", userID).Delete(&model.InboxMessage{}).Error
+}
+
+func (d *Database) AdminDisableTotp(ctx context.Context, userID string) error {
+	return d.Client.Model(&model.User{}).Where("id = ?", userID).Updates(map[string]interface{}{"totp_secret": "", "totp_backup": "", "totp_backup_used": ""}).Error
+}
+
+func (d *Database) AdminResetPassword(ctx context.Context, userID string, passwordHash string) error {
+	return d.Client.Model(&model.User{}).Where("id = ?", userID).Update("password_hash", passwordHash).Error
+}
+
+func (d *Database) AdminGetSettings(ctx context.Context, userID string) (model.Settings, error) {
+	var s model.Settings
+	err := d.Client.Where("user_id = ?", userID).First(&s).Error
+	return s, err
+}
+
+func (d *Database) AdminUpdateSettings(ctx context.Context, userID string, updates map[string]interface{}) error {
+	return d.Client.Model(&model.Settings{}).Where("user_id = ?", userID).Updates(updates).Error
+}
+
+func (d *Database) GetInboxMessageCount(ctx context.Context) (int64, error) {
+	var count int64
+	err := d.Client.Model(&model.InboxMessage{}).Count(&count).Error
+	return count, err
+}
+
+func (d *Database) GetRecipientCountAll(ctx context.Context) (int64, error) {
+	var count int64
+	err := d.Client.Model(&model.Recipient{}).Count(&count).Error
+	return count, err
+}
+
+func (d *Database) GetSubscriptionCount(ctx context.Context) (int64, error) {
+	var count int64
+	err := d.Client.Model(&model.Subscription{}).Count(&count).Error
+	return count, err
+}
+
+func (d *Database) GetActiveSubscriptionCount(ctx context.Context) (int64, error) {
+	var count int64
+	err := d.Client.Model(&model.Subscription{}).Where("is_active = ?", true).Count(&count).Error
+	return count, err
+}
+
+func (d *Database) AdminExportUsers(ctx context.Context) ([]model.User, error) {
+	var users []model.User
+	err := d.Client.Order("created_at desc").Find(&users).Error
+	return users, err
+}
+
+func (d *Database) AdminExportAliases(ctx context.Context) ([]model.Alias, error) {
+	var aliases []model.Alias
+	err := d.Client.Order("created_at desc").Find(&aliases).Error
+	return aliases, err
+}

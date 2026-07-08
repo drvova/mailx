@@ -1,7 +1,10 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"ivpn.net/email/api/internal/model"
@@ -34,6 +37,15 @@ type AdminService interface {
 	AdminDeleteCredential(context.Context, string) error
 	AdminUpdateSubscription(context.Context, string, string, bool, string) error
 	AdminBulkUpdateUsers(context.Context, []string, bool) error
+	GetAllInboxMessagesAdmin(context.Context, int, int) ([]model.InboxMessage, int64, error)
+	AdminDeleteInboxMessage(context.Context, uint) error
+	AdminPurgeInboxByUser(context.Context, string) error
+	AdminDisableTotp(context.Context, string) error
+	AdminResetPassword(context.Context, string, string) error
+	AdminGetSettings(context.Context, string) (model.Settings, error)
+	AdminUpdateSettings(context.Context, string, map[string]interface{}) error
+	AdminExportUsers(context.Context) ([]model.User, error)
+	AdminExportAliases(context.Context) ([]model.Alias, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -365,4 +377,134 @@ func (h *Handler) AdminBulkUpdateUsers(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk update"})
 	}
 	return c.JSON(fiber.Map{"message": "Users updated"})
+}
+
+func (h *Handler) AdminGetInboxMessages(c *fiber.Ctx) error {
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	msgs, total, err := h.Service.GetAllInboxMessagesAdmin(c.Context(), limit, offset)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch inbox messages"})
+	}
+	return c.JSON(fiber.Map{"messages": msgs, "total": total})
+}
+
+func (h *Handler) AdminDeleteInboxMessage(c *fiber.Ctx) error {
+	id := c.Params("id")
+	msgID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid message ID"})
+	}
+	if err := h.Service.AdminDeleteInboxMessage(c.Context(), uint(msgID)); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to delete message"})
+	}
+	return c.JSON(fiber.Map{"message": "Inbox message deleted"})
+}
+
+func (h *Handler) AdminPurgeInbox(c *fiber.Ctx) error {
+	userID := c.Params("id")
+	if userID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "User ID required"})
+	}
+	if err := h.Service.AdminPurgeInboxByUser(c.Context(), userID); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to purge inbox"})
+	}
+	return c.JSON(fiber.Map{"message": "Inbox purged"})
+}
+
+func (h *Handler) AdminDisableTotp(c *fiber.Ctx) error {
+	userID := c.Params("id")
+	if userID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "User ID required"})
+	}
+	if err := h.Service.AdminDisableTotp(c.Context(), userID); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to disable TOTP"})
+	}
+	return c.JSON(fiber.Map{"message": "TOTP disabled"})
+}
+
+type AdminResetPasswordReq struct {
+	UserID   string `json:"user_id" validate:"required,uuid"`
+	Password string `json:"password" validate:"required,min=12"`
+}
+
+func (h *Handler) AdminResetPassword(c *fiber.Ctx) error {
+	var req AdminResetPasswordReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	if err := h.Service.AdminResetPassword(c.Context(), req.UserID, req.Password); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to reset password"})
+	}
+	return c.JSON(fiber.Map{"message": "Password reset"})
+}
+
+func (h *Handler) AdminGetSettings(c *fiber.Ctx) error {
+	userID := c.Params("id")
+	if userID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "User ID required"})
+	}
+	settings, err := h.Service.AdminGetSettings(c.Context(), userID)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Settings not found"})
+	}
+	return c.JSON(settings)
+}
+
+type AdminUpdateSettingsReq struct {
+	UserID      string `json:"user_id" validate:"required,uuid"`
+	Domain      string `json:"domain"`
+	Recipient   string `json:"recipient"`
+	FromName    string `json:"from_name"`
+	AliasFormat string `json:"alias_format"`
+	LogIssues   *bool  `json:"log_issues"`
+	RemoveHeader *bool `json:"remove_header"`
+}
+
+func (h *Handler) AdminUpdateSettings(c *fiber.Ctx) error {
+	var req AdminUpdateSettingsReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	updates := map[string]interface{}{}
+	if req.Domain != "" { updates["domain"] = req.Domain }
+	if req.Recipient != "" { updates["recipient"] = req.Recipient }
+	if req.FromName != "" { updates["from_name"] = req.FromName }
+	if req.AliasFormat != "" { updates["alias_format"] = req.AliasFormat }
+	if req.LogIssues != nil { updates["log_issues"] = *req.LogIssues }
+	if req.RemoveHeader != nil { updates["remove_header"] = *req.RemoveHeader }
+	if err := h.Service.AdminUpdateSettings(c.Context(), req.UserID, updates); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to update settings"})
+	}
+	return c.JSON(fiber.Map{"message": "Settings updated"})
+}
+
+func (h *Handler) AdminExportUsers(c *fiber.Ctx) error {
+	users, err := h.Service.AdminExportUsers(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export users"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,email,is_active,is_admin,created_at\n")
+	for _, u := range users {
+		buf.WriteString(fmt.Sprintf("%s,%s,%t,%t,%s\n", u.ID, u.Email, u.IsActive, u.IsAdmin, u.CreatedAt.Format("2006-01-02")))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=users.csv")
+	return c.Send(buf.Bytes())
+}
+
+func (h *Handler) AdminExportAliases(c *fiber.Ctx) error {
+	aliases, err := h.Service.AdminExportAliases(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export aliases"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,user_id,name,enabled,created_at\n")
+	for _, a := range aliases {
+		buf.WriteString(fmt.Sprintf("%s,%s,%s,%t,%s\n", a.ID, a.UserID, a.Name, a.Enabled, a.CreatedAt.Format("2006-01-02")))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=aliases.csv")
+	return c.Send(buf.Bytes())
 }

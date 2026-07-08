@@ -15,18 +15,29 @@
                 <li><button :class="tab === 'keys' ? 'font-bold border-b-2' : ''" @click="tab = 'keys'" role="tab">API Keys</button></li>
                 <li><button :class="tab === 'sessions' ? 'font-bold border-b-2' : ''" @click="tab = 'sessions'" role="tab">Sessions</button></li>
                 <li><button :class="tab === 'passkeys' ? 'font-bold border-b-2' : ''" @click="tab = 'passkeys'" role="tab">Passkeys</button></li>
+                <li><button :class="tab === 'inbox' ? 'font-bold border-b-2' : ''" @click="tab = 'inbox'" role="tab">Inbox</button></li>
                 <li><button :class="tab === 'logs' ? 'font-bold border-b-2' : ''" @click="tab = 'logs'" role="tab">Logs</button></li>
             </ul>
 
             <!-- STATS -->
             <div v-if="tab === 'stats'" role="tabpanel">
-                <div v-if="stats" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div v-if="stats" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.total_users }}</p><p class="text-sm text-gray-500">Total Users</p></div>
                     <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.active_users }}</p><p class="text-sm text-gray-500">Active Users</p></div>
+                    <div class="card-secondary text-center"><p class="text-3xl font-bold text-red-500">{{ stats.suspended_users }}</p><p class="text-sm text-gray-500">Suspended</p></div>
+                    <div class="card-secondary text-center"><p class="text-3xl font-bold text-blue-500">{{ stats.admin_users }}</p><p class="text-sm text-gray-500">Admins</p></div>
                     <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.total_aliases }}</p><p class="text-sm text-gray-500">Aliases</p></div>
                     <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.total_domains }}</p><p class="text-sm text-gray-500">Domains</p></div>
+                    <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.total_recipients }}</p><p class="text-sm text-gray-500">Recipients</p></div>
+                    <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.total_inbox_messages }}</p><p class="text-sm text-gray-500">Inbox Msgs</p></div>
+                    <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.total_subscriptions }}</p><p class="text-sm text-gray-500">Subscriptions</p></div>
+                    <div class="card-secondary text-center"><p class="text-3xl font-bold text-green-500">{{ stats.active_subscriptions }}</p><p class="text-sm text-gray-500">Active Subs</p></div>
                     <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.total_logs }}</p><p class="text-sm text-gray-500">Log Entries</p></div>
                     <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.active_plans }}</p><p class="text-sm text-gray-500">Active Plans</p></div>
+                    <div class="col-span-2 md:col-span-4 flex gap-2 mt-2">
+                        <button class="cta cta-tertiary text-sm" @click="exportUsers">Export Users CSV</button>
+                        <button class="cta cta-tertiary text-sm" @click="exportAliases">Export Aliases CSV</button>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="3" />
             </div>
@@ -81,6 +92,9 @@
                         <div class="mb-4 flex gap-2">
                             <button class="cta cta-tertiary text-sm" @click="forceLogout(userDetail.user.id)">Force Logout</button>
                             <button class="cta cta-tertiary text-sm" @click="overrideSub(userDetail.user.id)">Override Subscription</button>
+                            <button class="cta cta-tertiary text-sm" @click="disableTotp(userDetail.user.id)">Disable 2FA</button>
+                            <button class="cta cta-tertiary text-sm" @click="resetPassword(userDetail.user.id)">Reset Password</button>
+                            <button class="cta cta-tertiary text-sm text-red-500" @click="purgeInbox(userDetail.user.id)">Purge Inbox</button>
                         </div>
                         <h4 class="mb-2">Aliases ({{ userDetail.aliases.length }})</h4>
                         <div v-if="userDetail.aliases.length" class="overflow-x-auto mb-4">
@@ -271,6 +285,26 @@
                 <SkeletonRows v-else :rows="5" />
             </div>
 
+            <!-- INBOX -->
+            <div v-if="tab === 'inbox'" role="tabpanel">
+                <div v-if="inboxMessages.length" class="overflow-x-auto">
+                    <table class="table">
+                        <thead><tr><th>From</th><th>Subject</th><th>Alias</th><th>Size</th><th>Date</th><th></th></tr></thead>
+                        <tbody>
+                            <tr v-for="m in inboxMessages" :key="m.id">
+                                <td>{{ m.from_name || m.from }}</td>
+                                <td class="max-w-xs truncate">{{ m.subject }}</td>
+                                <td class="text-xs text-gray-500">{{ m.alias_id.slice(0,8) }}...</td>
+                                <td>{{ Math.round(m.size / 1024) }}KB</td>
+                                <td>{{ formatDate(m.created_at) }}</td>
+                                <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteInboxMsg(m)">Delete</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <SkeletonRows v-else :rows="5" />
+            </div>
+
             <!-- LOGS -->
             <div v-if="tab === 'logs'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
@@ -306,7 +340,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { planApi, adminApi, type Plan, type AdminUser, type AdminLog, type AdminAlias, type AdminDomain, type AdminRecipient, type AdminAccessKey, type AdminSession, type AdminCredential, type SystemStats } from '../api/plan'
+import { planApi, adminApi, type Plan, type AdminUser, type AdminLog, type AdminAlias, type AdminDomain, type AdminRecipient, type AdminAccessKey, type AdminSession, type AdminCredential, type AdminInboxMessage, type SystemStats } from '../api/plan'
 import SkeletonRows from '../components/SkeletonRows.vue'
 
 const tab = ref('stats')
@@ -320,6 +354,7 @@ const logs = ref<AdminLog[]>([])
 const accessKeys = ref<AdminAccessKey[]>([])
 const sessions = ref<AdminSession[]>([])
 const credentials = ref<AdminCredential[]>([])
+const inboxMessages = ref<AdminInboxMessage[]>([])
 const loadingPlans = ref(true)
 const deleting = ref('')
 const saving = ref(false)
@@ -350,6 +385,7 @@ const fetchLogsFiltered = async () => { try { const r = await adminApi.logsFilte
 const fetchAccessKeys = async () => { try { const r = await adminApi.accessKeys(); accessKeys.value = r.keys } catch { /* */ } }
 const fetchSessions = async () => { try { const r = await adminApi.sessions(); sessions.value = r.sessions } catch { /* */ } }
 const fetchCredentials = async () => { try { const r = await adminApi.credentials(); credentials.value = r.credentials } catch { /* */ } }
+const fetchInboxMessages = async () => { try { const r = await adminApi.inboxMessages(); inboxMessages.value = r.messages } catch { /* */ } }
 
 const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(async () => { if (!userSearch.value) { fetchUsers(); return }; try { const r = await adminApi.searchUsers(userSearch.value); users.value = r.users } catch { /* */ } }, 300) }
 const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(fetchAliases, 300) }
@@ -388,6 +424,15 @@ const toggleAllUsers = (e: Event) => {
     const checked = (e.target as HTMLInputElement).checked
     users.value.forEach(u => { (u as any)._selected = checked })
 }
+const deleteInboxMsg = async (m: AdminInboxMessage) => { if (!confirm(`Delete message "${m.subject}"?`)) return; try { await adminApi.deleteInboxMessage(m.id); inboxMessages.value = inboxMessages.value.filter(x => x.id !== m.id) } catch { /* */ } }
+const disableTotp = async (userId: string) => { if (!confirm('Disable 2FA for this user?')) return; try { await adminApi.disableTotp(userId); alert('2FA disabled') } catch { /* */ } }
+const resetPassword = async (userId: string) => {
+    const pw = prompt('Enter new password (min 12 chars):')
+    if (!pw || pw.length < 12) { alert('Password must be 12+ characters'); return }
+    try { await adminApi.resetPassword(userId, pw); alert('Password reset') } catch { /* */ } }
+const purgeInbox = async (userId: string) => { if (!confirm('Delete ALL inbox messages for this user?')) return; try { await adminApi.purgeInbox(userId); alert('Inbox purged') } catch { /* */ } }
+const exportUsers = () => { window.open(`${import.meta.env.VITE_API_URL}/admin/export/users`, '_blank') }
+const exportAliases = () => { window.open(`${import.meta.env.VITE_API_URL}/admin/export/aliases`, '_blank') }
 
 const savePlan = async () => { saving.value = true; formError.value = ''; try { if (editing.value && form.value.id) { await planApi.update(form.value.id, form.value) } else { await planApi.create(form.value) }; resetForm(); await fetchPlans() } catch (err: any) { formError.value = err?.message || 'Failed' } finally { saving.value = false } }
 const editPlan = (plan: Plan) => { editing.value = true; showForm.value = true; form.value = { ...plan } }
@@ -401,6 +446,7 @@ watch(tab, (t) => {
     if (t === 'keys' && !accessKeys.value.length) fetchAccessKeys()
     if (t === 'sessions' && !sessions.value.length) fetchSessions()
     if (t === 'passkeys' && !credentials.value.length) fetchCredentials()
+    if (t === 'inbox' && !inboxMessages.value.length) fetchInboxMessages()
 })
 
 onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs() })
