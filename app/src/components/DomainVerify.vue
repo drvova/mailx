@@ -157,7 +157,7 @@
                     </article>
                     <footer>
                         <nav>
-                            <button @click.stop="verifyDomain" class="cta">
+                            <button @click.stop="verifyDomain" :disabled="saving" :aria-busy="saving" class="cta">
                                 Verify DNS Records
                             </button>
                             <button @click="close" class="cancel">
@@ -185,6 +185,7 @@ import { toast } from '../composables/useToast.ts'
 const props = defineProps(['domain'])
 const domain = ref(props.domain)
 const error = ref('')
+const saving = ref(false)
 const { copied, copy } = useClipboard(2000)
 
 const config = ref({
@@ -209,6 +210,7 @@ const getConfig = async () => {
 }
 
 const verifyDomain = async () => {
+    saving.value = true
     try {
         await domainApi.verifyDns(domain.value.id)
         error.value = ''
@@ -217,6 +219,8 @@ const verifyDomain = async () => {
         if (err instanceof ApiError) {
             error.value = err.data?.error || err.message || err.message
         }
+    } finally {
+        saving.value = false
     }
 }
 

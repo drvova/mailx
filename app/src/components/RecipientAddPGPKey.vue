@@ -24,7 +24,7 @@
                     </article>
                     <footer>
                         <nav>
-                            <button @click="addKey" class="cta">
+                            <button @click="addKey" :disabled="saving" :aria-busy="saving" class="cta">
                                 Add PGP Public Key
                             </button>
                             <button @click="close" class="cancel">
@@ -52,6 +52,7 @@ const recipient = ref(props.recipient)
 const pgp_key = ref('')
 const error = ref('')
 const pgpError = ref(false)
+const saving = ref(false)
 
 const validatePgp = () => {
     pgpError.value = !pgp_key.value
@@ -69,6 +70,7 @@ const addKey = async () => {
         pgp_key: pgp_key.value.trim()
     }
 
+    saving.value = true
     try {
         await recipientApi.update(payload)
         error.value = ''
@@ -83,6 +85,8 @@ const addKey = async () => {
                 error.value = 'Too many requests, please try again later.'
             }
         }
+    } finally {
+        saving.value = false
     }
 }
 

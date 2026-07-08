@@ -73,6 +73,7 @@ import { ref, onMounted } from 'vue'
 import overlay from '@preline/overlay'
 import tooltip from '@preline/tooltip'
 import { useClipboard } from '../composables/useClipboard.ts'
+import { toast } from '../composables/useToast.ts'
 
 const props = defineProps(['alias'])
 const alias = ref(props.alias)
@@ -109,7 +110,7 @@ const close = () => {
 }
 
 const copyAlias = (text: string) => {
-    copy(text).catch(() => {})
+    copy(text).catch(() => toast('Failed to copy', 'error'))
 }
 
 const addEvents = () => {

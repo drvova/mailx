@@ -31,10 +31,10 @@
                     </article>
                     <footer>
                         <nav>
-                            <button @click="verifyRecipient" class="cta">
+                            <button @click="verifyRecipient" :disabled="saving" :aria-busy="saving" class="cta">
                                 Verify Recipient
                             </button>
-                            <button @click="sendOtp" class="cancel">
+                            <button @click="sendOtp" :disabled="resending" :aria-busy="resending" class="cancel">
                                 Resend OTP
                             </button>
                             <button @click="close" class="cancel">
@@ -65,6 +65,8 @@ const recipient = ref(props.recipient)
 const resendSuccess = ref('')
 const error = ref('')
 const otpError = ref(false)
+const saving = ref(false)
+const resending = ref(false)
 
 const validateOtp = () => {
     otpError.value = !req.value.otp
@@ -76,6 +78,7 @@ const verifyRecipient = async () => {
 
     req.value.otp = req.value.otp + ''
 
+    saving.value = true
     try {
         await recipientApi.activate(recipient.value.id, req.value)
         error.value = ''
@@ -89,10 +92,13 @@ const verifyRecipient = async () => {
                 error.value = 'Too many requests, please try again later.'
             }
         }
+    } finally {
+        saving.value = false
     }
 }
 
 const sendOtp = async () => {
+    resending.value = true
     try {
         const response = await recipientApi.sendOtp(recipient.value.id)
         resendSuccess.value = response.data.message
@@ -106,6 +112,8 @@ const sendOtp = async () => {
                 error.value = 'Too many requests, please try again later.'
             }
         }
+    } finally {
+        resending.value = false
     }
 }
 
