@@ -288,6 +288,9 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+    events.off('alias.create', fetch)
+    events.off('alias.update', fetch)
+    events.off('alias.delete', onDeleteAlias)
     document.removeEventListener('keydown', handleKeydown)
     window.clearTimeout(searchDebounce)
 })

@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import events from '../events.ts'
@@ -129,5 +129,9 @@ const onUserUpdate = () => {
 onMounted(() => {
     getUser()
     events.on('user.update', onUserUpdate)
+})
+
+onUnmounted(() => {
+    events.off('user.update', onUserUpdate)
 })
 </script>

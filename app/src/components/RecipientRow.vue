@@ -186,7 +186,7 @@ const updateRecipient = async () => {
         toast(recipient.value.pgp_enabled ? 'PGP encryption enabled' : 'PGP encryption disabled')
     } catch (err) {
         if (err instanceof ApiError) {
-            var errMsg = err.data?.error || err.message || err.message
+            let errMsg = err.data?.error || err.message || err.message
 
             if (err.status === 429) {
                 errMsg = 'Too many requests, please try again later.'
@@ -214,7 +214,7 @@ const deletePgpKey = async () => {
         events.emit('recipient.update', {})
     } catch (err) {
         if (err instanceof ApiError) {
-            var errMsg = err.data?.error || err.message || err.message
+            let errMsg = err.data?.error || err.message || err.message
 
             if (err.status === 429) {
                 errMsg = 'Too many requests, please try again later.'

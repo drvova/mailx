@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { aliasApi } from '../api/alias'
 import { settingsApi } from '../api/settings.ts'
@@ -215,5 +215,11 @@ onMounted(async () => {
     events.on('alias.create', fetch)
     events.on('alias.update', fetch)
     events.on('alias.delete', onDeleteAlias)
+})
+
+onUnmounted(() => {
+    events.off('alias.create', fetch)
+    events.off('alias.update', fetch)
+    events.off('alias.delete', onDeleteAlias)
 })
 </script>

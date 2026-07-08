@@ -23,13 +23,13 @@
                 <tbody>
                     <tr v-for="cred in list" :key="`desktop-${cred.id}`" class="desktop">
                         <td>
-                            {{ new Date(cred.created_at).toDateString() }}
+                            {{ formatDistanceToNow(new Date(cred.created_at)) }} ago
                         </td>
                         <td>
                             {{ cred.name }}
                         </td>
                         <td>
-                            {{ cred.expires_at ? new Date(cred.expires_at).toDateString() : 'Never' }}
+                            {{ cred.expires_at ? formatDistanceToNow(new Date(cred.expires_at)) + ' left' : 'Never' }}
                         </td>
                         <td>
                             <button @click.stop="deleteAccessKey(cred.id)" :disabled="deleting" :aria-busy="deleting" class="delete w-full flex items-center gap-x-2 py-2 place-content-end">
@@ -42,7 +42,7 @@
                         <hr>
                         <div class="flex gap-2 justify-between">
                             <div class="text-start">
-                                <p class="mb-4 text-sm">{{ new Date(cred.created_at).toDateString() }}</p>
+                                <p class="mb-4 text-sm">{{ formatDistanceToNow(new Date(cred.created_at)) }} ago</p>
                                 <div>
                                     <p class="mb-1 text-sm">ID:</p>
                                     {{ cred.id }}
@@ -62,7 +62,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
+import { formatDistanceToNow } from 'date-fns'
 import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import AccessKeysCreate from './AccessKeysCreate.vue'
@@ -112,5 +113,9 @@ const deleteAccessKey = async (id: string) => {
 onMounted(() => {
     getList()
     events.on('accesskey.create', getList)
+})
+
+onUnmounted(() => {
+    events.off('accesskey.create', getList)
 })
 </script>

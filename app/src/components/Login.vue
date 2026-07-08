@@ -238,7 +238,7 @@ const loginWithPasskey = async () => {
     }
 
     try {
-        var res = await userApi.loginBegin(data)
+        const res = await userApi.loginBegin(data)
         startAuth(data, res)
     } catch (err) {
         if (err instanceof ApiError) {

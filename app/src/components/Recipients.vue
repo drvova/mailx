@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { recipientApi } from '../api/recipient.ts'
 import RecipientRow from './RecipientRow.vue'
@@ -93,5 +93,13 @@ onMounted(() => {
     events.on('recipient.verify', reload)
     events.on('recipient.delete.error', onDeleteRecipientError)
     events.on('recipient.reload', reload)
+})
+
+onUnmounted(() => {
+    events.off('recipient.create', getList)
+    events.off('recipient.update', reload)
+    events.off('recipient.verify', reload)
+    events.off('recipient.delete.error', onDeleteRecipientError)
+    events.off('recipient.reload', reload)
 })
 </script>

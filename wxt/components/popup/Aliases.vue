@@ -110,7 +110,6 @@ const fetchAliases = async () => {
         isLoading.value = true
         const res = await api.fetchAliases(props.apiToken, searchQuery.value)
         list.value = res.aliases
-        console.log('Fetched aliases:', res.aliases)
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'An unexpected error occurred'
         console.error('Fetch aliases error:', err)
@@ -129,7 +128,6 @@ const updateAlias = async (alias: Alias) => {
     alias.enabled = !alias.enabled
     try {
         await api.updateAlias(props.apiToken, alias.id, alias)
-        console.log('Updated alias:', alias)
     } catch (err) {
         console.error('Update alias error:', err)
     }
@@ -141,7 +139,6 @@ const deleteAlias = async (aliasId: string) => {
     try {
         await api.deleteAlias(props.apiToken, aliasId)
         list.value = list.value.filter(alias => alias.id !== aliasId)
-        console.log('Deleted alias with ID:', aliasId)
     } catch (err) {
         console.error('Delete alias error:', err)
     }
@@ -155,7 +152,6 @@ const copyAlias = (alias: string) => {
 
 const onCreateAlias = (event: { alias: Alias }) => {
     if (!event.alias) return
-    console.log('Alias created event received:', event.alias)
     list.value.unshift(event.alias)
 }
 

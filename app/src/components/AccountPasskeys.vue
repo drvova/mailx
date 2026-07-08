@@ -29,7 +29,7 @@
                 <tbody>
                     <tr v-for="cred in list" :key="`desktop-${cred.id}`" class="desktop">
                         <td>
-                            {{ new Date(cred.created_at).toDateString() }}
+                            {{ formatDistanceToNow(new Date(cred.created_at)) }} ago
                         </td>
                         <td>
                             {{ cred.id }}
@@ -45,7 +45,7 @@
                         <hr>
                         <div class="flex gap-2 justify-between">
                             <div class="text-start">
-                                <p class="mb-4 text-sm">{{ new Date(cred.created_at).toDateString() }}</p>
+                                <p class="mb-4 text-sm">{{ formatDistanceToNow(new Date(cred.created_at)) }} ago</p>
                                 <div>
                                     <p class="mb-1 text-sm">ID:</p>
                                     {{ cred.id }}
@@ -66,6 +66,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { formatDistanceToNow } from 'date-fns'
 import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser'
@@ -112,7 +113,7 @@ const deleteCred = async (id: string) => {
 const addPasskey = async () => {
     try {
         adding.value = true
-        var res = await userApi.registerAdd()
+        const res = await userApi.registerAdd()
         startAddPasskey(res)
     } catch (err) {
         if (err instanceof ApiError) {

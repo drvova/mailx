@@ -77,7 +77,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { formatDistanceToNow } from 'date-fns'
 import { ApiError } from '../api/api.ts'
 import { useRoute } from 'vue-router'
 import tooltip from '@preline/tooltip'
@@ -171,7 +172,7 @@ const isManaged = () => {
 }
 
 const activeUntilDate = () => {
-    return new Date(sub.value.active_until).toDateString()
+    return formatDistanceToNow(new Date(sub.value.active_until)) + ' left'
 }
 
 const updatedAtDate = () => {
@@ -204,6 +205,10 @@ onMounted(() => {
     getSubscription()
     tooltip.autoInit()
     events.on('user.update', onUpdateEmail)
+})
+
+onUnmounted(() => {
+    events.off('user.update', onUpdateEmail)
 })
 
 watch(currentRoute, () => {

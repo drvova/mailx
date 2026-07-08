@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { userApi } from '../api/user.ts'
 import events from '../events.ts'
@@ -90,6 +90,10 @@ const onUpdateEmail = (event: any) => {
 
 onMounted(() => {
     events.on('user.update', onUpdateEmail)
+})
+
+onUnmounted(() => {
+    events.off('user.update', onUpdateEmail)
 })
 
 watch(currentRoute, (newRoute) => {

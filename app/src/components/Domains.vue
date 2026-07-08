@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { domainApi } from '../api/domain.ts'
 import DomainCreate from './DomainCreate.vue'
@@ -84,5 +84,11 @@ onMounted(() => {
     events.on('domain.create', getList)
     events.on('domain.reload', getList)
     events.on('domain.update', getList)
+})
+
+onUnmounted(() => {
+    events.off('domain.create', getList)
+    events.off('domain.reload', getList)
+    events.off('domain.update', getList)
 })
 </script>

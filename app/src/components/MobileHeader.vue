@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { userApi } from '../api/user.ts'
 import events from '../events.ts'
 import { appConfirm } from '../composables/useConfirm.ts'
@@ -36,5 +36,9 @@ const onUpdateEmail = (event: any) => {
 
 onMounted(() => {
     events.on('user.update', onUpdateEmail)
+})
+
+onUnmounted(() => {
+    events.off('user.update', onUpdateEmail)
 })
 </script>

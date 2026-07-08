@@ -4,12 +4,12 @@
         <hr class="my-5">
         <p class="text-sm my-4">Show Mailx button on email input fields:</p>
         <div class="flex items-center">
-            <input @change="toggleInputButton(($event.target as HTMLInputElement).checked)" v-bind:checked="preferences.input_button" type="checkbox">
+            <input @change="toggleInputButton(($event.target as HTMLInputElement).checked)" v-bind:checked="preferences.input_button" type="checkbox" aria-label="Show Mailx button on email input fields">
         </div>
         <hr class="my-5">
         <p class="text-sm my-4">Add website description when creating alias via input button:</p>
         <div class="flex items-center">
-            <input @change="toggleAddDescription(($event.target as HTMLInputElement).checked)" v-bind:checked="preferences.add_description" type="checkbox">
+            <input @change="toggleAddDescription(($event.target as HTMLInputElement).checked)" v-bind:checked="preferences.add_description" type="checkbox" aria-label="Add website description when creating alias via input button">
         </div>
         <hr class="my-5">
         <p class="text-sm my-4">Refresh recipients, domains and defaults:</p>
@@ -39,7 +39,6 @@ const error = ref('')
 const refreshDefaults = async () => {
     try {
         const res = await api.fetchDefaults(props.apiToken)
-        console.log('Fetched defaults:', res)
         processResponse(res)
         success.value = 'Defaults refreshed successfully'
         error.value = ''
@@ -56,7 +55,6 @@ const logout = async () => {
     try {
         await api.logout(props.apiToken)
         store.clearAll()
-        console.log('Logged out successfully')
         error.value = ''
         alert('You have been logged out.')
     } catch (err) {

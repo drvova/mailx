@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import AccountTotpEnable from './AccountTotpEnable.vue'
@@ -45,5 +45,10 @@ onMounted(() => {
     getUser()
     events.on('totp.enable', getUser)
     events.on('totp.disable', getUser)
+})
+
+onUnmounted(() => {
+    events.off('totp.enable', getUser)
+    events.off('totp.disable', getUser)
 })
 </script>
