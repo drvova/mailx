@@ -73,7 +73,7 @@
                                     @blur="validatePassword"
                                     @keypress.enter.prevent
                                 />
-                                <p v-if="passwordError" class="error" role="alert">Required</p>
+                                <p v-if="passwordError" class="error" role="alert">{{ passwordError }}</p>
                             </div>
                             <p class="text-sm mb-5">Must be 12+ characters and contain uppercase, lowercase, number, and special character (e.g. -_+=~!@#$%^&*(),;.?":{}|<>)</p>
                             <div class="flex items-center w-full">
@@ -127,7 +127,7 @@ const emailAuthn = ref('')
 const password = ref('')
 const emailError = ref(false)
 const emailAuthnError = ref(false)
-const passwordError = ref(false)
+const passwordError = ref('')
 const apiSuccess = ref('')
 const apiError = ref('')
 const rotateSessionError = ref('')
@@ -148,7 +148,23 @@ const validateEmailAuthn = () => {
 }
 
 const validatePassword = () => {
-    passwordError.value = !password.value
+    passwordError.value = ''
+
+    if (!password.value) {
+        passwordError.value = 'Required'
+        return !passwordError.value
+    }
+
+    if (password.value.length < 12) {
+        passwordError.value = 'Password must be 12+ characters'
+        return !passwordError.value
+    }
+
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[-_+=~!@#$%^&*(),;.?":{}|<>])/.test(password.value)) {
+        passwordError.value = 'Password must contain uppercase, lowercase, number, and special character'
+        return !passwordError.value
+    }
+
     return !passwordError.value
 }
 
