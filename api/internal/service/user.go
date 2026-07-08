@@ -136,12 +136,14 @@ func (s *Service) CreateUserSelfSignup(ctx context.Context, user model.User) (mo
 	}
 	err = s.Store.PostSubscription(ctx, sub)
 	if err != nil {
-		return model.User{}, ErrPostUser
+		log.Printf("error creating subscription: %s", err.Error())
+		return model.User{}, err
 	}
 
 	err = s.PostSettings(ctx, user.ID)
 	if err != nil {
-		return model.User{}, ErrPostUser
+		log.Printf("error creating settings: %s", err.Error())
+		return model.User{}, err
 	}
 
 	return user, nil
