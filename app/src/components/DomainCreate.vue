@@ -92,7 +92,7 @@
                         </article>
                         <footer>
                             <nav>
-                                <button @click="postDomain" class="cta">
+                                <button @click="postDomain" :disabled="saving" :aria-busy="saving" class="cta">
                                     {{ ownershipPending ? 'Verify ownership' : 'Add Domain' }}
                                 </button>
                                 <button @click="close" class="cancel">
@@ -299,6 +299,7 @@ const step = ref(1)
 const ownershipPending = ref(false)
 const createdDomain = ref({ id: '' })
 const error = ref('')
+const saving = ref(false)
 const step2Error = ref('')
 const nameError = ref(false)
 const copyText = ref('Click to copy')
@@ -332,6 +333,7 @@ const postDomain = async () => {
     }
 
     try {
+        saving.value = true
         const res = await domainApi.create(payload)
         createdDomain.value = res.data
         toast('Domain added')
@@ -351,6 +353,8 @@ const postDomain = async () => {
                 error.value = err.data?.error || err.message || err.message
             }
         }
+    } finally {
+        saving.value = false
     }
 }
 

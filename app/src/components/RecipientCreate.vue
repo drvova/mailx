@@ -34,7 +34,7 @@
                     </article>
                     <footer>
                         <nav>
-                            <button @click="postRecipient" class="cta">
+                            <button @click="postRecipient" :disabled="saving" :aria-busy="saving" class="cta">
                                 Add Recipient
                             </button>
                             <button @click="close" class="cancel">
@@ -65,6 +65,7 @@ const recipient = ref({
 })
 const error = ref('')
 const emailError = ref(false)
+const saving = ref(false)
 
 const validateEmail = () => {
     emailError.value = !recipient.value.email
@@ -77,6 +78,7 @@ const postRecipient = async () => {
     }
 
     try {
+        saving.value = true
         await recipientApi.create(recipient.value)
         toast('Recipient added')
         error.value = ''
@@ -90,6 +92,8 @@ const postRecipient = async () => {
                 error.value = 'Too many requests, please try again later.'
             }
         }
+    } finally {
+        saving.value = false
     }
 }
 

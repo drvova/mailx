@@ -5,7 +5,7 @@
             <div class="flex gap-3 items-center justify-between">
                 <div class="max-lg:hidden relative">
                     <form v-if="loaded" @submit.prevent="getList" autocomplete="off">
-                        <input class="search" type="text" v-model="search" placeholder="Search aliases..." id="input_search">
+                        <input class="search" type="search" v-model="search" placeholder="Search aliases..." id="input_search" aria-label="Search aliases">
                     </form>
                     <button v-if="searchQuery" @click.prevent="clearSearch" class="absolute top-0 right-0 bottom-0 px-2 flex items-center justify-center">
                         <i class="icon close icon-tertiary text-base"></i>
@@ -21,7 +21,7 @@
         <div class="mb-7 tablet-lg">
             <div class="relative">
                 <form v-if="loaded" @submit.prevent="getList" autocomplete="off">
-                    <input class="search" type="text" v-model="search" placeholder="Search aliases...">
+                    <input class="search" type="search" v-model="search" placeholder="Search aliases..." aria-label="Search aliases">
                 </form>
                 <button v-if="searchQuery" @click.prevent="clearSearch" class="absolute top-0 right-0 bottom-0 px-2 flex items-center justify-center">
                     <i class="icon close icon-tertiary text-base"></i>

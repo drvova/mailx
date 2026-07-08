@@ -70,12 +70,14 @@ import { useRoute } from 'vue-router'
 import { userApi } from '../api/user.ts'
 import events from '../events.ts'
 import ThemeSwitch from './ThemeSwitch.vue'
+import { appConfirm } from '../composables/useConfirm.ts'
 
 const route = ref('/')
 const currentRoute = useRoute()
 const email = ref(localStorage.getItem('email'))
 
 const logout = async () => {
+    if (!await appConfirm('End your session?')) return
     try {
         await userApi.logout()
         userApi.clearSession()

@@ -122,7 +122,7 @@
             </p>
             <hr>
             <div class="mb-6">
-                <button @click="saveSettings" class="cta">
+                <button @click="saveSettings" :disabled="saving" :aria-busy="saving" class="cta">
                     Save Settings
                 </button>
             </div>
@@ -154,6 +154,7 @@ const domains = ref(envDomains)
 const recipients = ref([])
 const success = ref('')
 const error = ref('')
+const saving = ref(false)
 const aliasFormats = ref(['Words', 'Random', 'UUID'])
 const includeHeader = ref(true)
 const loaded = ref(false)
@@ -183,6 +184,7 @@ const saveSettings = async () => {
     req.value.remove_header = !includeHeader.value
 
     try {
+        saving.value = true
         const res = await settingsApi.update(req.value)
         success.value = res.data.message
         error.value = ''
@@ -191,6 +193,8 @@ const saveSettings = async () => {
             success.value = ''
             error.value = err.message
         }
+    } finally {
+        saving.value = false
     }
 }
 
