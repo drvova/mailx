@@ -158,7 +158,7 @@ const isLoggedIn = (): boolean => {
 
 // Authentication guard
 router.beforeEach((to, _) => {
-    document.title = to.name as string
+    document.title = `${String(to.name ?? 'FreeTheMail')} — FreeTheMail`
 
     // Protect all /account/* routes
     if (to.path.startsWith('/account') && !isLoggedIn()) {

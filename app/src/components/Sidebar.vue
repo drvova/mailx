@@ -7,19 +7,19 @@
                 </h1>
             </router-link>
             <div class="flex flex-col items-center">
-                <router-link v-bind:class="{ 'active': route == '/account' && !route.startsWith('/account/') }" to="/account">
+                <router-link v-bind:class="{ 'active': route == '/account' && !route.startsWith('/account/') }" :aria-current="route == '/account' && !route.startsWith('/account/') ? 'page' : undefined" to="/account">
                     <i class="icon at icon-primary"></i>
                     Aliases
                 </router-link>
-                <router-link v-bind:class="{ 'active': route == '/account/wildcard' }" to="/account/wildcard">
+                <router-link v-bind:class="{ 'active': route == '/account/wildcard' }" :aria-current="route == '/account/wildcard' ? 'page' : undefined" to="/account/wildcard">
                     <i class="icon scan icon-primary"></i>
                     Wildcard
                 </router-link>
-                <router-link v-bind:class="{ 'active': route == '/account/inbox' }" to="/account/inbox">
+                <router-link v-bind:class="{ 'active': route == '/account/inbox' }" :aria-current="route == '/account/inbox' ? 'page' : undefined" to="/account/inbox">
                     <i class="icon inbox icon-primary"></i>
                     Temp Mail
                 </router-link>
-                <router-link v-bind:class="{ 'active': route == '/account/recipients' }" to="/account/recipients">
+                <router-link v-bind:class="{ 'active': route == '/account/recipients' }" :aria-current="route == '/account/recipients' ? 'page' : undefined" to="/account/recipients">
                     <i class="icon inbox icon-primary"></i>
                     Recipients
                 </router-link>
@@ -27,19 +27,19 @@
                     <i class="icon global icon-primary"></i>
                     Domains
                 </router-link> -->
-                <router-link v-bind:class="{ 'active': route == '/account/stats' }" to="/account/stats">
+                <router-link v-bind:class="{ 'active': route == '/account/stats' }" :aria-current="route == '/account/stats' ? 'page' : undefined" to="/account/stats">
                     <i class="icon chart icon-primary"></i>
                     Stats
                 </router-link>
-                <router-link v-bind:class="{ 'active': route == '/account/diagnostics' }" to="/account/diagnostics">
+                <router-link v-bind:class="{ 'active': route == '/account/diagnostics' }" :aria-current="route == '/account/diagnostics' ? 'page' : undefined" to="/account/diagnostics">
                     <i class="icon alert icon-primary"></i>
                     Diagnostics
                 </router-link>
-                <router-link v-bind:class="{ 'active': route == '/account/settings' }" to="/account/settings">
+                <router-link v-bind:class="{ 'active': route == '/account/settings' }" :aria-current="route == '/account/settings' ? 'page' : undefined" to="/account/settings">
                     <i class="icon settings icon-primary"></i>
                     Settings
                 </router-link>
-                <router-link v-bind:class="{ 'active': route == '/account/profile' }" to="/account/profile">
+                <router-link v-bind:class="{ 'active': route == '/account/profile' }" :aria-current="route == '/account/profile' ? 'page' : undefined" to="/account/profile">
                     <i class="icon user icon-primary"></i>
                     Account
                 </router-link>

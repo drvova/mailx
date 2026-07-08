@@ -54,6 +54,14 @@ func (d *Database) GetInboxMessage(ctx context.Context, ID uint, userID string) 
 	return message, err
 }
 
+func (d *Database) GetInboxUnreadCount(ctx context.Context, userID string) (int64, error) {
+	var count int64
+	err := d.Client.WithContext(ctx).Model(&model.InboxMessage{}).
+		Where("user_id = ? AND `read` = ?", userID, false).
+		Count(&count).Error
+	return count, err
+}
+
 func (d *Database) DeleteInboxMessage(ctx context.Context, ID uint, userID string) error {
 	return d.Client.WithContext(ctx).
 		Where("id = ? AND user_id = ?", ID, userID).

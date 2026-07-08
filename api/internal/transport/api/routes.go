@@ -87,6 +87,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 
 	v1.Get("/alias/:id", h.GetAlias)
 	v1.Get("/alias/:id/inbox", h.GetInboxMessages)
+	v1.Get("/inbox/unread", h.GetInboxUnread)
 	v1.Get("/inbox/message/:id", h.GetInboxMessage)
 	v1.Delete("/inbox/message/:id", h.DeleteInboxMessage)
 	v1.Get("/aliases", h.GetAliases)

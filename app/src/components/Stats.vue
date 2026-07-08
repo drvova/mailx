@@ -5,7 +5,7 @@
         </header>
         <div class="card-primary pt-7">
             <h3>Messages in last 7 days</h3>
-            <div id="chart" class="mb-5"></div>
+            <div id="chart" role="img" :aria-label="chartLabel" class="mb-5"></div>
             <h3>Messages in last 90 days</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-8">
                 <div class="p-4 border-r border-secondary">
@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import ApexCharts from 'apexcharts'
@@ -101,6 +101,11 @@ const initChart = () => {
     chart = new ApexCharts(document.querySelector('#chart'), options)
     chart.render()
 }
+
+const chartLabel = computed(() => {
+    const total = stats.value.forwards + stats.value.blocks + stats.value.replies + stats.value.sends
+    return `Bar chart: messages in last 7 days. ${total} total: ${stats.value.forwards} forwards, ${stats.value.blocks} blocks, ${stats.value.replies} replies, ${stats.value.sends} sends.`
+})
 
 let chart: ApexCharts | undefined
 

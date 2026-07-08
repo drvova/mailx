@@ -1,9 +1,10 @@
 <template>
     <div class="page page-bg">
+        <a href="#main" class="skip-link">Skip to content</a>
         <div class="max-sm:hidden [@media(max-height:530px)]:hidden w-[224px] flex-shrink-0 fixed h-full">
             <Sidebar />
         </div>
-        <div class="mb-[65px] sm:mb-0 sm:ml-[224px] [@media(max-height:530px)]:ml-0 [@media(max-height:530px)]:mb-[65px] grow overflow-x-hidden">
+        <main id="main" class="mb-[65px] sm:mb-0 sm:ml-[224px] [@media(max-height:530px)]:ml-0 [@media(max-height:530px)]:mb-[65px] grow overflow-x-hidden">
             <div class="mobile">
                 <MobileHeader />
             </div>
@@ -16,7 +17,7 @@
             <div class="mobile">
                 <Tabbar />
             </div>
-        </div>
+        </main>
     </div>
 </template>
 

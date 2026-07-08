@@ -14,6 +14,7 @@ import (
 
 var (
 	ErrGetInboxMessages   = errors.New("Unable to retrieve inbox messages.")
+	ErrGetInboxUnread     = errors.New("Unable to retrieve unread count.")
 	ErrGetInboxMessage    = errors.New("Unable to retrieve inbox message.")
 	ErrDeleteInboxMessage = errors.New("Unable to delete inbox message.")
 	ErrInboxMessageSize   = errors.New("inbox message exceeds size limit")
@@ -22,6 +23,7 @@ var (
 type InboxStore interface {
 	PostInboxMessage(context.Context, model.InboxMessage) error
 	GetInboxMessages(context.Context, string, string) ([]model.InboxMessage, error)
+	GetInboxUnreadCount(context.Context, string) (int64, error)
 	GetInboxMessage(context.Context, uint, string) (model.InboxMessage, error)
 	DeleteInboxMessage(context.Context, uint, string) error
 }
@@ -81,6 +83,16 @@ func (s *Service) GetInboxMessages(ctx context.Context, aliasID string, userID s
 	}
 
 	return messages, nil
+}
+
+func (s *Service) GetInboxUnreadCount(ctx context.Context, userID string) (int64, error) {
+	count, err := s.Store.GetInboxUnreadCount(ctx, userID)
+	if err != nil {
+		log.Printf("error getting inbox unread count: %s", err.Error())
+		return 0, ErrGetInboxUnread
+	}
+
+	return count, nil
 }
 
 // GetRenderedInboxMessage loads a stored message, parses its MIME structure
