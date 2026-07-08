@@ -110,6 +110,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 import { ApiError } from '../api/api.ts'
+import { toast } from '../composables/useToast.ts'
 import { aliasApi } from '../api/alias'
 import { settingsApi } from '../api/settings.ts'
 import AliasRow from './AliasRow.vue'
@@ -204,6 +205,7 @@ const deleteAlias = async (payload: any) => {
     try {
         await aliasApi.delete(payload.id)
         error.value = ''
+        toast('Alias deleted')
         fetch()
     } catch (err) {
         if (err instanceof ApiError) {

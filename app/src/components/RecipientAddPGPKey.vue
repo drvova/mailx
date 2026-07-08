@@ -45,6 +45,7 @@ import { ApiError } from '../api/api.ts'
 import overlay from '@preline/overlay'
 import { recipientApi } from '../api/recipient.ts'
 import events from '../events.ts'
+import { toast } from '../composables/useToast.ts'
 
 const props = defineProps(['recipient'])
 const recipient = ref(props.recipient)
@@ -71,6 +72,7 @@ const addKey = async () => {
     try {
         await recipientApi.update(payload)
         error.value = ''
+        toast('PGP key added')
         events.emit('recipient.update', {})
         close()
     } catch (err) {

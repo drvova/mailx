@@ -93,6 +93,7 @@ import { ApiError } from '../api/api.ts'
 import { aliasApi } from '../api/alias.ts'
 import { inboxApi } from '../api/inbox.ts'
 import { useClipboard } from '../composables/useClipboard.ts'
+import { toast } from '../composables/useToast.ts'
 import CopyButton from './CopyButton.vue'
 
 interface InboxAlias {
@@ -170,7 +171,8 @@ const createInbox = async () => {
         await getInboxes()
         const created = inboxes.value.find((a) => a.id === response.data.alias?.id)
         if (created) selectInbox(created)
-        copy(response.data.alias?.name || '')
+        await copy(response.data.alias?.name || '')
+        toast('Temp inbox ready — address copied')
     } catch (err) {
         handle(err)
     } finally {
@@ -210,6 +212,7 @@ const deleteMsg = async (id: number) => {
         messages.value = messages.value.filter((m) => m.id !== id)
         openMessage.value = null
         error.value = ''
+        toast('Message deleted')
     } catch (err) {
         handle(err)
     }

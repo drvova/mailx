@@ -202,6 +202,7 @@ import events from '../events.ts'
 import { formatDistanceToNow } from 'date-fns'
 import dropdown from '@preline/dropdown'
 import { appConfirm } from '../composables/useConfirm.ts'
+import { toast } from '../composables/useToast.ts'
 
 const props = defineProps(['alias', 'recipients', 'catchAll'])
 const alias = ref(props.alias)
@@ -220,7 +221,11 @@ const updateAlias = async () => {
     try {
         await aliasApi.update(alias.value.id, alias.value)
         renderRow()
-    } catch {}
+        toast(alias.value.enabled ? 'Alias enabled' : 'Alias disabled')
+    } catch {
+        alias.value.enabled = !alias.value.enabled // revert the optimistic toggle
+        toast('Failed to update alias', 'error')
+    }
 }
 
 const deleteAlias = async () => {

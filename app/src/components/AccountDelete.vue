@@ -64,6 +64,7 @@ import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import overlay from '@preline/overlay'
 import { appConfirm } from '../composables/useConfirm.ts'
+import { toast } from '../composables/useToast.ts'
 
 const req = ref({ otp: '' })
 const otp = ref('')
@@ -84,8 +85,9 @@ const promptDeleteAccount = async () => {
 const deleteAccount = async () => {
     try {
         await userApi.delete(req.value)
-        alert('Account is deleted successfully. You will be logged out.')
-        userApi.clearSession()
+        toast('Account deleted. Logging you out...')
+        // clearSession() hard-redirects; give the toast a moment to be seen
+        setTimeout(() => userApi.clearSession(), 1500)
     } catch (err) {
         if (err instanceof ApiError) {
             error.value = err.data?.error || err.message || err.message

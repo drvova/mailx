@@ -1,8 +1,9 @@
 <template>
     <Teleport to="body">
-        <div role="status" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 items-end">
+        <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 items-end">
             <TransitionGroup name="toast-fade">
-                <div v-for="t in toasts" :key="t.id" class="toast-panel text-sm px-4 py-3">
+                <div v-for="t in toasts" :key="t.id" :role="t.kind === 'error' ? 'alert' : 'status'"
+                    class="toast-panel text-sm px-4 py-3" :class="{ error: t.kind === 'error' }">
                     {{ t.message }}
                 </div>
             </TransitionGroup>
@@ -21,6 +22,11 @@ import { toasts } from '../composables/useToast.ts'
     border-radius: var(--radius);
     box-shadow: var(--raised-shadow);
     font-family: var(--font-mono);
+}
+
+.toast-panel.error {
+    border-color: var(--danger);
+    color: var(--danger);
 }
 
 .toast-fade-enter-active {

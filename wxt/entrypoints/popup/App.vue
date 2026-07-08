@@ -17,6 +17,7 @@
         </div>
       </nav>
     </header>
+    <ConfirmDialog />
   </div>
 </template>
 
@@ -26,6 +27,7 @@ import { ref, onMounted } from 'vue'
 import { store } from '@/lib/store'
 import { Defaults, Preferences } from '@/lib/types'
 import Login from '@/components/popup/Login.vue'
+import ConfirmDialog from '@/components/popup/ConfirmDialog.vue'
 import Aliases from '@/components/popup/Aliases.vue'
 import Settings from '@/components/popup/Settings.vue'
 

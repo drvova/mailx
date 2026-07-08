@@ -1,4 +1,5 @@
 @import "../../../app/src/style/fonts/fonts.css";
+@import "../../../app/src/style/components/tokens.css";
 @import "../../../app/src/style/components/color.css";
 @import "../../../app/src/style/components/page.css";
 @import "../../../app/src/style/components/button.css";

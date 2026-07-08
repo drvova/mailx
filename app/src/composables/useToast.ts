@@ -3,6 +3,7 @@ import { reactive } from 'vue'
 interface Toast {
     id: number
     message: string
+    kind: 'status' | 'error'
 }
 
 let nextId = 0
@@ -10,9 +11,9 @@ let nextId = 0
 // Module-level singleton list, mirrors the useConfirm pattern.
 export const toasts = reactive<Toast[]>([])
 
-export function toast(message: string) {
+export function toast(message: string, kind: 'status' | 'error' = 'status') {
     const id = nextId++
-    toasts.push({ id, message })
+    toasts.push({ id, message, kind })
     setTimeout(() => {
         const index = toasts.findIndex(t => t.id === id)
         if (index !== -1) toasts.splice(index, 1)

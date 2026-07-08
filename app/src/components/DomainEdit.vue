@@ -61,6 +61,7 @@ const domain = ref(props.domain)
 const recipients = ref(props.recipients)
 const error = ref('')
 import events from '../events.ts'
+import { toast } from '../composables/useToast.ts'
 
 const updateDomain = async () => {
     const payload = {
@@ -71,6 +72,7 @@ const updateDomain = async () => {
     try {
         await domainApi.update(domain.value.id, payload)
         error.value = ''
+        toast('Domain updated')
         events.emit('domain.update', {})
         close()
     } catch (err) {

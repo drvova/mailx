@@ -42,6 +42,7 @@ import { domainApi } from '../api/domain.ts'
 import overlay from '@preline/overlay'
 import events from '../events.ts'
 import { appConfirm } from '../composables/useConfirm.ts'
+import { toast } from '../composables/useToast.ts'
 
 const props = defineProps(['domain'])
 const domain = ref(props.domain)
@@ -52,6 +53,7 @@ const deleteDomain = async () => {
 
     try {
         await domainApi.delete(domain.value.id)
+        toast('Domain deleted')
         events.emit('domain.reload', {})
         close()
     } catch (err) {

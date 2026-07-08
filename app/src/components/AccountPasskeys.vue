@@ -70,6 +70,7 @@ import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser'
 import { appConfirm } from '../composables/useConfirm.ts'
+import { toast } from '../composables/useToast.ts'
 
 const credential = {
     id: '',
@@ -99,6 +100,7 @@ const deleteCred = async (id: string) => {
         await userApi.deleteCredential(id)
         list.value = list.value.filter((cred: any) => cred.id !== id)
         error.value = ''
+        toast('Passkey deleted')
     } catch (err) {
         if (err instanceof ApiError) {
             error.value = err.message

@@ -95,6 +95,7 @@ import Pagination from './Pagination.vue'
 import SkeletonRows from './SkeletonRows.vue'
 import events from '../events.ts'
 import { RouterLink } from 'vue-router'
+import { toast } from '../composables/useToast.ts'
 
 const alias = {
     id: '',
@@ -169,6 +170,7 @@ const deleteAlias = async (payload: any) => {
     try {
         await aliasApi.delete(payload.id)
         error.value = ''
+        toast('Wildcard deleted')
         fetch()
     } catch (err) {
         if (err instanceof ApiError) {

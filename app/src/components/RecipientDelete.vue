@@ -72,6 +72,7 @@ import overlay from '@preline/overlay'
 import select from '@preline/select'
 import events from '../events.ts'
 import { appConfirm } from '../composables/useConfirm.ts'
+import { toast } from '../composables/useToast.ts'
 
 const props = defineProps(['recipient', 'recipients'])
 const recipient = ref(props.recipient)
@@ -87,6 +88,7 @@ const deleteRecipient = async () => {
 
     try {
         await recipientApi.delete(recipient.value.id, data)
+        toast('Recipient deleted')
         events.emit('recipient.reload', {})
         close()
     } catch (err) {

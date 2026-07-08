@@ -106,6 +106,7 @@ import dropdown from '@preline/dropdown'
 import { domainApi } from '../api/domain.ts'
 import DomainDelete from './DomainDelete.vue'
 import DomainVerify from './DomainVerify.vue'
+import { toast } from '../composables/useToast.ts'
 
 const props = defineProps(['domain'])
 const domain = ref(props.domain)
@@ -114,7 +115,11 @@ const updateDomain = async () => {
     domain.value.enabled = !domain.value.enabled
     try {
         await domainApi.update(domain.value.id, domain.value)
-    } catch {}
+        toast(domain.value.enabled ? 'Domain enabled' : 'Domain disabled')
+    } catch {
+        domain.value.enabled = !domain.value.enabled // revert the optimistic toggle
+        toast('Failed to update domain', 'error')
+    }
 }
 
 const dnsRecordsVerified = () => {

@@ -162,6 +162,7 @@ import { recipientApi } from '../api/recipient.ts'
 import events from '../events.ts'
 import dropdown from '@preline/dropdown'
 import { appConfirm } from '../composables/useConfirm.ts'
+import { toast } from '../composables/useToast.ts'
 
 const props = defineProps(['recipient', 'recipients'])
 const recipient = ref(props.recipient)
@@ -181,6 +182,7 @@ const updateRecipient = async () => {
 
     try {
         await recipientApi.update(payload)
+        toast(recipient.value.pgp_enabled ? 'PGP encryption enabled' : 'PGP encryption disabled')
     } catch (err) {
         if (err instanceof ApiError) {
             var errMsg = err.data?.error || err.message || err.message
@@ -191,7 +193,7 @@ const updateRecipient = async () => {
 
             recipient.value.pgp_enabled = temp_pgp_enabled // revert the change
 
-            alert(errMsg)
+            toast(errMsg, 'error')
         }
     }
 }
@@ -207,6 +209,7 @@ const deletePgpKey = async () => {
 
     try {
         await recipientApi.update(payload)
+        toast('PGP key removed')
         events.emit('recipient.update', {})
     } catch (err) {
         if (err instanceof ApiError) {
@@ -216,7 +219,7 @@ const deletePgpKey = async () => {
                 errMsg = 'Too many requests, please try again later.'
             }
 
-            alert(errMsg)
+            toast(errMsg, 'error')
         }
     }
 }
