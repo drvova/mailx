@@ -37,6 +37,48 @@
                 }
             }
         }
+
+        button.tabbar-more {
+            @apply p-0 text-primary hover:text-primary font-medium text-base cursor-pointer flex flex-row items-center justify-center rounded-md w-10 h-10 border-none bg-transparent;
+            transition: background 150ms var(--ease-smooth), box-shadow 150ms var(--ease-smooth);
+
+            &.active {
+                @apply border-none bg-tertiary;
+                background-image: var(--inset-bg);
+                box-shadow: var(--inset-shadow);
+
+                i {
+                    @apply icon-accent;
+                }
+            }
+        }
+    }
+
+    .tabbar-sheet-nav {
+        @apply flex flex-col gap-1 py-2;
+
+        a {
+            @apply flex items-center gap-3 px-4 py-3 text-primary text-sm font-medium rounded-md cursor-pointer no-underline;
+            transition: background 150ms var(--ease-smooth), box-shadow 150ms var(--ease-smooth);
+
+            &:hover {
+                background-image: var(--inset-bg);
+            }
+
+            &.active {
+                @apply bg-tertiary;
+                background-image: var(--inset-bg);
+                box-shadow: var(--inset-shadow);
+
+                i {
+                    @apply icon-accent;
+                }
+            }
+
+            i {
+                @apply text-lg;
+            }
+        }
     }
 
     nav[role=tablist] {
