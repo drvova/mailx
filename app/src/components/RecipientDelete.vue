@@ -71,6 +71,7 @@ import { recipientApi } from '../api/recipient.ts'
 import overlay from '@preline/overlay'
 import select from '@preline/select'
 import events from '../events.ts'
+import { appConfirm } from '../composables/useConfirm.ts'
 
 const props = defineProps(['recipient', 'recipients'])
 const recipient = ref(props.recipient)
@@ -80,7 +81,7 @@ const newEmails = ref([] as string[])
 const error = ref('')
 
 const deleteRecipient = async () => {
-    if (!confirm('Are you sure you want to delete recipient? Aliases without recipient(s) will be disabled.')) return
+    if (!(await appConfirm('Aliases without recipient(s) will be disabled.', { title: 'Delete this recipient?', confirmLabel: 'Delete recipient' }))) return
 
     const data = { recipients: newEmails.value.join(',') }
 

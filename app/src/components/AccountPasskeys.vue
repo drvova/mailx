@@ -69,6 +69,7 @@ import { onMounted, ref } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser'
+import { appConfirm } from '../composables/useConfirm.ts'
 
 const credential = {
     id: '',
@@ -92,7 +93,7 @@ const getList = async () => {
 }
 
 const deleteCred = async (id: string) => {
-    if (!confirm('Are you sure you want to delete Passkey?')) return
+    if (!(await appConfirm('You will no longer be able to log in with this passkey.', { title: 'Delete this passkey?', confirmLabel: 'Delete passkey' }))) return
 
     try {
         await userApi.deleteCredential(id)

@@ -41,13 +41,14 @@ import { ApiError } from '../api/api.ts'
 import { domainApi } from '../api/domain.ts'
 import overlay from '@preline/overlay'
 import events from '../events.ts'
+import { appConfirm } from '../composables/useConfirm.ts'
 
 const props = defineProps(['domain'])
 const domain = ref(props.domain)
 const error = ref('')
 
 const deleteDomain = async () => {
-    if (!confirm('Are you sure you want to delete this domain?')) return
+    if (!(await appConfirm('Aliases on this domain will stop working.', { title: 'Delete this domain?', confirmLabel: 'Delete domain' }))) return
 
     try {
         await domainApi.delete(domain.value.id)

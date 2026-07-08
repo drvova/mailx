@@ -67,6 +67,7 @@ import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import AccessKeysCreate from './AccessKeysCreate.vue'
 import events from '../events.ts'
+import { appConfirm } from '../composables/useConfirm.ts'
 
 const credential = {
     id: '',
@@ -91,7 +92,7 @@ const getList = async () => {
 }
 
 const deleteAccessKey = async (id: string) => {
-    if (!confirm('Are you sure you want to delete Access Key?')) return
+    if (!(await appConfirm('The browser extension using this key will be signed out.', { title: 'Delete this access key?', confirmLabel: 'Delete key' }))) return
 
     try {
         await userApi.accessKeyDelete(id)

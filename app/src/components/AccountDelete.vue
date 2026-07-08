@@ -63,6 +63,7 @@ import { ref, onMounted } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import overlay from '@preline/overlay'
+import { appConfirm } from '../composables/useConfirm.ts'
 
 const req = ref({ otp: '' })
 const otp = ref('')
@@ -74,9 +75,9 @@ const validateOtp = () => {
     return !otpError.value
 }
 
-const promptDeleteAccount = () => {
+const promptDeleteAccount = async () => {
     if (!validateOtp()) return
-    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) return
+    if (!(await appConfirm('This action cannot be undone.', { title: 'Delete your account?', confirmLabel: 'Delete account' }))) return
     deleteAccount()
 }
 

@@ -10,8 +10,6 @@ const isLoggedIn = computed(() => {
 })
 
 const logout = async () => {
-    if (!confirm('Do you want to proceed with the logout?')) return
-
     try {
         await userApi.logout()
         userApi.clearSession()

@@ -1,6 +1,6 @@
 @layer components {
     button {
-        @apply text-accent hover:text-accent-alt text-sm focus:outline-none disabled:opacity-50 disabled:pointer-events-none py-2;
+        @apply text-accent hover:text-accent-alt text-sm disabled:opacity-50 disabled:pointer-events-none py-2;
 
         &.cta {
             @apply sm:text-base text-sm py-2 px-3 inline-flex items-center gap-x-2 font-semibold;
@@ -74,6 +74,11 @@
 
             &.xs {
                 @apply font-medium font-secondary text-xs py-1.5 px-2;
+            }
+
+            &[aria-busy="true"] {
+                @apply pointer-events-none;
+                animation: sk-pulse 1.6s ease-in-out infinite;
             }
         }
 

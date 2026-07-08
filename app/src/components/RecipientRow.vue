@@ -161,6 +161,7 @@ import RecipientDelete from './RecipientDelete.vue'
 import { recipientApi } from '../api/recipient.ts'
 import events from '../events.ts'
 import dropdown from '@preline/dropdown'
+import { appConfirm } from '../composables/useConfirm.ts'
 
 const props = defineProps(['recipient', 'recipients'])
 const recipient = ref(props.recipient)
@@ -196,7 +197,7 @@ const updateRecipient = async () => {
 }
 
 const deletePgpKey = async () => {
-    if (!confirm('Are you sure you want to remove PGP public key?')) return
+    if (!(await appConfirm('Forwarded messages to this recipient will no longer be encrypted.', { title: 'Remove PGP key?', confirmLabel: 'Remove key' }))) return
 
     const payload = {
         id: recipient.value.id,

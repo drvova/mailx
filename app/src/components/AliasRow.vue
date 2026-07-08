@@ -201,6 +201,7 @@ import { aliasApi } from '../api/alias.ts'
 import events from '../events.ts'
 import { formatDistanceToNow } from 'date-fns'
 import dropdown from '@preline/dropdown'
+import { appConfirm } from '../composables/useConfirm.ts'
 
 const props = defineProps(['alias', 'recipients', 'catchAll'])
 const alias = ref(props.alias)
@@ -222,9 +223,9 @@ const updateAlias = async () => {
     } catch {}
 }
 
-const deleteAlias = () => {
+const deleteAlias = async () => {
     const errMessage = props.catchAll ? 'WARNING: You will not be able to create the same catch-all alias in the next 90 days. Are you sure you want to delete alias? ' : 'Are you sure you want to delete alias?'
-    if (!confirm(errMessage)) return
+    if (!(await appConfirm(errMessage, { confirmLabel: 'Delete alias' }))) return
 
     events.emit('alias.delete', { id: alias.value.id, catchAll: props.catchAll })
 }

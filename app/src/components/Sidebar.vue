@@ -76,8 +76,6 @@ const currentRoute = useRoute()
 const email = ref(localStorage.getItem('email'))
 
 const logout = async () => {
-    if (!confirm('Do you want to proceed with the logout?')) return
-
     try {
         await userApi.logout()
         userApi.clearSession()

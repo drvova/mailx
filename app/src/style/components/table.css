@@ -36,6 +36,7 @@
 
             td {
                 @apply px-4 py-4 whitespace-nowrap text-start text-sm text-primary;
+                font-variant-numeric: tabular-nums;
 
                 &:first-child {
                     @apply text-start px-0 pr-4;

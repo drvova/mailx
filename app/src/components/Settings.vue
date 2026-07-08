@@ -138,6 +138,7 @@ import { ApiError } from '../api/api.ts'
 import { settingsApi } from '../api/settings.ts'
 import { recipientApi } from '../api/recipient.ts'
 import { logApi } from '../api/log.ts'
+import { appConfirm } from '../composables/useConfirm.ts'
 
 const req = ref({
     id: '',
@@ -208,7 +209,7 @@ const getRecipients = async () => {
 }
 
 const deleteAllLogs = async () => {
-    if (!confirm('Are you sure you want to delete all diagnostic logs? This action cannot be undone.')) return
+    if (!(await appConfirm('This action cannot be undone.', { title: 'Delete all diagnostic logs?', confirmLabel: 'Delete logs' }))) return
 
     try {
         const res = await logApi.deleteAll()
