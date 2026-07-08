@@ -767,6 +767,81 @@ func (d *Database) AdminGetSubscriptionStats(ctx context.Context) (active, expir
 	return
 }
 
+func (d *Database) AdminGetDailyActivity(ctx context.Context, days int) ([]model.DailyStats, error) {
+	var results []model.DailyStats
+	start := time.Now().AddDate(0, 0, -days)
+	// Get daily forwards, blocks, replies, sends from messages
+	rows, err := d.Client.Model(&model.Message{}).
+		Select("date(created_at) as date, count(*) as total, sum(case when type = 0 then 1 else 0 end) as forwards, sum(case when type = 1 then 1 else 0 end) as blocks, sum(case when type = 2 then 1 else 0 end) as replies, sum(case when type = 3 then 1 else 0 end) as sends").
+		Where("created_at >= ?", start).
+		Group("date(created_at)").
+		Order("date desc").
+		Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var ds model.DailyStats
+		rows.Scan(&ds.Date, &ds.Total, &ds.Forwards, &ds.Blocks, &ds.Replies, &ds.Sends)
+		results = append(results, ds)
+	}
+	// Also get daily signups
+	signupRows, err2 := d.Client.Model(&model.User{}).
+		Select("date(created_at) as date, count(*) as signups").
+		Where("created_at >= ?", start).
+		Group("date(created_at)").
+		Order("date desc").
+		Rows()
+	if err2 == nil {
+		defer signupRows.Close()
+		signupMap := map[string]int64{}
+		for signupRows.Next() {
+			var date string; var count int64
+			signupRows.Scan(&date, &count)
+			signupMap[date] = count
+		}
+		for i := range results { results[i].Signups = signupMap[results[i].Date] }
+	}
+	return results, nil
+}
+
+func (d *Database) AdminGetPlanDistribution(ctx context.Context) (map[string]int64, error) {
+	var rows []struct { Tier string; Count int64 }
+	err := d.Client.Model(&model.Subscription{}).
+		Select("tier, count(*) as count").
+		Where("tier != '' AND is_active = true").
+		Group("tier").
+		Scan(&rows).Error
+	if err != nil { return nil, err }
+	result := map[string]int64{}
+	for _, r := range rows { result[r.Tier] = r.Count }
+	return result, nil
+}
+
+func (d *Database) AdminGetDomainHealth(ctx context.Context) (verified, unverified int64, err error) {
+	d.Client.Model(&model.Domain{}).Where("mx_verified_at is not null AND mx_verified_at > '0001-01-01'").Count(&verified)
+	d.Client.Model(&model.Domain{}).Where("mx_verified_at is null OR mx_verified_at <= '0001-01-01'").Count(&unverified)
+	return
+}
+
+func (d *Database) AdminGlobalUserSearch(ctx context.Context, query string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, error) {
+	var user model.User
+	q := d.Client.Where("email LIKE ?", "%"+query+"%").First(&user)
+	if q.Error != nil {
+		return nil, nil, nil, nil, nil, q.Error
+	}
+	var sub model.Subscription
+	d.Client.Where("user_id = ?", user.ID).First(&sub)
+	var aliases []model.Alias
+	d.Client.Where("user_id = ?", user.ID).Limit(50).Find(&aliases)
+	var domains []model.Domain
+	d.Client.Where("user_id = ?", user.ID).Find(&domains)
+	var recipients []model.Recipient
+	d.Client.Where("user_id = ?", user.ID).Limit(50).Find(&recipients)
+	return &user, &sub, aliases, domains, recipients, nil
+}
+
 func (d *Database) AdminGetLogsDateRange(ctx context.Context, logType, from, to string, limit, offset int) ([]model.Log, int64, error) {
 	q := d.Client.Model(&model.Log{})
 	if logType != "" {

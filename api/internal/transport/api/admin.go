@@ -109,6 +109,10 @@ type AdminService interface {
 	AdminGetDomainDNS(context.Context, string) (model.DNSConfig, error)
 	AdminUpdateUserNotes(context.Context, string, string) error
 	AdminGetSubscriptionStats(context.Context) (int64, int64, int64, error)
+	AdminGetDailyActivity(context.Context, int) ([]model.DailyStats, error)
+	AdminGetPlanDistribution(context.Context) (map[string]int64, error)
+	AdminGetDomainHealth(context.Context) (int64, int64, error)
+	AdminGlobalUserSearch(context.Context, string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1469,6 +1473,46 @@ func (h *Handler) AdminGetSubscriptionStats(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch subscription stats"})
 	}
 	return c.JSON(fiber.Map{"active": active, "expired": expired, "grace_period": grace})
+}
+
+func (h *Handler) AdminGetDailyActivity(c *fiber.Ctx) error {
+	days := c.QueryInt("days", 30)
+	stats, err := h.Service.AdminGetDailyActivity(c.Context(), days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch activity"})
+	}
+	return c.JSON(fiber.Map{"activity": stats})
+}
+
+func (h *Handler) AdminGetPlanDistribution(c *fiber.Ctx) error {
+	dist, err := h.Service.AdminGetPlanDistribution(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch plan distribution"})
+	}
+	return c.JSON(dist)
+}
+
+func (h *Handler) AdminGetDomainHealth(c *fiber.Ctx) error {
+	verified, unverified, err := h.Service.AdminGetDomainHealth(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch domain health"})
+	}
+	return c.JSON(fiber.Map{"verified": verified, "unverified": unverified})
+}
+
+func (h *Handler) AdminGlobalUserSearch(c *fiber.Ctx) error {
+	query := c.Query("q", "")
+	if query == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Query required"})
+	}
+	user, sub, aliases, domains, recipients, err := h.Service.AdminGlobalUserSearch(c.Context(), query)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "User not found"})
+	}
+	return c.JSON(fiber.Map{
+		"user": user, "subscription": sub,
+		"aliases": aliases, "domains": domains, "recipients": recipients,
+	})
 }
 
 func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {

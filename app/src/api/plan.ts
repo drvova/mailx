@@ -222,6 +222,14 @@ export const adminApi = {
     updateUserNotes: async (id: string, notes: string) => api.put(`/admin/user/${id}/notes`, { notes }),
     // Subscription stats breakdown
     subscriptionStats: async () => (await api.get('/admin/subscriptions/stats')).data as { active: number; expired: number; grace_period: number },
+    // Daily activity time-series
+    dailyActivity: async (days = 30) => (await api.get('/admin/daily-activity', { params: { days } })).data as { activity: any[] },
+    // Plan distribution
+    planDistribution: async () => (await api.get('/admin/plan-distribution')).data as Record<string, number>,
+    // Domain health
+    domainHealth: async () => (await api.get('/admin/domain-health')).data as { verified: number; unverified: number },
+    // Global user quick-search
+    globalSearch: async (q: string) => (await api.get('/admin/global-search', { params: { q } })).data as { user: AdminUser; subscription: any; aliases: AdminAlias[]; domains: AdminDomain[]; recipients: AdminRecipient[] },
 }
 
 export interface AdminAlias {

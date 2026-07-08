@@ -134,6 +134,10 @@ type AdminStore interface {
 	AdminGetDomainDNS(context.Context, string) (model.DNSConfig, error)
 	AdminUpdateUserNotes(context.Context, string, string) error
 	AdminGetSubscriptionStats(context.Context) (int64, int64, int64, error)
+	AdminGetDailyActivity(context.Context, int) ([]model.DailyStats, error)
+	AdminGetPlanDistribution(context.Context) (map[string]int64, error)
+	AdminGetDomainHealth(context.Context) (int64, int64, error)
+	AdminGlobalUserSearch(context.Context, string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -627,4 +631,21 @@ func (s *Service) AdminUpdateUserNotes(ctx context.Context, userID, notes string
 
 func (s *Service) AdminGetSubscriptionStats(ctx context.Context) (int64, int64, int64, error) {
 	return s.Store.AdminGetSubscriptionStats(ctx)
+}
+
+func (s *Service) AdminGetDailyActivity(ctx context.Context, days int) ([]model.DailyStats, error) {
+	if days <= 0 || days > 90 { days = 30 }
+	return s.Store.AdminGetDailyActivity(ctx, days)
+}
+
+func (s *Service) AdminGetPlanDistribution(ctx context.Context) (map[string]int64, error) {
+	return s.Store.AdminGetPlanDistribution(ctx)
+}
+
+func (s *Service) AdminGetDomainHealth(ctx context.Context) (int64, int64, error) {
+	return s.Store.AdminGetDomainHealth(ctx)
+}
+
+func (s *Service) AdminGlobalUserSearch(ctx context.Context, query string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, error) {
+	return s.Store.AdminGlobalUserSearch(ctx, query)
 }

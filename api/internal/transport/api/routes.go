@@ -305,6 +305,12 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Put("/user/:id/notes", h.AdminUpdateUserNotes)
 	admin.Get("/subscriptions/stats", h.AdminGetSubscriptionStats)
 
+	// Daily activity, plan distribution, domain health, global search
+	admin.Get("/daily-activity", h.AdminGetDailyActivity)
+	admin.Get("/plan-distribution", h.AdminGetPlanDistribution)
+	admin.Get("/domain-health", h.AdminGetDomainHealth)
+	admin.Get("/global-search", h.AdminGlobalUserSearch)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

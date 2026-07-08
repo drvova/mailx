@@ -4,6 +4,29 @@
             <h2>Admin</h2>
         </header>
 
+        <!-- Global quick-search -->
+        <div class="flex gap-2 mb-4">
+            <input v-model="globalQuery" placeholder="Quick-search user by email..." class="flex-1" @keyup.enter="globalSearch" />
+            <button class="cta cta-tertiary" @click="globalSearch">Search</button>
+        </div>
+        <div v-if="globalResult" class="card-secondary mb-4">
+            <div class="flex items-center justify-between mb-2">
+                <h3>{{ globalResult.user.email }}</h3>
+                <button class="cta cta-tertiary text-sm" @click="globalResult = null">Close</button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                <div><span class="text-gray-500">Tier:</span> {{ globalResult.subscription?.tier || 'none' }}</div>
+                <div><span class="text-gray-500">Active:</span> {{ globalResult.user.is_active ? 'Yes' : 'No' }}</div>
+                <div><span class="text-gray-500">Admin:</span> {{ globalResult.user.is_admin ? 'Yes' : 'No' }}</div>
+                <div><span class="text-gray-500">2FA:</span> {{ globalResult.user.totp_enabled ? 'Yes' : 'No' }}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mt-2 text-sm">
+                <div><span class="text-gray-500">Aliases:</span> {{ globalResult.aliases.length }}</div>
+                <div><span class="text-gray-500">Domains:</span> {{ globalResult.domains.length }}</div>
+                <div><span class="text-gray-500">Recipients:</span> {{ globalResult.recipients.length }}</div>
+            </div>
+        </div>
+
         <div class="card-primary">
             <ul class="flex gap-4 border-b mb-6 overflow-x-auto" role="tablist">
                 <li><button :class="tab === 'stats' ? 'font-bold border-b-2' : ''" @click="tab = 'stats'" role="tab">Stats</button></li>
@@ -53,6 +76,41 @@
                         <div class="card-secondary text-center"><p class="text-2xl font-bold text-green-500">{{ subStats.active }}</p><p class="text-sm text-gray-500">Active Subs</p></div>
                         <div class="card-secondary text-center"><p class="text-2xl font-bold text-yellow-500">{{ subStats.grace_period }}</p><p class="text-sm text-gray-500">Grace Period</p></div>
                         <div class="card-secondary text-center"><p class="text-2xl font-bold text-red-500">{{ subStats.expired }}</p><p class="text-sm text-gray-500">Expired</p></div>
+                    </div>
+                    <div v-if="planDist" class="mt-4">
+                        <h3 class="font-bold mb-2">Plan Distribution</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div v-for="(count, tier) in planDist" :key="tier" class="card-secondary text-center">
+                                <p class="text-lg font-bold">{{ count }}</p>
+                                <p class="text-sm text-gray-500">{{ tier }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="domHealth" class="mt-4">
+                        <h3 class="font-bold mb-2">Domain Health</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="card-secondary text-center"><p class="text-lg font-bold text-green-500">{{ domHealth.verified }}</p><p class="text-sm text-gray-500">Verified</p></div>
+                            <div class="card-secondary text-center"><p class="text-lg font-bold text-yellow-500">{{ domHealth.unverified }}</p><p class="text-sm text-gray-500">Unverified</p></div>
+                        </div>
+                    </div>
+                    <div v-if="dailyActivity.length" class="mt-4">
+                        <h3 class="font-bold mb-2">Daily Activity ({{ dailyActivity.length }} days)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="table text-xs">
+                                <thead><tr><th>Date</th><th>Signups</th><th>Forwards</th><th>Blocks</th><th>Replies</th><th>Sends</th><th>Total</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="d in dailyActivity.slice(0,14)" :key="d.date">
+                                        <td>{{ d.date }}</td>
+                                        <td>{{ d.signups }}</td>
+                                        <td>{{ d.forwards }}</td>
+                                        <td>{{ d.blocks }}</td>
+                                        <td>{{ d.replies }}</td>
+                                        <td>{{ d.sends }}</td>
+                                        <td class="font-bold">{{ d.total }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 <SkeletonRows v-else :rows="3" />
@@ -973,7 +1031,16 @@ const editUserNotes = async (u: AdminUser) => {
     if (notes === null) return
     try { await adminApi.updateUserNotes(u.id, notes); u.notes = notes } catch { /* */ } }
 const subStats = ref<any>(null)
+const dailyActivity = ref<any[]>([])
+const planDist = ref<Record<string, number> | null>(null)
+const domHealth = ref<{ verified: number; unverified: number } | null>(null)
+const globalQuery = ref('')
+const globalResult = ref<any>(null)
 const fetchSubStats = async () => { try { subStats.value = await adminApi.subscriptionStats() } catch { /* */ } }
+const fetchDailyActivity = async () => { try { const r = await adminApi.dailyActivity(); dailyActivity.value = r.activity } catch { /* */ } }
+const fetchPlanDist = async () => { try { planDist.value = await adminApi.planDistribution() } catch { /* */ } }
+const fetchDomainHealth = async () => { try { domHealth.value = await adminApi.domainHealth() } catch { /* */ } }
+const globalSearch = async () => { if (!globalQuery.value) return; try { globalResult.value = await adminApi.globalSearch(globalQuery.value) } catch { alert('User not found') } }
 
-onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats() })
+onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth() })
 </script>
