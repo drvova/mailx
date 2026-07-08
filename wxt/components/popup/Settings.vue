@@ -24,6 +24,7 @@
 
 <script lang="ts" setup>
 import { api } from '@/lib/api'
+import { appConfirm } from '@/lib/useConfirm'
 import { store } from '@/lib/store'
 import { Defaults, Preferences } from '@/lib/types'
 
@@ -50,13 +51,13 @@ const refreshDefaults = async () => {
 }
 
 const logout = async () => {
-    if (!confirm('Do you want to proceed with the logout?')) return
+    if (!(await appConfirm('You will need to log in again to use the extension.', { title: 'Log out?', confirmLabel: 'Log out' }))) return
 
     try {
         await api.logout(props.apiToken)
         store.clearAll()
         error.value = ''
-        alert('You have been logged out.')
+        success.value = 'You have been logged out.'
     } catch (err) {
         console.error('Logout error:', err)
         success.value = ''

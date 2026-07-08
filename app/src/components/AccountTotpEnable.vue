@@ -36,7 +36,7 @@
                                     v-bind:class="{ 'error': codeError }"
                                     id="totp_enable_code"
                                     placeholder="6-digit code"
-                                    type="text"
+                                    type="text" inputmode="numeric"
                                     pattern="[0-9]*"
                                 >
                                 <p v-if="codeError" class="error" role="alert">Required</p>

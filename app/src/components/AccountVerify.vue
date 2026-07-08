@@ -16,7 +16,7 @@
                     v-model="otp"
                     v-bind:class="{ 'error': otpError }"
                     id="account-otp"
-                    type="text"
+                    type="text" inputmode="numeric"
                     pattern="[0-9]*"
                 >
                 <p v-if="otpError" class="error" role="alert">Required</p>

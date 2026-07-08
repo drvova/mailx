@@ -19,7 +19,7 @@
                         <p v-if="accessKeyError" class="error">Required</p>
                     </div>
                     <div class="flex items-center w-full">
-                        <button :disabled="isLoading" @click="loginWithAccessKey" class="cta full">
+                        <button :disabled="isLoading" :aria-busy="isLoading" @click="loginWithAccessKey" class="cta full">
                             Log In
                         </button>
                     </div>

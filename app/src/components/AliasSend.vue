@@ -33,7 +33,7 @@
                                 v-bind:id="'to_email_' + alias.id"
                                 v-bind:class="{ 'error': emailError }"
                                 v-model="toEmail"
-                                type="text"
+                                type="email"
                             >
                             <p v-if="emailError" class="error" role="alert">Valid email required</p>
                         </div>
