@@ -182,3 +182,18 @@ func GetAuthToken(c *fiber.Ctx) string {
 
 	return ""
 }
+
+type AdminChecker interface {
+	GetUser(context.Context, string) (model.User, error)
+}
+
+func NewAdminGuard(service AdminChecker) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		userID := GetUserID(c)
+		user, err := service.GetUser(context.Background(), userID)
+		if err != nil || !user.IsAdmin {
+			return c.SendStatus(fiber.StatusForbidden)
+		}
+		return c.Next()
+	}
+}

@@ -19,6 +19,7 @@ type User struct {
 	PasswordHash   string                `json:"-"`
 	PasswordPlain  *string               `gorm:"-" json:"-"`
 	IsActive       bool                  `json:"is_active"`
+	IsAdmin        bool                  `gorm:"default:false" json:"is_admin"`
 	TotpSecret     string                `json:"-"`
 	TotpBackup     string                `json:"-"`
 	TotpBackupUsed string                `json:"-"`

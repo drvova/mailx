@@ -27,6 +27,13 @@ type APIConfig struct {
 	PreauthURL         string
 	PreauthPSK         string
 	PreauthTTL         time.Duration
+	AdminEmails        []string
+}
+
+type OxapayConfig struct {
+	MerchantKey  string
+	WebhookURL   string
+	ReturnURL    string
 }
 
 type DBConfig struct {
@@ -65,6 +72,7 @@ type Config struct {
 	DB         DBConfig
 	SMTPClient SMTPClientConfig
 	Service    ServiceConfig
+	Oxapay     OxapayConfig
 }
 
 func New() (Config, error) {
@@ -124,6 +132,10 @@ func New() (Config, error) {
 	dbHosts := strings.Split(os.Getenv("DB_HOSTS"), ",")
 	apiTrustedProxies := strings.Split(os.Getenv("API_TRUSTED_PROXIES"), ",")
 	apiAllowIPs := strings.Split(os.Getenv("API_ALLOW_IPS"), ",")
+	adminEmails := strings.Split(os.Getenv("ADMIN_EMAILS"), ",")
+	for i, e := range adminEmails {
+		adminEmails[i] = strings.TrimSpace(e)
+	}
 
 	preauthTTLStr := os.Getenv("PREAUTH_TTL")
 	preauthTTL, err := time.ParseDuration(preauthTTLStr)
@@ -160,6 +172,7 @@ func New() (Config, error) {
 			PreauthURL:         os.Getenv("PREAUTH_URL"),
 			PreauthPSK:         os.Getenv("PREAUTH_PSK"),
 			PreauthTTL:         preauthTTL,
+			AdminEmails:        adminEmails,
 		},
 		DB: DBConfig{
 			Hosts:    dbHosts,
@@ -188,6 +201,11 @@ func New() (Config, error) {
 			MaxSessions:         maxSessions,
 			IdLimiterMax:        idLimiterMax,
 			IdLimiterExpiration: idLimiterExpiration,
+		},
+		Oxapay: OxapayConfig{
+			MerchantKey: os.Getenv("OXAPAY_MERCHANT_KEY"),
+			WebhookURL:  os.Getenv("OXAPAY_WEBHOOK_URL"),
+			ReturnURL:   os.Getenv("OXAPAY_RETURN_URL"),
 		},
 	}, nil
 }

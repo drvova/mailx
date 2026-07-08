@@ -91,13 +91,14 @@ func (s *Service) PostRecipient(ctx context.Context, recipient model.Recipient) 
 		return ErrPostRecipientInactiveSub
 	}
 
+	limits := s.GetLimits(ctx, recipient.UserID)
 	count, err := s.Store.GetRecipientsCount(ctx, recipient.UserID)
 	if err != nil {
 		log.Printf("error creating recipient: %s", err.Error())
 		return ErrPostRecipient
 	}
 
-	if count >= s.Cfg.Service.MaxRecipients {
+	if count >= limits.MaxRecipients {
 		return ErrMaxExceededRecipient
 	}
 

@@ -111,6 +111,18 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	v1.Delete("/domain/:id", h.DeleteDomain)
 	v1.Post("/domain/:id/verify-dns", h.VerifyDomainDNSRecords)
 
+	// Plans - public list, admin CRUD
+	v1.Get("/plans", h.GetPlans)
+	admin := v1.Group("/admin", auth.NewAdminGuard(h.Service))
+	admin.Get("/plans", h.GetAllPlans)
+	admin.Post("/plan", h.CreatePlan)
+	admin.Put("/plan/:id", h.UpdatePlan)
+	admin.Delete("/plan/:id", h.DeletePlan)
+
+	// Billing - Oxapay checkout + webhook
+	v1.Post("/billing/checkout", h.CreateCheckoutSession)
+	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)
+
 	docs := h.Server.Group("/docs")
 	docs.Use(auth.NewBasicAuth(cfg))
 	docs.Get("/*", swagger.HandlerDefault)

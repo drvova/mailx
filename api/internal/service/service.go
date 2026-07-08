@@ -6,6 +6,7 @@ import (
 
 	"ivpn.net/email/api/config"
 	"ivpn.net/email/api/internal/client/http"
+	"ivpn.net/email/api/internal/client/oxapay"
 )
 
 type Store interface {
@@ -21,6 +22,7 @@ type Store interface {
 	LogStore
 	AccessKeyStore
 	DomainStore
+	PlanStore
 }
 
 type Cache interface {
@@ -31,10 +33,11 @@ type Cache interface {
 }
 
 type Service struct {
-	Cfg   config.Config
-	Store Store
-	Cache Cache
-	Http  http.Http
+	Cfg    config.Config
+	Store  Store
+	Cache  Cache
+	Http   http.Http
+	Oxapay OxapayClient
 }
 
 func New(cfg config.Config, store Store, cache Cache) *Service {
@@ -45,5 +48,6 @@ func New(cfg config.Config, store Store, cache Cache) *Service {
 		Http: http.Http{
 			Cfg: cfg.API,
 		},
+		Oxapay: oxapay.New(cfg.Oxapay.MerchantKey),
 	}
 }

@@ -38,6 +38,7 @@ type Subscription struct {
 	Outage       bool               `gorm:"-" json:"outage"`
 	Terminated   bool               `json:"terminated"`
 	TerminatedAt *time.Time         `json:"terminated_at"`
+	PlanID       *string            `gorm:"index" json:"plan_id"`
 }
 
 func (s *Subscription) BeforeCreate(tx *gorm.DB) error {

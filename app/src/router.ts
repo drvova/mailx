@@ -19,6 +19,8 @@ import Privacy from './components/Privacy.vue'
 import Faq from './components/Faq.vue'
 import NotFound from './components/NotFound.vue'
 import Landing from './components/Landing.vue'
+import Pricing from './components/Pricing.vue'
+import AdminPlans from './components/AdminPlans.vue'
 import { type IStaticMethods } from 'preline/preline'
 
 declare global {
@@ -76,6 +78,11 @@ const dashboardChildren: RouteRecordRaw[] = [
         name: `${AppName}: Account`,
         component: Account,
     },
+    {
+        path: 'admin',
+        name: `${AppName}: Admin`,
+        component: AdminPlans,
+    },
 ]
 
 const routes: RouteRecordRaw[] = [
@@ -94,6 +101,11 @@ const routes: RouteRecordRaw[] = [
         path: '/signup',
         name: `${AppName}: Sign Up`,
         component: Signup
+    },
+    {
+        path: '/pricing',
+        name: `${AppName}: Pricing`,
+        component: Pricing
     },
     {
         path: '/login',

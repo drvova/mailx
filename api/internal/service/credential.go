@@ -37,13 +37,14 @@ func (s *Service) GetCredentials(ctx context.Context, userID string) ([]model.Cr
 }
 
 func (s *Service) SaveCredential(ctx context.Context, credential webauthn.Credential, userID string) error {
+	limits := s.GetLimits(ctx, userID)
 	count, err := s.Store.GetCredentialsCount(ctx, userID)
 	if err != nil {
 		log.Printf("error saving credential: %s", err.Error())
 		return ErrSaveCredential
 	}
 
-	if count >= s.Cfg.Service.MaxCredentials {
+	if count >= limits.MaxCredentials {
 		return ErrMaxExceededCredential
 	}
 

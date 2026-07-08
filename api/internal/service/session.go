@@ -42,12 +42,13 @@ func (s *Service) GetSessionCount(ctx context.Context, userID string) (int, erro
 }
 
 func (s *Service) CheckSessionCount(ctx context.Context, userID string) (bool, error) {
+	limits := s.GetLimits(ctx, userID)
 	count, err := s.Store.GetSessionCount(ctx, userID)
 	if err != nil {
 		return false, err
 	}
 
-	if count >= s.Cfg.Service.MaxSessions {
+	if count >= limits.MaxSessions {
 		return false, nil
 	}
 

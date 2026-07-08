@@ -67,6 +67,7 @@ func (s *Service) GetUser(ctx context.Context, userID string) (model.User, error
 		return model.User{}, ErrGetUser
 	}
 
+	s.bootstrapAdmin(ctx, &user)
 	return user, nil
 }
 
@@ -133,6 +134,18 @@ func (s *Service) CreateUserSelfSignup(ctx context.Context, user model.User) (mo
 		ActiveUntil: time.Now().AddDate(100, 0, 0),
 		IsActive:    true,
 		Tier:        "self-hosted",
+	}
+
+	// Assign free plan if one exists
+	plans, perr := s.Store.GetActivePlans(ctx)
+	if perr == nil {
+		for _, p := range plans {
+			if p.PriceCents == 0 {
+				sub.PlanID = &p.ID
+				sub.Tier = p.Name
+				break
+			}
+		}
 	}
 	err = s.Store.PostSubscription(ctx, sub)
 	if err != nil {
@@ -766,4 +779,17 @@ func (s *Service) TotpUseBackup(ctx context.Context, userID string, backup strin
 	}
 
 	return true, nil
+}
+
+func (s *Service) bootstrapAdmin(ctx context.Context, user *model.User) {
+	if user.IsAdmin {
+		return
+	}
+	for _, email := range s.Cfg.API.AdminEmails {
+		if email != "" && email == user.Email {
+			user.IsAdmin = true
+			_ = s.Store.SaveUser(ctx, *user)
+			return
+		}
+	}
 }

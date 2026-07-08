@@ -110,3 +110,21 @@ type UpdateDomainReq struct {
 	FromName    string `json:"from_name"`
 	Enabled     bool   `json:"enabled"`
 }
+
+type PlanReq struct {
+	Name              string `json:"name" validate:"required,min=2,max=50"`
+	DisplayName       string `json:"display_name" validate:"required,min=2,max=100"`
+	PriceCents        int    `json:"price_cents" validate:"min=0"`
+	Currency          string `json:"currency" validate:"required,oneof=usd eur gbp"`
+	Interval          string `json:"interval" validate:"required,oneof=monthly yearly one_time"`
+	MaxRecipients     int    `json:"max_recipients" validate:"min=0"`
+	MaxCredentials    int    `json:"max_credentials" validate:"min=0"`
+	MaxDailyAliases   int    `json:"max_daily_aliases" validate:"min=0"`
+	MaxDailySendReply int    `json:"max_daily_send_reply" validate:"min=0"`
+	MaxSessions       int    `json:"max_sessions" validate:"min=0"`
+	SortOrder         int    `json:"sort_order" validate:"min=0"`
+}
+
+type CheckoutReq struct {
+	PlanID string `json:"plan_id" validate:"required,uuid"`
+}

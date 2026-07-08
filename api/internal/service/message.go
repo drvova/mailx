@@ -72,13 +72,14 @@ func (s *Service) DeleteMessageByUserID(ctx context.Context, userID string) erro
 }
 
 func (s *Service) ValidateSendReplyDailyCount(ctx context.Context, userID string) error {
+	limits := s.GetLimits(ctx, userID)
 	count, err := s.Store.SendReplyDailyCount(ctx, userID)
 	if err != nil {
 		log.Printf("error getting send/reply daily count: %s", err.Error())
 		return ErrGetMessagesByUser
 	}
 
-	if count >= s.Cfg.Service.MaxDailySendReply {
+	if count >= limits.MaxDailySendReply {
 		return errors.New("daily limit reached")
 	}
 

@@ -84,6 +84,7 @@ func migrate(db *gorm.DB) error {
 		&model.Log{},
 		&model.AccessKey{},
 		&model.Domain{},
+		&model.Plan{},
 	)
 	if err != nil {
 		return err

@@ -167,13 +167,14 @@ func (s *Service) PostAlias(ctx context.Context, alias model.Alias, format strin
 		return model.Alias{}, ErrPostAliasInactiveSub
 	}
 
+	limits := s.GetLimits(ctx, alias.UserID)
 	count, err := s.Store.GetAliasDailyCount(ctx, alias.UserID)
 	if err != nil {
 		log.Printf("error creating alias: %s", err.Error())
 		return model.Alias{}, ErrPostAlias
 	}
 
-	if count >= s.Cfg.Service.MaxDailyAliases {
+	if count >= limits.MaxDailyAliases {
 		return model.Alias{}, ErrPostAliasLimit
 	}
 

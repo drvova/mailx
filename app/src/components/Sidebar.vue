@@ -43,6 +43,10 @@
                     <i class="icon user icon-primary"></i>
                     Account
                 </router-link>
+                <router-link v-if="isAdmin" v-bind:class="{ 'active': route == '/account/admin' }" :aria-current="route == '/account/admin' ? 'page' : undefined" to="/account/admin">
+                    <i class="icon settings icon-primary"></i>
+                    Admin
+                </router-link>
             </div>
         </nav>
         <div>
@@ -76,6 +80,7 @@ import { toast } from '../composables/useToast.ts'
 const route = ref('/')
 const currentRoute = useRoute()
 const email = ref(localStorage.getItem('email'))
+const isAdmin = ref(false)
 
 const logout = async () => {
     if (!await appConfirm('End your session?')) return
@@ -92,8 +97,12 @@ const onUpdateEmail = (event: any) => {
     email.value = event.email
 }
 
-onMounted(() => {
+onMounted(async () => {
     events.on('user.update', onUpdateEmail)
+    try {
+        const res = await userApi.get()
+        isAdmin.value = res.data?.is_admin ?? false
+    } catch { /* not logged in */ }
 })
 
 onUnmounted(() => {

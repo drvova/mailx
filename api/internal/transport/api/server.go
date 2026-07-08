@@ -24,6 +24,8 @@ type Service interface {
 	LogService
 	AccessKeyService
 	DomainService
+	PlanService
+	BillingService
 }
 
 type Handler struct {
