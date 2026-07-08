@@ -85,6 +85,14 @@ type AdminStore interface {
 	SearchInboxMessages(context.Context, string, int, int) ([]model.InboxMessage, int64, error)
 	AdminVerifyDomain(context.Context, string, bool) error
 	AdminCreateSession(context.Context, string, string, time.Time) error
+	GetAllMessagesAdmin(context.Context, int, int, string) ([]model.Message, int64, error)
+	AdminGetUserStats(context.Context, string) (model.UserStats, error)
+	SearchLogs(context.Context, string, string, int, int) ([]model.Log, int64, error)
+	AdminToggleRecipient(context.Context, string, bool) error
+	SearchDomainsAdmin(context.Context, string) ([]model.Domain, error)
+	GetMessageCount(context.Context) (int64, error)
+	AdminExportRecipients(context.Context) ([]model.Recipient, error)
+	AdminExportSubscriptions(context.Context) ([]model.Subscription, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -352,4 +360,34 @@ func (s *Service) SearchSessions(ctx context.Context, userID string, limit, offs
 func (s *Service) SearchInboxMessages(ctx context.Context, search string, limit, offset int) ([]model.InboxMessage, int64, error) {
 	if limit <= 0 || limit > 100 { limit = 50 }
 	return s.Store.SearchInboxMessages(ctx, search, limit, offset)
+}
+
+func (s *Service) GetAllMessagesAdmin(ctx context.Context, limit, offset int, msgType string) ([]model.Message, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.GetAllMessagesAdmin(ctx, limit, offset, msgType)
+}
+
+func (s *Service) AdminGetUserStats(ctx context.Context, userID string) (model.UserStats, error) {
+	return s.Store.AdminGetUserStats(ctx, userID)
+}
+
+func (s *Service) SearchLogs(ctx context.Context, search string, logType string, limit, offset int) ([]model.Log, int64, error) {
+	if limit <= 0 || limit > 200 { limit = 100 }
+	return s.Store.SearchLogs(ctx, search, logType, limit, offset)
+}
+
+func (s *Service) AdminToggleRecipient(ctx context.Context, recipientID string, isActive bool) error {
+	return s.Store.AdminToggleRecipient(ctx, recipientID, isActive)
+}
+
+func (s *Service) SearchDomainsAdmin(ctx context.Context, search string) ([]model.Domain, error) {
+	return s.Store.SearchDomainsAdmin(ctx, search)
+}
+
+func (s *Service) AdminExportRecipients(ctx context.Context) ([]model.Recipient, error) {
+	return s.Store.AdminExportRecipients(ctx)
+}
+
+func (s *Service) AdminExportSubscriptions(ctx context.Context) ([]model.Subscription, error) {
+	return s.Store.AdminExportSubscriptions(ctx)
 }

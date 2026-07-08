@@ -206,6 +206,23 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/sessions/search", h.AdminSearchSessions)
 	admin.Get("/inbox/search", h.AdminSearchInbox)
 
+	// Admin message log + user stats
+	admin.Get("/messages", h.AdminGetMessages)
+	admin.Get("/user/:id/stats", h.AdminGetUserStats)
+
+	// Admin log search (text + type)
+	admin.Get("/logs/search", h.AdminSearchLogs)
+
+	// Admin recipient toggle
+	admin.Put("/recipient/:id/toggle", h.AdminToggleRecipient)
+
+	// Admin domain search
+	admin.Get("/domains/search", h.AdminSearchDomains)
+
+	// Admin CSV export for recipients and subscriptions
+	admin.Get("/export/recipients", h.AdminExportRecipients)
+	admin.Get("/export/subscriptions", h.AdminExportSubscriptions)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

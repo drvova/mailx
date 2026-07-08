@@ -16,6 +16,7 @@
                 <li><button :class="tab === 'sessions' ? 'font-bold border-b-2' : ''" @click="tab = 'sessions'" role="tab">Sessions</button></li>
                 <li><button :class="tab === 'passkeys' ? 'font-bold border-b-2' : ''" @click="tab = 'passkeys'" role="tab">Passkeys</button></li>
                 <li><button :class="tab === 'inbox' ? 'font-bold border-b-2' : ''" @click="tab = 'inbox'" role="tab">Inbox</button></li>
+                <li><button :class="tab === 'messages' ? 'font-bold border-b-2' : ''" @click="tab = 'messages'" role="tab">Messages</button></li>
                 <li><button :class="tab === 'subs' ? 'font-bold border-b-2' : ''" @click="tab = 'subs'" role="tab">Subscriptions</button></li>
                 <li><button :class="tab === 'system' ? 'font-bold border-b-2' : ''" @click="tab = 'system'" role="tab">System</button></li>
                 <li><button :class="tab === 'logs' ? 'font-bold border-b-2' : ''" @click="tab = 'logs'" role="tab">Logs</button></li>
@@ -39,6 +40,8 @@
                     <div class="col-span-2 md:col-span-4 flex gap-2 mt-2">
                         <button class="cta cta-tertiary text-sm" @click="exportUsers">Export Users CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportAliases">Export Aliases CSV</button>
+                        <button class="cta cta-tertiary text-sm" @click="exportRecipients">Export Recipients CSV</button>
+                        <button class="cta cta-tertiary text-sm" @click="exportSubscriptions">Export Subscriptions CSV</button>
                     </div>
                 </div>
                 <SkeletonRows v-else :rows="3" />
@@ -151,6 +154,7 @@
             <!-- DOMAINS -->
             <div v-if="tab === 'domains'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
+                    <input v-model="domainSearch" placeholder="Search domains..." @input="searchDomainsDeb" class="flex-1" />
                     <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteDomains">Bulk Delete Selected</button>
                 </div>
                 <div v-if="domains.length" class="overflow-x-auto">
@@ -191,7 +195,10 @@
                                 <td><span :class="r.is_active ? 'badge badge-success' : 'badge'">{{ r.is_active ? 'Yes' : 'No' }}</span></td>
                                 <td>{{ r.pgp_enabled ? 'Yes' : 'No' }}</td>
                                 <td>{{ formatDate(r.created_at) }}</td>
-                                <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteRecipient(r)">Delete</button></td>
+                                <td><div class="flex gap-1">
+                                    <button class="cta cta-tertiary text-sm" @click="toggleRecipient(r)">{{ r.is_active ? 'Suspend' : 'Activate' }}</button>
+                                    <button class="cta cta-tertiary text-sm text-red-500" @click="deleteRecipient(r)">Delete</button>
+                                </div></td>
                             </tr>
                         </tbody>
                     </table>
@@ -320,6 +327,35 @@
                 <SkeletonRows v-else :rows="5" />
             </div>
 
+            <!-- MESSAGES -->
+            <div v-if="tab === 'messages'" role="tabpanel">
+                <div class="flex gap-2 mb-4">
+                    <select v-model="msgTypeFilter" @change="fetchMessages" class="max-w-xs">
+                        <option value="">All Types</option>
+                        <option value="0">Forward</option>
+                        <option value="1">Block</option>
+                        <option value="2">Reply</option>
+                        <option value="3">Send</option>
+                        <option value="4">Bounce</option>
+                        <option value="5">Inbox</option>
+                    </select>
+                </div>
+                <div v-if="messages.length" class="overflow-x-auto">
+                    <table class="table">
+                        <thead><tr><th>Type</th><th>User ID</th><th>Alias ID</th><th>Date</th></tr></thead>
+                        <tbody>
+                            <tr v-for="m in messages" :key="m.id">
+                                <td><span class="badge">{{ ['Forward','Block','Reply','Send','Bounce','Inbox'][m.type] }}</span></td>
+                                <td class="text-xs text-gray-500">{{ m.user_id?.slice(0,8) || '-' }}...</td>
+                                <td class="text-xs text-gray-500">{{ m.alias_id?.slice(0,8) || '-' }}...</td>
+                                <td>{{ formatDate(m.created_at) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <SkeletonRows v-else :rows="5" />
+            </div>
+
             <!-- SUBSCRIPTIONS -->
             <div v-if="tab === 'subs'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
@@ -388,6 +424,7 @@
                         <option value="unauthorised_send">Unauthorised Send</option>
                         <option value="inactive_subscription">Inactive Subscription</option>
                     </select>
+                    <input v-model="logSearch" placeholder="Search from/destination/message..." @input="searchLogsDeb" class="flex-1" />
                 </div>
                 <div v-if="logs.length" class="overflow-x-auto">
                     <table class="table">
@@ -465,6 +502,11 @@ const fetchInboxMessages = async () => { try { const r = await adminApi.inboxMes
 const fetchSubscriptions = async () => { try { const r = await adminApi.subscriptions(subFilter.value || undefined); subscriptions.value = r.subscriptions } catch { /* */ } }
 const fetchTableSizes = async () => { try { tableSizes.value = await adminApi.tableSizes() } catch { /* */ } }
 const fetchRecentSignups = async () => { try { const r = await adminApi.recentSignups(7); recentSignups.value = r.users } catch { /* */ } }
+const fetchMessages = async () => { try { const r = await adminApi.messages(msgTypeFilter.value || undefined); messages.value = r.messages } catch { /* */ } }
+let logSearchTimer: any
+const searchLogsDeb = () => { clearTimeout(logSearchTimer); logSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchLogs(logSearch.value, logFilter.value || undefined); logs.value = r.logs } catch { /* */ } }, 300) }
+let domainSearchTimer: any
+const searchDomainsDeb = () => { clearTimeout(domainSearchTimer); domainSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchDomains(domainSearch.value); domains.value = r.domains } catch { /* */ } }, 300) }
 
 const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(async () => { if (!userSearch.value) { fetchUsers(); return }; try { const r = await adminApi.searchUsers(userSearch.value); users.value = r.users } catch { /* */ } }, 300) }
 const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(fetchAliases, 300) }
@@ -519,9 +561,16 @@ const bulkDeleteRecipients = async () => { const selected = recipients.value.fil
 const toggleAllAliases = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; aliases.value.forEach(a => { (a as any)._selected = checked }) }
 const toggleAllDomains = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; domains.value.forEach(d => { (d as any)._selected = checked }) }
 const toggleAllRecipients = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; recipients.value.forEach(r => { (r as any)._selected = checked }) }
+const toggleRecipient = async (r: AdminRecipient) => { try { await adminApi.toggleRecipient(r.id, !r.is_active); r.is_active = !r.is_active } catch { /* */ } }
+const exportRecipients = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/recipients`, '_blank') }
+const exportSubscriptions = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/subscriptions`, '_blank') }
 const verifyDomain = async (d: AdminDomain) => { try { await adminApi.verifyDomain(d.id, !d.mx_verified_at); d.mx_verified_at = d.mx_verified_at ? null : new Date().toISOString() as any } catch { /* */ } }
 const impersonate = async (userId: string) => { if (!confirm('Login as this user? You will get a 24h session token.')) return; try { const r = await adminApi.impersonate(userId); document.cookie = `authn=${r.token}; path=/; secure; max-age=86400`; window.open('/account/aliases', '_blank') } catch { /* */ } }
 const inboxSearch = ref('')
+const logSearch = ref('')
+const domainSearch = ref('')
+const msgTypeFilter = ref('')
+const messages = ref<any[]>([])
 let inboxSearchTimer: any
 const searchInboxDeb = () => { clearTimeout(inboxSearchTimer); inboxSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchInbox(inboxSearch.value); inboxMessages.value = r.messages } catch { /* */ } }, 300) }
 
@@ -538,6 +587,7 @@ watch(tab, (t) => {
     if (t === 'sessions' && !sessions.value.length) fetchSessions()
     if (t === 'passkeys' && !credentials.value.length) fetchCredentials()
     if (t === 'inbox' && !inboxMessages.value.length) fetchInboxMessages()
+    if (t === 'messages') fetchMessages()
     if (t === 'subs') fetchSubscriptions()
     if (t === 'system') { fetchTableSizes(); fetchRecentSignups() }
 })

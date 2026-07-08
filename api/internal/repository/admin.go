@@ -456,3 +456,77 @@ func (d *Database) AdminCreateSession(ctx context.Context, token string, userID 
 	sessionData.ExpiresAt = exp
 	return d.Client.Create(&sessionData).Error
 }
+
+func (d *Database) GetAllMessagesAdmin(ctx context.Context, limit, offset int, msgType string) ([]model.Message, int64, error) {
+	var msgs []model.Message
+	q := d.Client.Model(&model.Message{})
+	if msgType != "" {
+		q = q.Where("type = ?", msgType)
+	}
+	var total int64
+	q.Count(&total)
+	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&msgs).Error
+	return msgs, total, err
+}
+
+func (d *Database) AdminGetUserStats(ctx context.Context, userID string) (model.UserStats, error) {
+	var stats model.UserStats
+	var fw, bl, rp, sd int64
+	d.Client.Model(&model.Message{}).Where("user_id = ? AND type = ?", userID, model.Forward).Count(&fw)
+	d.Client.Model(&model.Message{}).Where("user_id = ? AND type = ?", userID, model.Block).Count(&bl)
+	d.Client.Model(&model.Message{}).Where("user_id = ? AND type = ?", userID, model.Reply).Count(&rp)
+	d.Client.Model(&model.Message{}).Where("user_id = ? AND type = ?", userID, model.Send).Count(&sd)
+	stats.Forwards = int(fw)
+	stats.Blocks = int(bl)
+	stats.Replies = int(rp)
+	stats.Sends = int(sd)
+	d.Client.Model(&model.Alias{}).Where("user_id = ?", userID).Count(&stats.Aliases)
+	return stats, nil
+}
+
+func (d *Database) SearchLogs(ctx context.Context, search string, logType string, limit, offset int) ([]model.Log, int64, error) {
+	q := d.Client.Model(&model.Log{})
+	if logType != "" {
+		q = q.Where("log_type = ?", logType)
+	}
+	if search != "" {
+		q = q.Where("from LIKE ? OR destination LIKE ? OR message LIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%")
+	}
+	var total int64
+	q.Count(&total)
+	var logs []model.Log
+	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&logs).Error
+	return logs, total, err
+}
+
+func (d *Database) AdminToggleRecipient(ctx context.Context, recipientID string, isActive bool) error {
+	return d.Client.Model(&model.Recipient{}).Where("id = ?", recipientID).Update("is_active", isActive).Error
+}
+
+func (d *Database) SearchDomainsAdmin(ctx context.Context, search string) ([]model.Domain, error) {
+	var domains []model.Domain
+	q := d.Client.Model(&model.Domain{})
+	if search != "" {
+		q = q.Where("name LIKE ?", "%"+search+"%")
+	}
+	err := q.Order("created_at desc").Find(&domains).Error
+	return domains, err
+}
+
+func (d *Database) GetMessageCount(ctx context.Context) (int64, error) {
+	var count int64
+	err := d.Client.Model(&model.Message{}).Count(&count).Error
+	return count, err
+}
+
+func (d *Database) AdminExportRecipients(ctx context.Context) ([]model.Recipient, error) {
+	var recipients []model.Recipient
+	err := d.Client.Order("created_at desc").Find(&recipients).Error
+	return recipients, err
+}
+
+func (d *Database) AdminExportSubscriptions(ctx context.Context) ([]model.Subscription, error) {
+	var subs []model.Subscription
+	err := d.Client.Order("created_at desc").Find(&subs).Error
+	return subs, err
+}

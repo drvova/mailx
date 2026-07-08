@@ -131,6 +131,19 @@ export const adminApi = {
     searchAccessKeys: async (userId?: string) => (await api.get('/admin/accesskeys/search', { params: userId ? { user_id: userId } : undefined })).data as { keys: AdminAccessKey[]; total: number },
     searchSessions: async (userId?: string) => (await api.get('/admin/sessions/search', { params: userId ? { user_id: userId } : undefined })).data as { sessions: AdminSession[]; total: number },
     searchInbox: async (search?: string) => (await api.get('/admin/inbox/search', { params: search ? { search } : undefined })).data as { messages: AdminInboxMessage[]; total: number },
+    // Messages
+    messages: async (type?: string) => (await api.get('/admin/messages', { params: type ? { type } : undefined })).data as { messages: any[]; total: number },
+    // User stats
+    userStats: async (id: string) => (await api.get(`/admin/user/${id}/stats`)).data as { forwards: number; blocks: number; replies: number; sends: number; aliases: number },
+    // Log search (text + type)
+    searchLogs: async (search: string, type?: string) => (await api.get('/admin/logs/search', { params: { search, ...(type ? { type } : {}) } })).data as { logs: AdminLog[]; total: number },
+    // Recipient toggle
+    toggleRecipient: async (id: string, isActive: boolean) => api.put(`/admin/recipient/${id}/toggle`, { is_active: isActive }),
+    // Domain search
+    searchDomains: async (search: string) => (await api.get('/admin/domains/search', { params: { search } })).data as { domains: AdminDomain[]; total: number },
+    // CSV export recipients and subscriptions
+    exportRecipients: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/recipients`,
+    exportSubscriptions: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/subscriptions`,
 }
 
 export interface AdminAlias {

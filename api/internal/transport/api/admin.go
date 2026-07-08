@@ -59,6 +59,13 @@ type AdminService interface {
 	SearchAccessKeys(context.Context, string, int, int) ([]model.AccessKey, int64, error)
 	SearchSessions(context.Context, string, int, int) ([]model.Session, int64, error)
 	SearchInboxMessages(context.Context, string, int, int) ([]model.InboxMessage, int64, error)
+	GetAllMessagesAdmin(context.Context, int, int, string) ([]model.Message, int64, error)
+	AdminGetUserStats(context.Context, string) (model.UserStats, error)
+	SearchLogs(context.Context, string, string, int, int) ([]model.Log, int64, error)
+	AdminToggleRecipient(context.Context, string, bool) error
+	SearchDomainsAdmin(context.Context, string) ([]model.Domain, error)
+	AdminExportRecipients(context.Context) ([]model.Recipient, error)
+	AdminExportSubscriptions(context.Context) ([]model.Subscription, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -659,4 +666,95 @@ func (h *Handler) AdminSearchInbox(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Unable to search inbox"})
 	}
 	return c.JSON(fiber.Map{"messages": msgs, "total": total})
+}
+
+func (h *Handler) AdminGetMessages(c *fiber.Ctx) error {
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	msgType := c.Query("type", "")
+	msgs, total, err := h.Service.GetAllMessagesAdmin(c.Context(), limit, offset, msgType)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch messages"})
+	}
+	return c.JSON(fiber.Map{"messages": msgs, "total": total})
+}
+
+func (h *Handler) AdminGetUserStats(c *fiber.Ctx) error {
+	userID := c.Params("id")
+	if userID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "User ID required"})
+	}
+	stats, err := h.Service.AdminGetUserStats(c.Context(), userID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch user stats"})
+	}
+	return c.JSON(stats)
+}
+
+func (h *Handler) AdminSearchLogs(c *fiber.Ctx) error {
+	search := c.Query("search", "")
+	logType := c.Query("type", "")
+	limit := c.QueryInt("limit", 100)
+	offset := c.QueryInt("offset", 0)
+	logs, total, err := h.Service.SearchLogs(c.Context(), search, logType, limit, offset)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to search logs"})
+	}
+	return c.JSON(fiber.Map{"logs": logs, "total": total})
+}
+
+type AdminToggleRecipientReq struct {
+	IsActive bool `json:"is_active"`
+}
+
+func (h *Handler) AdminToggleRecipient(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Recipient ID required"})
+	}
+	var req AdminToggleRecipientReq
+	c.BodyParser(&req)
+	if err := h.Service.AdminToggleRecipient(c.Context(), id, req.IsActive); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to toggle recipient"})
+	}
+	return c.JSON(fiber.Map{"message": "Recipient updated"})
+}
+
+func (h *Handler) AdminSearchDomains(c *fiber.Ctx) error {
+	search := c.Query("search", "")
+	domains, err := h.Service.SearchDomainsAdmin(c.Context(), search)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to search domains"})
+	}
+	return c.JSON(fiber.Map{"domains": domains, "total": len(domains)})
+}
+
+func (h *Handler) AdminExportRecipients(c *fiber.Ctx) error {
+	recipients, err := h.Service.AdminExportRecipients(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export recipients"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,user_id,email,is_active,created_at\n")
+	for _, r := range recipients {
+		buf.WriteString(fmt.Sprintf("%s,%s,%s,%t,%s\n", r.ID, r.UserID, r.Email, r.IsActive, r.CreatedAt.Format("2006-01-02")))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=recipients.csv")
+	return c.Send(buf.Bytes())
+}
+
+func (h *Handler) AdminExportSubscriptions(c *fiber.Ctx) error {
+	subs, err := h.Service.AdminExportSubscriptions(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export subscriptions"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,user_id,type,tier,is_active,active_until,created_at\n")
+	for _, s := range subs {
+		buf.WriteString(fmt.Sprintf("%s,%s,%s,%s,%t,%s,%s\n", s.ID, s.UserID, s.Type, s.Tier, s.IsActive, s.ActiveUntil.Format("2006-01-02"), s.CreatedAt.Format("2006-01-02")))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=subscriptions.csv")
+	return c.Send(buf.Bytes())
 }
