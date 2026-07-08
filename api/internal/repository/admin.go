@@ -737,6 +737,36 @@ func (d *Database) AdminExportUsersEnriched(ctx context.Context) ([]model.UserWi
 	return results, err
 }
 
+func (d *Database) AdminBulkDeleteMessages(ctx context.Context, msgIDs []uint) error {
+	return d.Client.Where("id IN ?", msgIDs).Delete(&model.Message{}).Error
+}
+
+func (d *Database) AdminSetRecipientPGP(ctx context.Context, recipientID string, pgpKey string, pgpInline bool) error {
+	return d.Client.Model(&model.Recipient{}).Where("id = ?", recipientID).Updates(map[string]interface{}{"pgp_key": pgpKey, "pgp_enabled": pgpKey != "", "pgp_inline": pgpInline}).Error
+}
+
+func (d *Database) AdminGetDomainDNS(ctx context.Context, domainID string) (model.DNSConfig, error) {
+	var dm model.Domain
+	err := d.Client.First(&dm, "id = ?", domainID).Error
+	if err != nil {
+		return model.DNSConfig{}, err
+	}
+	return model.DNSConfig{Domain: dm.Name}, nil
+}
+
+func (d *Database) AdminUpdateUserNotes(ctx context.Context, userID string, notes string) error {
+	return d.Client.Model(&model.User{}).Where("id = ?", userID).Update("notes", notes).Error
+}
+
+func (d *Database) AdminGetSubscriptionStats(ctx context.Context) (active, expired, grace int64, err error) {
+	now := time.Now()
+	graceCut := now.AddDate(0, 0, -30)
+	d.Client.Model(&model.Subscription{}).Where("is_active = true AND active_until > ?", now).Count(&active)
+	d.Client.Model(&model.Subscription{}).Where("active_until <= ? AND active_until > '0001-01-01'", now).Count(&expired)
+	d.Client.Model(&model.Subscription{}).Where("is_active = true AND active_until > ? AND active_until <= ?", graceCut, now).Count(&grace)
+	return
+}
+
 func (d *Database) AdminGetLogsDateRange(ctx context.Context, logType, from, to string, limit, offset int) ([]model.Log, int64, error) {
 	q := d.Client.Model(&model.Log{})
 	if logType != "" {

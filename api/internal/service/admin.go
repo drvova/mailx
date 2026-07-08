@@ -129,6 +129,11 @@ type AdminStore interface {
 	AdminBulkDeleteCredentials(context.Context, []string) error
 	AdminBulkExtendSubscriptions(context.Context, []string, int) (int64, error)
 	AdminExportUsersEnriched(context.Context) ([]model.UserWithSub, error)
+	AdminBulkDeleteMessages(context.Context, []uint) error
+	AdminSetRecipientPGP(context.Context, string, string, bool) error
+	AdminGetDomainDNS(context.Context, string) (model.DNSConfig, error)
+	AdminUpdateUserNotes(context.Context, string, string) error
+	AdminGetSubscriptionStats(context.Context) (int64, int64, int64, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -602,4 +607,24 @@ func (s *Service) AdminBulkExtendSubscriptions(ctx context.Context, subIDs []str
 
 func (s *Service) AdminExportUsersEnriched(ctx context.Context) ([]model.UserWithSub, error) {
 	return s.Store.AdminExportUsersEnriched(ctx)
+}
+
+func (s *Service) AdminBulkDeleteMessages(ctx context.Context, msgIDs []uint) error {
+	return s.Store.AdminBulkDeleteMessages(ctx, msgIDs)
+}
+
+func (s *Service) AdminSetRecipientPGP(ctx context.Context, recipientID, pgpKey string, pgpInline bool) error {
+	return s.Store.AdminSetRecipientPGP(ctx, recipientID, pgpKey, pgpInline)
+}
+
+func (s *Service) AdminGetDomainDNS(ctx context.Context, domainID string) (model.DNSConfig, error) {
+	return s.Store.AdminGetDomainDNS(ctx, domainID)
+}
+
+func (s *Service) AdminUpdateUserNotes(ctx context.Context, userID, notes string) error {
+	return s.Store.AdminUpdateUserNotes(ctx, userID, notes)
+}
+
+func (s *Service) AdminGetSubscriptionStats(ctx context.Context) (int64, int64, int64, error) {
+	return s.Store.AdminGetSubscriptionStats(ctx)
 }

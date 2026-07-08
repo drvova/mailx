@@ -298,6 +298,13 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	// Enriched user export with subscription data
 	admin.Get("/export/users-enriched", h.AdminExportUsersEnriched)
 
+	// Bulk message delete, PGP upload, domain DNS, user notes, subscription stats
+	admin.Post("/messages/bulk-delete", h.AdminBulkDeleteMessages)
+	admin.Put("/recipient/:id/pgp-key", h.AdminSetRecipientPGP)
+	admin.Get("/domain/:id/dns", h.AdminGetDomainDNS)
+	admin.Put("/user/:id/notes", h.AdminUpdateUserNotes)
+	admin.Get("/subscriptions/stats", h.AdminGetSubscriptionStats)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

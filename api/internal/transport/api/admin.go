@@ -104,6 +104,11 @@ type AdminService interface {
 	AdminBulkDeleteCredentials(context.Context, []string) error
 	AdminBulkExtendSubscriptions(context.Context, []string, int) (int64, error)
 	AdminExportUsersEnriched(context.Context) ([]model.UserWithSub, error)
+	AdminBulkDeleteMessages(context.Context, []uint) error
+	AdminSetRecipientPGP(context.Context, string, string, bool) error
+	AdminGetDomainDNS(context.Context, string) (model.DNSConfig, error)
+	AdminUpdateUserNotes(context.Context, string, string) error
+	AdminGetSubscriptionStats(context.Context) (int64, int64, int64, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1391,6 +1396,79 @@ func (h *Handler) AdminExportUsersEnriched(c *fiber.Ctx) error {
 	c.Set("Content-Type", "text/csv")
 	c.Set("Content-Disposition", "attachment; filename=users_enriched.csv")
 	return c.Send(buf.Bytes())
+}
+
+type AdminBulkDeleteMsgsReq struct {
+	IDs []uint `json:"ids"`
+}
+
+func (h *Handler) AdminBulkDeleteMessages(c *fiber.Ctx) error {
+	var req AdminBulkDeleteMsgsReq
+	if err := c.BodyParser(&req); err != nil || len(req.IDs) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "ids required"})
+	}
+	if err := h.Service.AdminBulkDeleteMessages(c.Context(), req.IDs); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk delete messages"})
+	}
+	h.audit(c, "bulk_delete_messages", fmt.Sprintf("%d msgs", len(req.IDs)), "")
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d messages deleted", len(req.IDs))})
+}
+
+type AdminPGPUploadReq struct {
+	PGPKey    string `json:"pgp_key"`
+	PGPInline bool   `json:"pgp_inline"`
+}
+
+func (h *Handler) AdminSetRecipientPGP(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Recipient ID required"})
+	}
+	var req AdminPGPUploadReq
+	c.BodyParser(&req)
+	if err := h.Service.AdminSetRecipientPGP(c.Context(), id, req.PGPKey, req.PGPInline); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to set PGP key"})
+	}
+	h.audit(c, "set_pgp_key", id, "")
+	return c.JSON(fiber.Map{"message": "PGP key set"})
+}
+
+func (h *Handler) AdminGetDomainDNS(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Domain ID required"})
+	}
+	dns, err := h.Service.AdminGetDomainDNS(c.Context(), id)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Domain not found"})
+	}
+	return c.JSON(dns)
+}
+
+type AdminUserNotesReq struct {
+	Notes string `json:"notes"`
+}
+
+func (h *Handler) AdminUpdateUserNotes(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "User ID required"})
+	}
+	var req AdminUserNotesReq
+	c.BodyParser(&req)
+	if err := h.Service.AdminUpdateUserNotes(c.Context(), id, req.Notes); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to update notes"})
+	}
+	h.audit(c, "update_user_notes", id, req.Notes)
+	return c.JSON(fiber.Map{"message": "Notes updated"})
+}
+
+func (h *Handler) AdminGetSubscriptionStats(c *fiber.Ctx) error {
+	active, expired, grace, err := h.Service.AdminGetSubscriptionStats(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch subscription stats"})
+	}
+	return c.JSON(fiber.Map{"active": active, "expired": expired, "grace_period": grace})
 }
 
 func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {

@@ -48,6 +48,8 @@ export interface AdminUser {
     email: string
     is_active: boolean
     is_admin: boolean
+    notes: string
+    totp_enabled: boolean
     created_at: string
 }
 
@@ -210,6 +212,16 @@ export const adminApi = {
     auditLog: async (offset = 0) => (await api.get('/admin/audit', { params: { offset } })).data as { entries: AdminAudit[]; total: number },
     // Session data
     sessionData: async (id: string) => (await api.get(`/admin/session/${id}/data`)).data as any,
+    // Bulk delete messages
+    bulkDeleteMessages: async (ids: number[]) => api.post('/admin/messages/bulk-delete', { ids }),
+    // PGP key upload
+    setRecipientPGP: async (id: string, pgpKey: string, pgpInline?: boolean) => api.put(`/admin/recipient/${id}/pgp-key`, { pgp_key: pgpKey, pgp_inline: pgpInline ?? false }),
+    // Domain DNS view
+    domainDNS: async (id: string) => (await api.get(`/admin/domain/${id}/dns`)).data as { domain: string; verify: string; dkim_selectors: string[]; mx_hosts: string[] },
+    // User notes
+    updateUserNotes: async (id: string, notes: string) => api.put(`/admin/user/${id}/notes`, { notes }),
+    // Subscription stats breakdown
+    subscriptionStats: async () => (await api.get('/admin/subscriptions/stats')).data as { active: number; expired: number; grace_period: number },
 }
 
 export interface AdminAlias {

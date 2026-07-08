@@ -49,6 +49,11 @@
                         <button class="cta cta-tertiary text-sm" @click="exportMessages">Export Messages CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportUsersEnriched">Export Users + Subs CSV</button>
                     </div>
+                    <div v-if="subStats" class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="card-secondary text-center"><p class="text-2xl font-bold text-green-500">{{ subStats.active }}</p><p class="text-sm text-gray-500">Active Subs</p></div>
+                        <div class="card-secondary text-center"><p class="text-2xl font-bold text-yellow-500">{{ subStats.grace_period }}</p><p class="text-sm text-gray-500">Grace Period</p></div>
+                        <div class="card-secondary text-center"><p class="text-2xl font-bold text-red-500">{{ subStats.expired }}</p><p class="text-sm text-gray-500">Expired</p></div>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="3" />
             </div>
@@ -102,6 +107,7 @@
                             <div><p class="text-sm text-gray-500">Active Until</p><p>{{ userDetail.subscription.active_until ? formatDate(userDetail.subscription.active_until) : 'N/A' }}</p></div>
                             <div><p class="text-sm text-gray-500">2FA</p><span :class="userDetail.user.totp_enabled ? 'badge badge-success' : 'badge'">{{ userDetail.user.totp_enabled ? 'Enabled' : 'Disabled' }}</span></div>
                             <div><p class="text-sm text-gray-500">Created</p><p>{{ formatDate(userDetail.user.created_at) }}</p></div>
+                            <div><p class="text-sm text-gray-500">Notes</p><p class="text-xs">{{ userDetail.user.notes || 'none' }}</p><button class="cta cta-tertiary text-sm mt-1" @click="editUserNotes(userDetail.user)">Edit Notes</button></div>
                         </div>
                         <div v-if="userStats" class="grid grid-cols-5 gap-2 mb-4 text-center">
                             <div class="card-secondary"><p class="text-lg font-bold">{{ userStats.forwards }}</p><p class="text-xs text-gray-500">Forwards</p></div>
@@ -217,6 +223,7 @@
                                     <button class="cta cta-tertiary text-sm" @click="toggleDomain(d)">{{ d.enabled ? 'Disable' : 'Enable' }}</button>
                                     <button class="cta cta-tertiary text-sm" @click="verifyDomain(d)">{{ d.mx_verified_at ? 'Unverify' : 'Verify' }}</button>
                                     <button class="cta cta-tertiary text-sm" @click="editDomain(d)">Edit</button>
+                                    <button class="cta cta-tertiary text-sm" @click="viewDomainDNS(d)">DNS</button>
                                     <button class="cta cta-tertiary text-sm" @click="transferDomain(d)">Transfer</button>
                                     <button class="cta cta-tertiary text-sm text-red-500" @click="deleteDomain(d)">Delete</button>
                                 </div></td>
@@ -248,6 +255,7 @@
                                     <button v-if="r.pgp_enabled" class="cta cta-tertiary text-sm" @click="toggleRecipientPGP(r)">Disable PGP</button>
                                     <button v-if="r.pgp_enabled" class="cta cta-tertiary text-sm text-red-500" @click="removePGPKey(r)">Remove PGP Key</button>
                                     <button class="cta cta-tertiary text-sm" @click="editRecipient(r)">Edit</button>
+                                    <button class="cta cta-tertiary text-sm" @click="uploadPGP(r)">Upload PGP</button>
                                     <button class="cta cta-tertiary text-sm text-red-500" @click="deleteRecipient(r)">Delete</button>
                                 </div></td>
                             </tr>
@@ -438,7 +446,7 @@
             <div v-if="tab === 'messages'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
                     <input v-model="msgSearch" placeholder="Search by user/alias ID..." @input="searchMessagesDeb" class="flex-1" />
-                    <select v-model="msgTypeFilter" @change="fetchMessages" class="max-w-xs">
+                    <select v-model="msgTypeFilter" @change="messagesOffset = 0; fetchMessages()" class="max-w-xs">
                         <option value="">All Types</option>
                         <option value="0">Forward</option>
                         <option value="1">Block</option>
@@ -447,12 +455,14 @@
                         <option value="4">Bounce</option>
                         <option value="5">Inbox</option>
                     </select>
+                    <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteMessages">Bulk Delete Selected</button>
                 </div>
                 <div v-if="messages.length" class="overflow-x-auto">
                     <table class="table">
-                        <thead><tr><th>Type</th><th>User ID</th><th>Alias ID</th><th>Date</th></tr></thead>
+                        <thead><tr><th><input type="checkbox" @click="toggleAllMessages($event)" /></th><th>Type</th><th>User ID</th><th>Alias ID</th><th>Date</th></tr></thead>
                         <tbody>
                             <tr v-for="m in messages" :key="m.id">
+                                <td><input type="checkbox" v-model="(m as any)._selected" /></td>
                                 <td><span class="badge">{{ ['Forward','Block','Reply','Send','Bounce','Inbox'][m.type] }}</span></td>
                                 <td class="text-xs text-gray-500">{{ m.user_id?.slice(0,8) || '-' }}...</td>
                                 <td class="text-xs text-gray-500">{{ m.alias_id?.slice(0,8) || '-' }}...</td>
@@ -753,6 +763,12 @@ const toggleAllInbox = (e: Event) => { const checked = (e.target as HTMLInputEle
 const toggleAllKeys = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; accessKeys.value.forEach(k => { (k as any)._selected = checked }) }
 const toggleAllCredentials = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; credentials.value.forEach(c => { (c as any)._selected = checked }) }
 const toggleAllSubs = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; subscriptions.value.forEach(s => { (s as any)._selected = checked }) }
+const toggleAllMessages = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; messages.value.forEach(m => { (m as any)._selected = checked }) }
+const bulkDeleteMessages = async () => {
+    const selected = messages.value.filter(m => (m as any)._selected)
+    if (!selected.length) { alert('Select messages first'); return }
+    if (!confirm(`Delete ${selected.length} messages?`)) return
+    try { await adminApi.bulkDeleteMessages(selected.map(m => m.id)); messages.value = messages.value.filter(m => !selected.includes(m)) } catch { /* */ } }
 const bulkDeleteKeys = async () => {
     const selected = accessKeys.value.filter(k => (k as any)._selected)
     if (!selected.length) { alert('Select keys first'); return }
@@ -946,5 +962,18 @@ watch(tab, (t) => {
     if (t === 'audit' && !auditEntries.value.length) fetchAuditLog()
 })
 
-onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs() })
+const uploadPGP = async (r: AdminRecipient) => {
+    const key = prompt('Paste PGP public key:')
+    if (key === null) return
+    try { await adminApi.setRecipientPGP(r.id, key); r.pgp_enabled = true; alert('PGP key set') } catch { /* */ } }
+const viewDomainDNS = async (d: AdminDomain) => {
+    try { const dns = await adminApi.domainDNS(d.id); alert(`Domain: ${dns.domain}\nMX: ${(dns.mx_hosts||[]).join(', ') || 'N/A'}\nDKIM: ${(dns.dkim_selectors||[]).join(', ') || 'N/A'}`) } catch { alert('Unable to load DNS') } }
+const editUserNotes = async (u: AdminUser) => {
+    const notes = prompt('Notes:', u.notes || '')
+    if (notes === null) return
+    try { await adminApi.updateUserNotes(u.id, notes); u.notes = notes } catch { /* */ } }
+const subStats = ref<any>(null)
+const fetchSubStats = async () => { try { subStats.value = await adminApi.subscriptionStats() } catch { /* */ } }
+
+onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats() })
 </script>
