@@ -1,0 +1,40 @@
+services:
+  api:
+    build: ./api
+    env_file: ./api/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  app:
+    build: ./app
+    env_file: ./app/.env
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-email}
+      MYSQL_USER: ${DB_USER:-email}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-email}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-email}
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  db-data:
