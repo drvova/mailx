@@ -138,6 +138,7 @@ type AdminService interface {
 	AdminGetSubscriptionChanges(context.Context, int, int) ([]model.SubscriptionChange, int64, error)
 	AdminGetCatchAllStats(context.Context) (map[string]interface{}, error)
 	AdminGetPlanUsage(context.Context) ([]model.PlanUsage, error)
+	AdminGetStatsComparison(context.Context) (map[string]interface{}, error)
 	AdminGetInactiveAliases(context.Context, int) ([]model.InactiveAlias, error)
 	AdminBulkToggleDomains(context.Context, []string, bool) error
 	AdminBulkVerifyDomains(context.Context, []string) error
@@ -152,6 +153,35 @@ type AdminService interface {
 	AdminGetAccountAgeDistribution(context.Context) (map[string]int64, error)
 	AdminGetSubscriptionBreakdown(context.Context) (map[string]int64, error)
 	GetActivePlans(context.Context) ([]model.Plan, error)
+	AdminGetDBHealth(context.Context) (map[string]interface{}, error)
+	AdminSearchUsersByAlias(context.Context, string) ([]model.User, int64, error)
+	AdminGetUserDailyActivity(context.Context, string, int) ([]model.DailyStats, error)
+}
+
+func (h *Handler) AdminExportPlansCSV(c *fiber.Ctx) error {
+	plans, err := h.Service.GetActivePlans(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,name,display_name,price_cents,currency,interval,max_recipients,max_credentials,max_daily_aliases,max_daily_send_reply,max_sessions,is_active,sort_order,created_at\n")
+	for _, p := range plans {
+		buf.WriteString(fmt.Sprintf("%s,%s,%s,%d,%s,%s,%d,%d,%d,%d,%d,%t,%d,%s\n",
+			p.ID, p.Name, p.DisplayName, p.PriceCents, p.Currency, p.Interval,
+			p.MaxRecipients, p.MaxCredentials, p.MaxDailyAliases, p.MaxDailySendReply,
+			p.MaxSessions, p.IsActive, p.SortOrder, p.CreatedAt.Format(time.RFC3339)))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=plans.csv")
+	return c.Send(buf.Bytes())
+}
+
+func (h *Handler) AdminGetDBHealth(c *fiber.Ctx) error {
+	health, err := h.Service.AdminGetDBHealth(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch DB health"})
+	}
+	return c.JSON(health)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1867,6 +1897,14 @@ func (h *Handler) AdminGetPlanUsage(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"users": usage})
 }
 
+func (h *Handler) AdminGetStatsComparison(c *fiber.Ctx) error {
+	stats, err := h.Service.AdminGetStatsComparison(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch"})
+	}
+	return c.JSON(stats)
+}
+
 func (h *Handler) AdminGetInactiveAliases(c *fiber.Ctx) error {
 	days := c.QueryInt("days", 30)
 	aliases, err := h.Service.AdminGetInactiveAliases(c.Context(), days)
@@ -2055,6 +2093,31 @@ func (h *Handler) AdminGetSubscriptionBreakdown(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch"})
 	}
 	return c.JSON(stats)
+}
+
+func (h *Handler) AdminSearchUsersByAlias(c *fiber.Ctx) error {
+	q := c.Query("q", "")
+	if q == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Query required"})
+	}
+	users, total, err := h.Service.AdminSearchUsersByAlias(c.Context(), q)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to search"})
+	}
+	return c.JSON(fiber.Map{"users": users, "total": total})
+}
+
+func (h *Handler) AdminGetUserDailyActivity(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "User ID required"})
+	}
+	days := c.QueryInt("days", 14)
+	stats, err := h.Service.AdminGetUserDailyActivity(c.Context(), id, days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch"})
+	}
+	return c.JSON(fiber.Map{"user_id": id, "activity": stats})
 }
 
 func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {

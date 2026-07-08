@@ -70,6 +70,21 @@
                         <span v-if="lastRefresh" class="text-xs text-gray-500 ml-2">Last refreshed: {{ lastRefresh }}</span>
                     </div>
                 </div>
+                <div v-if="statsComp" class="mt-4 mb-4">
+                    <h3 class="font-bold mb-2">7d vs 30d Comparison</h3>
+                    <div class="overflow-x-auto">
+                        <table class="table text-sm">
+                            <thead><tr><th>Metric</th><th>7 Days</th><th>30 Days</th></tr></thead>
+                            <tbody>
+                                <tr v-for="metric in ['forwards','blocks','replies','sends','signups']" :key="metric">
+                                    <td class="capitalize">{{ metric }}</td>
+                                    <td class="font-bold">{{ statsComp['7d']?.[metric] || 0 }}</td>
+                                    <td class="font-bold">{{ statsComp['30d']?.[metric] || 0 }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
                 <div v-if="stats" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.total_users }}</p><p class="text-sm text-gray-500">Total Users</p></div>
                     <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.active_users }}</p><p class="text-sm text-gray-500">Active Users</p></div>
@@ -258,6 +273,7 @@
             <div v-if="tab === 'users'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
                     <input v-model="userSearch" placeholder="Search by email..." @input="searchUsersDeb" class="flex-1" />
+                    <button class="cta cta-tertiary text-sm" @click="searchByAlias">Search by Alias</button>
                     <button class="cta cta-tertiary text-sm" @click="createUser">Create User</button>
                     <button class="cta cta-tertiary text-sm" @click="bulkSuspend">Bulk Suspend</button>
                     <button class="cta cta-tertiary text-sm" @click="bulkActivate">Bulk Activate</button>
@@ -332,6 +348,10 @@
                             <div class="card-secondary"><p class="text-lg font-bold">{{ userStats.replies }}</p><p class="text-xs text-gray-500">Replies</p></div>
                             <div class="card-secondary"><p class="text-lg font-bold">{{ userStats.sends }}</p><p class="text-xs text-gray-500">Sends</p></div>
                             <div class="card-secondary"><p class="text-lg font-bold">{{ userStats.aliases }}</p><p class="text-xs text-gray-500">Aliases</p></div>
+                        </div>
+                        <div v-if="userDailyStats?.length" class="mt-3">
+                            <p class="text-sm text-gray-500 mb-1">Daily Activity (14d)</p>
+                            <div class="max-h-24 overflow-y-auto"><table class="table text-xs"><thead><tr><th>Date</th><th>Fwd</th><th>Blk</th><th>Rpy</th><th>Snd</th></tr></thead><tbody><tr v-for="d in userDailyStats" :key="d.date"><td>{{ d.date }}</td><td>{{ d.forwards }}</td><td>{{ d.blocks }}</td><td>{{ d.replies }}</td><td>{{ d.sends }}</td></tr></tbody></table></div>
                         </div>
                         <div class="mb-4">
                             <label class="text-sm text-gray-500">Assign Plan</label>
@@ -507,6 +527,7 @@
                 <div class="flex justify-between items-center mb-4">
                     <h3>Plans</h3>
                     <div class="flex gap-2">
+                        <button class="cta cta-tertiary text-sm" @click="exportPlansCSV">Export CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="comparePlans">Compare Plans</button>
                         <button class="cta" @click="showForm = !showForm" v-if="!showForm">Create Plan</button>
                     </div>
@@ -768,6 +789,7 @@
                     <div class="card-secondary text-center"><p class="text-2xl font-bold">{{ runtimeInfo.num_gc }}</p><p class="text-sm text-gray-500">GC Cycles</p></div>
                     <div class="card-secondary text-center"><p class="text-2xl font-bold">{{ formatUptime(runtimeInfo.uptime_seconds) }}</p><p class="text-sm text-gray-500">Uptime</p></div>
                 </div>
+                <div v-if="dbHealthInfo" class="mt-4"><h3 class="font-bold mb-2">Database Health</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-2"><div class="card-secondary text-center"><p class="text-lg font-bold">{{ dbHealthInfo.in_use }}/{{ dbHealthInfo.open_connections }}</p><p class="text-xs text-gray-500">Connections (used/open)</p></div><div class="card-secondary text-center"><p class="text-lg font-bold">{{ dbHealthInfo.idle }}</p><p class="text-xs text-gray-500">Idle</p></div><div class="card-secondary text-center"><p class="text-lg font-bold">{{ dbHealthInfo.ping_latency_ms }}ms</p><p class="text-xs text-gray-500">Ping</p></div><div class="card-secondary text-center"><p class="text-lg font-bold">{{ dbHealthInfo.wait_count }}</p><p class="text-xs text-gray-500">Waits</p></div></div></div>
                 <div v-if="tableSizes" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div v-for="(count, table) in tableSizes" :key="table" class="card-secondary text-center">
                         <p class="text-2xl font-bold">{{ count }}</p>
@@ -778,12 +800,12 @@
                     <h3 class="mb-3 font-bold">Recent Signups (7 days)</h3>
                     <div v-if="recentSignups.length" class="overflow-x-auto">
                         <table class="table">
-                            <thead><tr><th>Email</th><th>Active</th><th>Admin</th><th>Joined</th></tr></thead>
+                            <thead><tr><th>Email</th><th>Tier</th><th>Has Aliases</th><th>Joined</th></tr></thead>
                             <tbody>
                                 <tr v-for="u in recentSignups" :key="u.id">
-                                    <td>{{ u.email }}</td>
-                                    <td><span :class="u.is_active ? 'badge badge-success' : 'badge badge-error'">{{ u.is_active ? 'Active' : 'Suspended' }}</span></td>
-                                    <td>{{ u.is_admin ? 'Admin' : 'User' }}</td>
+                                    <td class="max-w-[200px] truncate">{{ u.email }}</td>
+                                    <td><span class="badge" v-if="u._tier">{{ u._tier }}</span><span v-else class="text-gray-400">-</span></td>
+                                    <td>{{ u._hasAliases ? 'Yes' : 'No' }}</td>
                                     <td>{{ formatDate(u.created_at) }}</td>
                                 </tr>
                             </tbody>
@@ -1050,7 +1072,7 @@ const inboxMessages = ref<AdminInboxMessage[]>([])
 const subscriptions = ref<AdminSubscription[]>([])
 const subFilter = ref('')
 const tableSizes = ref<Record<string, number> | null>(null)
-const recentSignups = ref<AdminUser[]>([])
+const recentSignups = ref<any[]>([])
 const configInfo = ref<Record<string, any> | null>(null)
 const loadingPlans = ref(true)
 const deleting = ref('')
@@ -1091,7 +1113,7 @@ const fetchSubscriptions = async () => { try { const r = await adminApi.subscrip
 const fetchMessages = async () => { try { const r = await adminApi.messages(msgTypeFilter.value || undefined, messagesOffset.value); messages.value = r.messages; messagesTotal.value = r.total } catch { /* */ } }
 const fetchInboxMessages = async () => { try { const r = await adminApi.inboxMessages(inboxOffset.value); inboxMessages.value = r.messages; inboxTotal.value = r.total } catch { /* */ } }
 const fetchTableSizes = async () => { try { tableSizes.value = await adminApi.tableSizes() } catch { /* */ } }
-const fetchRecentSignups = async () => { try { const r = await adminApi.recentSignups(7); recentSignups.value = r.users } catch { /* */ } }
+const fetchRecentSignups = async () => { try { const r = await adminApi.recentSignups(7); const enriched: any[] = []; for (const u of r.users) { try { const detail = await adminApi.userDetail(u.id); (u as any)._tier = detail.subscription?.tier; (u as any)._hasAliases = detail.aliases?.length > 0 } catch { (u as any)._tier = '?'; (u as any)._hasAliases = false }; enriched.push(u) }; recentSignups.value = enriched } catch { /* */ } }
 const fetchConfig = async () => { try { configInfo.value = await adminApi.getConfig() } catch { /* */ } }
 const searchMessagesDeb = () => { clearTimeout(msgSearchTimer); msgSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchMessages(msgSearch.value || undefined, msgTypeFilter.value || undefined); messages.value = r.messages } catch { /* */ } }, 300) }
 const toggleRecipientPGP = async (r: AdminRecipient) => { if (!confirm('Disable PGP for this recipient?')) return; try { await adminApi.toggleRecipientPGP(r.id, false); r.pgp_enabled = false } catch { /* */ } }
@@ -1220,7 +1242,12 @@ const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeo
 const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { aliasesOffset.value = 0; fetchAliases() }, 300) }
 const searchRecipientsDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { recipientsOffset.value = 0; fetchRecipients() }, 300) }
 
-const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || ''; userStats.value = await adminApi.userStats(id); userSettings.value = await adminApi.getSettings(id); const la = await adminApi.userLastActive(id); lastActive.value = la.last_active ? formatDate(la.last_active) : 'Never'; userQuota.value = await adminApi.userQuota(id); loginHistory.value = (await adminApi.userLoginHistory(id)).events } catch { /* */ } }
+const searchByAlias = async () => {
+    const q = prompt('Enter alias name (partial match):')
+    if (!q) return
+    try { const r = await adminApi.searchUsersByAlias(q); users.value = r.users; usersTotal.value = r.total; usersOffset.value = 0 } catch { alert('No users found') }
+}
+const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || ''; userStats.value = await adminApi.userStats(id); userSettings.value = await adminApi.getSettings(id); const la = await adminApi.userLastActive(id); lastActive.value = la.last_active ? formatDate(la.last_active) : 'Never'; userQuota.value = await adminApi.userQuota(id); loginHistory.value = (await adminApi.userLoginHistory(id)).events; userDailyStats.value = (await adminApi.userDailyActivity(id, 14)).activity } catch { /* */ } }
 const assignPlan = async (userId: string) => { if (!selectedPlan.value) return; try { await adminApi.assignPlan(userId, selectedPlan.value); viewUser(userId) } catch { /* */ } }
 
 const toggleUser = async (u: AdminUser) => { if (u.email === localStorage.getItem('email')) { alert('Cannot suspend your own account'); return } try { await adminApi.updateUser({ id: u.id, is_active: !u.is_active }); u.is_active = !u.is_active } catch { /* */ } }
@@ -1340,7 +1367,7 @@ watch(tab, (t) => {
     if (t === 'inbox' && !inboxMessages.value.length) fetchInboxMessages()
     if (t === 'messages') fetchMessages()
     if (t === 'subs') fetchSubscriptions()
-    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats(); fetchRuntime(); fetchRecipientDomains(); fetchSessConcurrency(); fetchBounceStats(); fetchOnboardingStatus(); fetchCatchAll(); fetchInactiveAliases(); fetchCleanupStats() }
+    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats(); fetchRuntime(); fetchRecipientDomains(); fetchSessConcurrency(); fetchBounceStats(); fetchOnboardingStatus(); fetchCatchAll(); fetchInactiveAliases(); fetchCleanupStats(); fetchDBHealth() }
     if (t === 'logs') fetchLogsFiltered()
     if (t === 'audit' && !auditEntries.value.length) fetchAuditLog()
     if (t === 'usage' && !planUsageData.value.length) fetchPlanUsage()
@@ -1371,6 +1398,7 @@ const domainStatsData = ref<any[]>([])
 const runtimeInfo = ref<any>(null)
 const userQuota = ref<any>(null)
 const loginHistory = ref<any[]>([])
+const userDailyStats = ref<any[]>([])
 const planDetail = ref<Plan | null>(null)
 const compareData = ref<any>(null)
 const recipDomains = ref<Record<string, number> | null>(null)
@@ -1400,6 +1428,7 @@ const bulkTerminateSessions = async () => {
 const purgeSessions = async () => { if (!confirm('Purge all expired sessions?')) return; try { const r = await adminApi.purgeExpiredSessions(); alert(r.message); fetchSessions() } catch { /* */ } }
 const fetchDomainStats = async () => { try { const r = await adminApi.domainStats(); domainStatsData.value = r.domains } catch { /* */ } }
 const fetchCleanupStats = async () => { try { cleanupStatsData.value = await adminApi.cleanupStats() } catch {} }
+const fetchDBHealth = async () => { try { dbHealthInfo.value = await adminApi.dbHealth() } catch {} }
 const runCleanupAliases = async () => { if (!confirm('Disable all expired aliases?')) return; try { const r = await adminApi.cleanupExpiredAliases(); alert(r.message); fetchCleanupStats() } catch {} }
 const runCleanupSessions = async () => { if (!confirm('Delete all orphaned sessions?')) return; try { const r = await adminApi.cleanupOrphanedSessions(); alert(r.message); fetchCleanupStats() } catch {} }
 const fetchRuntime = async () => { try { runtimeInfo.value = await adminApi.runtimeStats() } catch { /* */ } }
@@ -1415,14 +1444,18 @@ const bounceDomains = ref<Record<string, number> | null>(null)
 const onboardingUsers = ref<any[]>([])
 const catchAllInfo = ref<any>(null)
 const planUsageData = ref<any[]>([])
+const statsComp = ref<any>(null)
 const inactiveAliasesData = ref<any[]>([])
 const cleanupStatsData = ref<any>(null)
+const dbHealthInfo = ref<any>(null)
 const fetchBounceStats = async () => { try { const r = await adminApi.bounceStats(); bounceStats.value = r.aliases } catch { /* */ } }
 const fetchBounceByDomain = async () => { try { bounceDomains.value = await adminApi.bounceByDomain() } catch { /* */ } }
 const fetchOnboardingStatus = async () => { try { const r = await adminApi.onboardingStatus(); onboardingUsers.value = r.users } catch { /* */ } }
 const fetchCatchAll = async () => { try { catchAllInfo.value = await adminApi.catchAllStats() } catch {} }
 const fetchPlanUsage = async () => { try { const r = await adminApi.planUsage(); planUsageData.value = r.users } catch {} }
 const fetchInactiveAliases = async () => { try { const r = await adminApi.inactiveAliases(); inactiveAliasesData.value = r.aliases } catch {} }
+const fetchStatsComp = async () => { try { statsComp.value = await adminApi.statsComparison() } catch {} }
+const exportPlansCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/plans-csv`, '_blank') }
 const exportSubsCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/subscriptions-csv`, '_blank') }
 const exportAliasesCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/aliases-csv`, '_blank') }
 const exportKeysCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/keys-csv`, '_blank') }
@@ -1434,7 +1467,7 @@ const fetchSessConcurrency = async () => { try { const r = await adminApi.sessio
 const autoRefresh = ref(false)
 let refreshTimer: any
 const lastRefresh = ref('')
-const refreshAllStats = () => { fetchStats(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats(); fetchBounceStats(); fetchHourlyVolume(); fetchTopSenders(); lastRefresh.value = new Date().toLocaleTimeString() }
+const refreshAllStats = () => { fetchStats(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats(); fetchBounceStats(); fetchHourlyVolume(); fetchTopSenders(); fetchStatsComp(); lastRefresh.value = new Date().toLocaleTimeString() }
 watch(autoRefresh, (v) => { if (v) { refreshTimer = setInterval(refreshAllStats, 30000) } else { clearInterval(refreshTimer) } })
 let notifTimer: any
 onUnmounted(() => { clearInterval(refreshTimer); clearInterval(notifTimer) })
@@ -1498,5 +1531,5 @@ const viewAliasTrend = async () => {
 }
 const exportUserDataFull = async (u: AdminUser) => { try { const d = await adminApi.exportUserData(u.id); alert(JSON.stringify(d, null, 2)) } catch { alert('Unable to export') } }
 
-onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchAgeDist(); fetchSubBreakdown(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats(); fetchBounceStats(); fetchBounceByDomain(); fetchNotifications(); fetchHourlyVolume(); fetchTopSenders(); notifTimer = window.setInterval(fetchNotifications, 60000) })
+onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchAgeDist(); fetchSubBreakdown(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats(); fetchBounceStats(); fetchBounceByDomain(); fetchNotifications(); fetchHourlyVolume(); fetchTopSenders(); fetchStatsComp(); notifTimer = window.setInterval(fetchNotifications, 60000) })
 </script>

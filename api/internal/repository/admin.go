@@ -962,6 +962,17 @@ func (d *Database) AdminBulkCreateAliases(ctx context.Context, aliases []model.A
 	return d.Client.Create(&aliases).Error
 }
 
+func (d *Database) AdminSearchUsersByAlias(ctx context.Context, aliasQuery string) ([]model.User, int64, error) {
+	var aliasIDs []string
+	d.Client.Model(&model.Alias{}).Where("name LIKE ?", "%"+aliasQuery+"%").Limit(100).Pluck("user_id", &aliasIDs)
+	if len(aliasIDs) == 0 {
+		return nil, 0, nil
+	}
+	var users []model.User
+	d.Client.Where("id IN ?", aliasIDs).Order("created_at desc").Find(&users)
+	return users, int64(len(users)), nil
+}
+
 func (d *Database) AdminBulkToggleRecipients(ctx context.Context, recipientIDs []string, isActive bool) error {
 	return d.Client.Model(&model.Recipient{}).Where("id IN ?", recipientIDs).Update("is_active", isActive).Error
 }

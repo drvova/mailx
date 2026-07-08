@@ -268,6 +268,7 @@ export const adminApi = {
     topSenders: async (days = 30) => (await api.get('/admin/top-senders', { params: { days } })).data as { users: { user_id: string; email: string; sends: number }[] },
     sessionConcurrency: async () => (await api.get('/admin/session-concurrency')).data as { users: { user_id: string; email: string; active_sessions: number }[] },
     planUsage: async () => (await api.get('/admin/plan-usage')).data as { users: { user_id: string; email: string; tier: string; alias_count: number; max_aliases: number; recipient_count: number; max_recipients: number; credential_count: number; max_credentials: number; session_count: number; max_sessions: number }[] },
+    statsComparison: async () => (await api.get('/admin/stats-comparison')).data as Record<string, {forwards:number;blocks:number;replies:number;sends:number;signups:number}>,
     inactiveAliases: async (days = 30) => (await api.get('/admin/inactive-aliases', { params: { days } })).data as { aliases: { alias_id: string; alias_name: string; user_id: string; days_inactive: number; created_at: string }[] },
     recipientStats: async () => (await api.get('/admin/recipient-stats')).data as { total:number;active:number;inactive:number;pgp_enabled:number },
     cleanupStats: async () => (await api.get('/admin/cleanup-stats')).data as { expired_aliases:number; orphaned_sessions:number },
@@ -278,6 +279,10 @@ export const adminApi = {
     bounceByDomain: async (days = 30) => (await api.get('/admin/bounce-by-domain', { params: { days } })).data as Record<string, number>,
     accountAgeDist: async () => (await api.get('/admin/account-age-dist')).data as Record<string, number>,
     subscriptionBreakdown: async () => (await api.get('/admin/subscription-breakdown')).data as Record<string, number>,
+    dbHealth: async () => (await api.get('/admin/system/db-health')).data as {open_connections:number;in_use:number;idle:number;max_open:number;wait_count:number;wait_duration_ms:number;ping_latency_ms:number;ping_ok:boolean},
+    exportPlansCSV: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/plans-csv`,
+    searchUsersByAlias: async (q: string) => (await api.get('/admin/users/search-by-alias', { params: { q } })).data as { users: AdminUser[]; total: number },
+    userDailyActivity: async (id: string, days = 14) => (await api.get(`/admin/user/${id}/daily-activity`, { params: { days } })).data as { user_id: string; activity: { date: string; forwards: number; blocks: number; replies: number; sends: number; total: number }[] },
 }
 
 export interface AdminAlias {

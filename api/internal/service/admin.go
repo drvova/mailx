@@ -162,6 +162,7 @@ type AdminStore interface {
 	AdminGetSubscriptionChanges(context.Context, int, int) ([]model.SubscriptionChange, int64, error)
 	AdminGetCatchAllStats(context.Context) (map[string]interface{}, error)
 	AdminGetPlanUsage(context.Context) ([]model.PlanUsage, error)
+	AdminGetStatsComparison(context.Context) (map[string]interface{}, error)
 	AdminGetInactiveAliases(context.Context, int) ([]model.InactiveAlias, error)
 	AdminBulkToggleDomains(context.Context, []string, bool) error
 	AdminBulkVerifyDomains(context.Context, []string) error
@@ -175,6 +176,9 @@ type AdminStore interface {
 	AdminGetSubscriptionBreakdown(context.Context) (map[string]int64, error)
 	AdminLogLoginEvent(context.Context, model.LoginEvent) error
 	AdminGetLoginHistory(context.Context, string, int) ([]model.LoginEvent, error)
+	AdminGetDBHealth(context.Context) (map[string]interface{}, error)
+	AdminSearchUsersByAlias(context.Context, string) ([]model.User, int64, error)
+	AdminGetUserDailyActivity(context.Context, string, int) ([]model.DailyStats, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -811,6 +815,10 @@ func (s *Service) AdminGetPlanUsage(ctx context.Context) ([]model.PlanUsage, err
 	return s.Store.AdminGetPlanUsage(ctx)
 }
 
+func (s *Service) AdminGetStatsComparison(ctx context.Context) (map[string]interface{}, error) {
+	return s.Store.AdminGetStatsComparison(ctx)
+}
+
 func (s *Service) AdminGetInactiveAliases(ctx context.Context, days int) ([]model.InactiveAlias, error) {
 	if days <= 0 {
 		days = 30
@@ -873,4 +881,19 @@ func (s *Service) AdminGetLoginHistory(ctx context.Context, userID string, limit
 		limit = 20
 	}
 	return s.Store.AdminGetLoginHistory(ctx, userID, limit)
+}
+
+func (s *Service) AdminGetDBHealth(ctx context.Context) (map[string]interface{}, error) {
+	return s.Store.AdminGetDBHealth(ctx)
+}
+
+func (s *Service) AdminSearchUsersByAlias(ctx context.Context, query string) ([]model.User, int64, error) {
+	return s.Store.AdminSearchUsersByAlias(ctx, query)
+}
+
+func (s *Service) AdminGetUserDailyActivity(ctx context.Context, userID string, days int) ([]model.DailyStats, error) {
+	if days <= 0 || days > 90 {
+		days = 14
+	}
+	return s.Store.AdminGetUserDailyActivity(ctx, userID, days)
 }

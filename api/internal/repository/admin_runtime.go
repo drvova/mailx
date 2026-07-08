@@ -123,6 +123,28 @@ func (d *Database) AdminGetCatchAllStats(ctx context.Context) (map[string]interf
 	}, nil
 }
 
+func (d *Database) AdminGetDBHealth(ctx context.Context) (map[string]interface{}, error) {
+	db, err := d.Client.DB()
+	if err != nil {
+		return nil, err
+	}
+	stats := db.Stats()
+	start := time.Now()
+	pingErr := db.PingContext(ctx)
+	latency := time.Since(start).Milliseconds()
+
+	return map[string]interface{}{
+		"open_connections": stats.OpenConnections,
+		"in_use":          stats.InUse,
+		"idle":            stats.Idle,
+		"max_open":        stats.MaxOpenConnections,
+		"wait_count":      stats.WaitCount,
+		"wait_duration_ms": stats.WaitDuration.Milliseconds(),
+		"ping_latency_ms": latency,
+		"ping_ok":         pingErr == nil,
+	}, nil
+}
+
 func (d *Database) AdminGetRuntimeStats(ctx context.Context) (map[string]interface{}, error) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
@@ -361,6 +383,53 @@ func (d *Database) AdminGetBounceByDomain(ctx context.Context, days int) (map[st
 	result := map[string]int64{}
 	for _, r := range rows {
 		result[r.From] = r.Count
+	}
+	return result, nil
+}
+
+func (d *Database) AdminGetUserDailyActivity(ctx context.Context, userID string, days int) ([]model.DailyStats, error) {
+	start := time.Now().AddDate(0, 0, -days)
+	type row struct {
+		Date     string
+		Forwards int64
+		Blocks   int64
+		Replies  int64
+		Sends    int64
+		Total    int64
+	}
+	var rows []row
+	d.Client.Model(&model.Message{}).
+		Select("date(created_at) as date, sum(case when type=0 then 1 else 0 end) as forwards, sum(case when type=1 then 1 else 0 end) as blocks, sum(case when type=2 then 1 else 0 end) as replies, sum(case when type=3 then 1 else 0 end) as sends, count(*) as total").
+		Where("user_id = ? AND created_at >= ?", userID, start).
+		Group("date(created_at)").Order("date desc").Scan(&rows)
+	var results []model.DailyStats
+	for _, r := range rows {
+		results = append(results, model.DailyStats{Date: r.Date, Forwards: r.Forwards, Blocks: r.Blocks, Replies: r.Replies, Sends: r.Sends, Total: r.Total})
+	}
+	return results, nil
+}
+
+func (d *Database) AdminGetStatsComparison(ctx context.Context) (map[string]interface{}, error) {
+	now := time.Now()
+	type period struct {
+		name  string
+		since time.Time
+	}
+	periods := []period{
+		{"7d", now.AddDate(0, 0, -7)},
+		{"30d", now.AddDate(0, 0, -30)},
+	}
+	result := map[string]interface{}{}
+	for _, p := range periods {
+		var forwards, blocks, replies, sends, signups int64
+		d.Client.Model(&model.Message{}).Where("created_at >= ? AND type = 0", p.since).Count(&forwards)
+		d.Client.Model(&model.Message{}).Where("created_at >= ? AND type = 1", p.since).Count(&blocks)
+		d.Client.Model(&model.Message{}).Where("created_at >= ? AND type = 2", p.since).Count(&replies)
+		d.Client.Model(&model.Message{}).Where("created_at >= ? AND type = 3", p.since).Count(&sends)
+		d.Client.Model(&model.User{}).Where("created_at >= ?", p.since).Count(&signups)
+		result[p.name] = map[string]int64{
+			"forwards": forwards, "blocks": blocks, "replies": replies, "sends": sends, "signups": signups,
+		}
 	}
 	return result, nil
 }

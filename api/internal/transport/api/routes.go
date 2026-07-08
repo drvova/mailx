@@ -144,6 +144,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	// Admin log filtering + user search + user detail
 	admin.Get("/logs/filter", h.AdminGetLogsFiltered)
 	admin.Get("/users/search", h.AdminSearchUsers)
+	admin.Get("/users/search-by-alias", h.AdminSearchUsersByAlias)
 	admin.Get("/user/:id/detail", h.AdminGetUserDetail)
 
 	// Admin access key moderation
@@ -211,6 +212,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	// Admin message log + user stats
 	admin.Get("/messages", h.AdminGetMessages)
 	admin.Get("/user/:id/stats", h.AdminGetUserStats)
+	admin.Get("/user/:id/daily-activity", h.AdminGetUserDailyActivity)
 
 	// Admin log search (text + type)
 	admin.Get("/logs/search", h.AdminSearchLogs)
@@ -355,6 +357,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/export/keys-csv", h.AdminExportAccessKeysCSV)
 	admin.Get("/export/sessions-csv", h.AdminExportSessionsCSV)
 	admin.Get("/plan-usage", h.AdminGetPlanUsage)
+	admin.Get("/stats-comparison", h.AdminGetStatsComparison)
 	admin.Get("/inactive-aliases", h.AdminGetInactiveAliases)
 
 	admin.Get("/cleanup-stats", h.AdminGetCleanupStats)
@@ -368,6 +371,9 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/bounce-by-domain", h.AdminGetBounceByDomain)
 	admin.Get("/account-age-distribution", h.AdminGetAccountAgeDistribution)
 	admin.Get("/subscription-breakdown", h.AdminGetSubscriptionBreakdown)
+
+	admin.Get("/export/plans-csv", h.AdminExportPlansCSV)
+	admin.Get("/system/db-health", h.AdminGetDBHealth)
 
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
