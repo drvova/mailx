@@ -119,6 +119,8 @@ type AdminService interface {
 	AdminExportUserData(context.Context, string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, []model.AccessKey, *model.Settings, error)
 	AdminPurgeExpiredSessions(context.Context) (int64, error)
 	AdminGetDomainWithAliasCounts(context.Context) ([]model.DomainStats, error)
+	AdminBulkCreateAliases(context.Context, []model.Alias) error
+	AdminBulkToggleRecipients(context.Context, []string, bool) error
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1591,6 +1593,54 @@ func (h *Handler) AdminGetDomainWithAliasCounts(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch domain stats"})
 	}
 	return c.JSON(fiber.Map{"domains": stats})
+}
+
+type AdminBulkCreateAliasesReq struct {
+	UserID string   `json:"user_id" validate:"required,uuid"`
+	Names  []string `json:"names"`
+	Count  int      `json:"count"`
+}
+
+func (h *Handler) AdminBulkCreateAliases(c *fiber.Ctx) error {
+	var req AdminBulkCreateAliasesReq
+	if err := c.BodyParser(&req); err != nil || req.UserID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "user_id required"})
+	}
+	if len(req.Names) == 0 && req.Count == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "names or count required"})
+	}
+	var aliases []model.Alias
+	if len(req.Names) > 0 {
+		for _, name := range req.Names {
+			aliases = append(aliases, model.Alias{UserID: req.UserID, Name: name, Enabled: true})
+		}
+	} else {
+		for i := 0; i < req.Count && i < 100; i++ {
+			aliases = append(aliases, model.Alias{UserID: req.UserID, Name: fmt.Sprintf("auto-%d", time.Now().UnixNano()+int64(i)), Enabled: true})
+		}
+	}
+	if err := h.Service.AdminBulkCreateAliases(c.Context(), aliases); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to create aliases"})
+	}
+	h.audit(c, "bulk_create_aliases", req.UserID, fmt.Sprintf("%d aliases", len(aliases)))
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d aliases created", len(aliases))})
+}
+
+type AdminBulkToggleReq struct {
+	IDs      []string `json:"ids"`
+	IsActive bool     `json:"is_active"`
+}
+
+func (h *Handler) AdminBulkToggleRecipients(c *fiber.Ctx) error {
+	var req AdminBulkToggleReq
+	if err := c.BodyParser(&req); err != nil || len(req.IDs) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "ids required"})
+	}
+	if err := h.Service.AdminBulkToggleRecipients(c.Context(), req.IDs, req.IsActive); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk update recipients"})
+	}
+	h.audit(c, "bulk_toggle_recipients", fmt.Sprintf("%d recipients", len(req.IDs)), fmt.Sprintf("is_active=%v", req.IsActive))
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d recipients updated", len(req.IDs))})
 }
 
 func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {

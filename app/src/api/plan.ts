@@ -239,6 +239,10 @@ export const adminApi = {
     purgeExpiredSessions: async () => (await api.delete('/admin/sessions/expired')).data as { message: string },
     // Domain stats with alias counts
     domainStats: async () => (await api.get('/admin/domain-stats')).data as { domains: { domain: string; enabled: boolean; verified: boolean; alias_count: number }[] },
+    // Bulk alias creation
+    bulkCreateAliases: async (userId: string, names?: string[], count?: number) => (await api.post('/admin/aliases/bulk-create', { user_id: userId, ...(names ? { names } : {}), ...(count ? { count } : {}) })).data as { message: string },
+    // Bulk recipient toggle
+    bulkToggleRecipients: async (ids: string[], isActive: boolean) => (await api.post('/admin/recipients/bulk-toggle', { ids, is_active: isActive })).data as { message: string },
 }
 
 export interface AdminAlias {

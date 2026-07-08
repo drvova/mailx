@@ -194,6 +194,7 @@
                             <button class="cta cta-tertiary text-sm" @click="createDomainForUser(userDetail.user.id)">Add Domain</button>
                             <button class="cta cta-tertiary text-sm" @click="createAliasForUser(userDetail.user.id)">Add Alias</button>
                             <button class="cta cta-tertiary text-sm" @click="createKeyForUser(userDetail.user.id)">Add API Key</button>
+                            <button class="cta cta-tertiary text-sm" @click="bulkAliasesForUser(userDetail.user.id)">Bulk Create Aliases</button>
                             <button class="cta cta-tertiary text-sm" @click="exportUserDataFull(userDetail.user)">Export User Data</button>
                         </div>
                         <h4 class="mb-2">Aliases ({{ userDetail.aliases.length }})</h4>
@@ -299,6 +300,8 @@
             <div v-if="tab === 'recipients'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
                     <input v-model="recipientSearch" placeholder="Search by email..." @input="searchRecipientsDeb" class="flex-1" />
+                    <button class="cta cta-tertiary text-sm" @click="bulkToggleRecipients(true)">Bulk Activate</button>
+                    <button class="cta cta-tertiary text-sm" @click="bulkToggleRecipients(false)">Bulk Suspend</button>
                     <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteRecipients">Bulk Delete Selected</button>
                 </div>
                 <div v-if="recipients.length" class="overflow-x-auto">
@@ -1067,6 +1070,23 @@ const fetchDomainHealth = async () => { try { domHealth.value = await adminApi.d
 const fetchInactiveUsers = async () => { try { const r = await adminApi.inactiveUsers(inactiveDays.value); inactiveUsers.value = r.users } catch { /* */ } }
 const purgeSessions = async () => { if (!confirm('Purge all expired sessions?')) return; try { const r = await adminApi.purgeExpiredSessions(); alert(r.message); fetchSessions() } catch { /* */ } }
 const fetchDomainStats = async () => { try { const r = await adminApi.domainStats(); domainStatsData.value = r.domains } catch { /* */ } }
+const bulkToggleRecipients = async (active: boolean) => {
+    const selected = recipients.value.filter(r => (r as any)._selected)
+    if (!selected.length) { alert('Select recipients first'); return }
+    if (!confirm(`${active ? 'Activate' : 'Suspend'} ${selected.length} recipients?`)) return
+    try { await adminApi.bulkToggleRecipients(selected.map(r => r.id), active); selected.forEach(r => r.is_active = active) } catch { /* */ } }
+const bulkAliasesForUser = async (userId: string) => {
+    const input = prompt('Enter alias names (comma-separated) or a number to auto-generate:')
+    if (!input) return
+    if (/^\d+$/.test(input)) {
+        const count = parseInt(input); if (count <= 0) return
+        try { const r = await adminApi.bulkCreateAliases(userId, undefined, count); alert(r.message); viewUser(userId) } catch { /* */ }
+    } else {
+        const names = input.split(',').map(s => s.trim()).filter(Boolean)
+        if (!names.length) return
+        try { const r = await adminApi.bulkCreateAliases(userId, names); alert(r.message); viewUser(userId) } catch { /* */ }
+    }
+}
 const globalSearch = async () => { if (!globalQuery.value) return; try { globalResult.value = await adminApi.globalSearch(globalQuery.value) } catch { alert('User not found') } }
 const toggleCatchAll = async (a: AdminAlias) => { try { await adminApi.toggleAliasCatchAll(a.id, !a.catch_all); a.catch_all = !a.catch_all } catch { /* */ } }
 const exportUserDataFull = async (u: AdminUser) => { try { const d = await adminApi.exportUserData(u.id); alert(JSON.stringify(d, null, 2)) } catch { alert('Unable to export') } }

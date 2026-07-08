@@ -919,6 +919,14 @@ func (d *Database) AdminGetDomainWithAliasCounts(ctx context.Context) ([]model.D
 	return results, nil
 }
 
+func (d *Database) AdminBulkCreateAliases(ctx context.Context, aliases []model.Alias) error {
+	return d.Client.Create(&aliases).Error
+}
+
+func (d *Database) AdminBulkToggleRecipients(ctx context.Context, recipientIDs []string, isActive bool) error {
+	return d.Client.Model(&model.Recipient{}).Where("id IN ?", recipientIDs).Update("is_active", isActive).Error
+}
+
 func (d *Database) AdminGetLogsDateRange(ctx context.Context, logType, from, to string, limit, offset int) ([]model.Log, int64, error) {
 	q := d.Client.Model(&model.Log{})
 	if logType != "" {

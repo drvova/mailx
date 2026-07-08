@@ -321,6 +321,10 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Delete("/sessions/expired", h.AdminPurgeExpiredSessions)
 	admin.Get("/domain-stats", h.AdminGetDomainWithAliasCounts)
 
+	// Bulk alias creation, bulk recipient toggle
+	admin.Post("/aliases/bulk-create", h.AdminBulkCreateAliases)
+	admin.Post("/recipients/bulk-toggle", h.AdminBulkToggleRecipients)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)
