@@ -140,7 +140,7 @@ func (mailer Mailer) Reply(from string, name string, rcp model.Recipient, data [
 	m.SetHeader("X-Complaints-To", mailer.cfg.Report)
 	m.SetHeader("X-Report-Abuse", mailer.cfg.Report)
 	m.SetHeader("X-Report-Abuse-To", mailer.cfg.Report)
-	m.SetHeader("Feedback-ID", fmt.Sprintf("mailx:%x:reply", sha256.Sum256([]byte(mailer.cfg.TokenSecret+alias.ID))))
+	m.SetHeader("Feedback-ID", fmt.Sprintf("freethemail:%x:reply", sha256.Sum256([]byte(mailer.cfg.TokenSecret+alias.ID))))
 
 	for _, a := range email.AttachedFiles {
 		m.Attach(a.ContentDisposition.Params["filename"], gomail.SetCopyFunc(func(w io.Writer) error {
@@ -239,17 +239,17 @@ func (mailer Mailer) Forward(from string, name string, rcp model.Recipient, data
 	if envFrom, ok := email.Headers.ExtraHeaders["Return-Path"]; ok && len(envFrom) > 0 {
 		originalSender = envFrom[0]
 	}
-	m.SetHeader("X-Mailx-Original-Envelope-From", originalSender)
-	m.SetHeader("X-Mailx-Original-Sender", originalSender)
-	m.SetHeader("X-Mailx-Original-To", rcp.Email)
+	m.SetHeader("X-FreeTheMail-Original-Envelope-From", originalSender)
+	m.SetHeader("X-FreeTheMail-Original-Sender", originalSender)
+	m.SetHeader("X-FreeTheMail-Original-To", rcp.Email)
 	if len(email.Headers.From) > 0 {
-		m.SetHeader("X-Mailx-Original-From-Header", email.Headers.From[0].String())
+		m.SetHeader("X-FreeTheMail-Original-From-Header", email.Headers.From[0].String())
 	}
 	if email.Headers.MessageID != "" {
 		m.SetHeader("Message-ID", string(email.Headers.MessageID))
 	}
 	if authResults, ok := email.Headers.ExtraHeaders["Authentication-Results"]; ok && len(authResults) > 0 {
-		m.SetHeader("X-Mailx-Authentication-Results", authResults...)
+		m.SetHeader("X-FreeTheMail-Authentication-Results", authResults...)
 	}
 	if len(email.Headers.InReplyTo) > 0 {
 		m.SetHeader("In-Reply-To", string(email.Headers.InReplyTo[0]))
@@ -279,7 +279,7 @@ func (mailer Mailer) Forward(from string, name string, rcp model.Recipient, data
 	m.SetHeader("X-Complaints-To", mailer.cfg.Report)
 	m.SetHeader("X-Report-Abuse", mailer.cfg.Report)
 	m.SetHeader("X-Report-Abuse-To", mailer.cfg.Report)
-	m.SetHeader("Feedback-ID", fmt.Sprintf("mailx:%x:forward", sha256.Sum256([]byte(mailer.cfg.TokenSecret+alias.ID))))
+	m.SetHeader("Feedback-ID", fmt.Sprintf("freethemail:%x:forward", sha256.Sum256([]byte(mailer.cfg.TokenSecret+alias.ID))))
 
 	// PGP/Inline encryption
 	if rcp.PGPEnabled && rcp.PGPKey != "" && rcp.PGPInline {
