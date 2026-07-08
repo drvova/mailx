@@ -2,7 +2,7 @@
     input[type=email],
     input[type=text],
     input[type=password] {
-        @apply bg-secondary text-secondary appearance-none outline-none border w-full py-3 px-4 leading-tight focus:border-accent;
+        @apply bg-secondary text-secondary appearance-none border w-full py-3 px-4 leading-tight focus:border-accent;
         border-color: var(--sk-border);
         border-radius: var(--radius);
         background-image: var(--inset-bg);
@@ -49,7 +49,7 @@
     }
 
     select {
-        @apply bg-secondary text-secondary form-select py-2.5 px-4 pe-9 block w-full border focus:border-accent disabled:opacity-50 disabled:pointer-events-none outline-none focus:ring-transparent cursor-pointer mb-2;
+        @apply bg-secondary text-secondary form-select py-2.5 px-4 pe-9 block w-full border focus:border-accent disabled:opacity-50 disabled:pointer-events-none focus:ring-transparent cursor-pointer mb-2;
         border-color: var(--sk-border);
         border-radius: var(--radius);
         box-shadow: var(--inset-shadow);
@@ -59,7 +59,7 @@
     }
 
     textarea {
-        @apply bg-secondary text-secondary appearance-none outline-none border w-full py-3 px-4 leading-tight focus:border-accent mb-2 h-[350px];
+        @apply bg-secondary text-secondary appearance-none border w-full py-3 px-4 leading-tight focus:border-accent mb-2 h-[350px];
         border-color: var(--sk-border);
         border-radius: var(--radius);
         background-image: var(--inset-bg);

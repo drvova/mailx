@@ -84,7 +84,7 @@
                                     v-model="otp"
                                     v-bind:class="{ 'error': otpError }"
                                     id="otp"
-                                    type="text"
+                                    type="text" inputmode="numeric"
                                 >
                                 <p v-if="otpError" class="error" role="alert">Required</p>
                             </div>

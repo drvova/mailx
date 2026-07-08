@@ -17,6 +17,7 @@
                             v-model="pgp_key"
                             v-bind:class="{ 'error': pgpError }"
                             id="recipient_pgp"
+                            spellcheck="false"
                             placeholder="Starts with '-----BEGIN PGP PUBLIC KEY BLOCK-----'"
                         >
                         </textarea>
