@@ -33,6 +33,7 @@ type Handler struct {
 	Validator utils.Validator
 	Cache     Cache
 	WebAuthn  *webauthn.WebAuthn
+	Metrics   *Metrics
 }
 
 type Cache interface {
@@ -48,6 +49,8 @@ func Start(cfg config.APIConfig, service Service, cache Cache) error {
 		ProxyHeader:             fiber.HeaderXForwardedFor,
 	})
 
+	metrics := NewMetrics()
+
 	h := &Handler{
 		Cfg:       cfg,
 		Service:   service,
@@ -55,7 +58,10 @@ func Start(cfg config.APIConfig, service Service, cache Cache) error {
 		Validator: utils.NewValidator(),
 		Cache:     cache,
 		WebAuthn:  auth.NewWebAuthn(cfg),
+		Metrics:   metrics,
 	}
+
+	app.Use(metrics.Middleware())
 
 	h.SetupRoutes(cfg)
 

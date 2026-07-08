@@ -114,4 +114,10 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	docs := h.Server.Group("/docs")
 	docs.Use(auth.NewBasicAuth(cfg))
 	docs.Get("/*", swagger.HandlerDefault)
+
+	// Anonymous endpoint hit counters — no PII, no cookies, no client JS.
+	// Protected by the same basic-auth as docs.
+	metrics := h.Server.Group("/metrics")
+	metrics.Use(auth.NewBasicAuth(cfg))
+	metrics.Get("/endpoints", h.Metrics.HandleMetrics)
 }
