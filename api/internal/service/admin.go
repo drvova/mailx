@@ -148,6 +148,8 @@ type AdminStore interface {
 	AdminBulkToggleRecipients(context.Context, []string, bool) error
 	AdminGetRuntimeStats(context.Context) (map[string]interface{}, error)
 	AdminGetUserQuota(context.Context, string) (*model.UserQuota, error)
+	AdminCompareUsers(context.Context, string, string) ([]model.User, []model.Subscription, error)
+	AdminGetRecipientDomains(context.Context) (map[string]int64, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -699,4 +701,12 @@ func (s *Service) AdminGetRuntimeStats(ctx context.Context) (map[string]interfac
 
 func (s *Service) AdminGetUserQuota(ctx context.Context, userID string) (*model.UserQuota, error) {
 	return s.Store.AdminGetUserQuota(ctx, userID)
+}
+
+func (s *Service) AdminCompareUsers(ctx context.Context, id1, id2 string) ([]model.User, []model.Subscription, error) {
+	return s.Store.AdminCompareUsers(ctx, id1, id2)
+}
+
+func (s *Service) AdminGetRecipientDomains(ctx context.Context) (map[string]int64, error) {
+	return s.Store.AdminGetRecipientDomains(ctx)
 }

@@ -123,6 +123,7 @@
                     <button class="cta cta-tertiary text-sm" @click="createUser">Create User</button>
                     <button class="cta cta-tertiary text-sm" @click="bulkSuspend">Bulk Suspend</button>
                     <button class="cta cta-tertiary text-sm" @click="bulkActivate">Bulk Activate</button>
+                    <button class="cta cta-tertiary text-sm" @click="compareUsers">Compare</button>
                     <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteUsers">Bulk Delete</button>
                 </div>
                 <div v-if="users.length" class="overflow-x-auto">
@@ -380,7 +381,7 @@
                             <td>{{ plan.max_recipients }}</td>
                             <td>{{ plan.max_daily_aliases }}</td>
                             <td><span :class="plan.is_active ? 'badge badge-success' : 'badge badge-error'">{{ plan.is_active ? 'Active' : 'Inactive' }}</span></td>
-                            <td><div class="flex gap-1"><button class="cta cta-tertiary text-sm" @click="editPlan(plan)">Edit</button><button class="cta cta-tertiary text-sm" @click="deletePlan(plan)" :disabled="deleting === plan.id" :aria-busy="deleting === plan.id">Delete</button></div></td>
+                            <td><div class="flex gap-1"><button class="cta cta-tertiary text-sm" @click="viewPlan(plan)">Detail</button><button class="cta cta-tertiary text-sm" @click="editPlan(plan)">Edit</button><button class="cta cta-tertiary text-sm" @click="deletePlan(plan)" :disabled="deleting === plan.id" :aria-busy="deleting === plan.id">Delete</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -1054,7 +1055,7 @@ watch(tab, (t) => {
     if (t === 'inbox' && !inboxMessages.value.length) fetchInboxMessages()
     if (t === 'messages') fetchMessages()
     if (t === 'subs') fetchSubscriptions()
-    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats(); fetchRuntime() }
+    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats(); fetchRuntime(); fetchRecipientDomains() }
     if (t === 'logs') fetchLogsFiltered()
     if (t === 'audit' && !auditEntries.value.length) fetchAuditLog()
 })
@@ -1081,6 +1082,9 @@ const inactiveDays = ref(30)
 const domainStatsData = ref<any[]>([])
 const runtimeInfo = ref<any>(null)
 const userQuota = ref<any>(null)
+const planDetail = ref<Plan | null>(null)
+const compareData = ref<any>(null)
+const recipDomains = ref<Record<string, number> | null>(null)
 const fetchSubStats = async () => { try { subStats.value = await adminApi.subscriptionStats() } catch { /* */ } }
 const fetchDailyActivity = async () => { try { const r = await adminApi.dailyActivity(); dailyActivity.value = r.activity } catch { /* */ } }
 const fetchPlanDist = async () => { try { planDist.value = await adminApi.planDistribution() } catch { /* */ } }
@@ -1089,6 +1093,14 @@ const fetchInactiveUsers = async () => { try { const r = await adminApi.inactive
 const purgeSessions = async () => { if (!confirm('Purge all expired sessions?')) return; try { const r = await adminApi.purgeExpiredSessions(); alert(r.message); fetchSessions() } catch { /* */ } }
 const fetchDomainStats = async () => { try { const r = await adminApi.domainStats(); domainStatsData.value = r.domains } catch { /* */ } }
 const fetchRuntime = async () => { try { runtimeInfo.value = await adminApi.runtimeStats() } catch { /* */ } }
+const fetchRecipientDomains = async () => { try { recipDomains.value = await adminApi.recipientDomains() } catch { /* */ } }
+const viewPlan = (p: Plan) => { planDetail.value = p }
+const compareUsers = async () => {
+    const id1 = prompt('Enter first user ID:')
+    if (!id1) return
+    const id2 = prompt('Enter second user ID:')
+    if (!id2) return
+    try { compareData.value = await adminApi.compareUsers(id1, id2) } catch { alert('Unable to compare') } }
 const formatUptime = (s: number) => { const d = Math.floor(s/86400); const h = Math.floor((s%86400)/3600); const m = Math.floor((s%3600)/60); return d ? `${d}d ${h}h` : `${h}h ${m}m` }
 const bulkToggleRecipients = async (active: boolean) => {
     const selected = recipients.value.filter(r => (r as any)._selected)

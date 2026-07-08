@@ -123,6 +123,8 @@ type AdminService interface {
 	AdminBulkToggleRecipients(context.Context, []string, bool) error
 	AdminGetRuntimeStats(context.Context) (map[string]interface{}, error)
 	AdminGetUserQuota(context.Context, string) (*model.UserQuota, error)
+	AdminCompareUsers(context.Context, string, string) ([]model.User, []model.Subscription, error)
+	AdminGetRecipientDomains(context.Context) (map[string]int64, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1663,6 +1665,27 @@ func (h *Handler) AdminGetUserQuota(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Unable to fetch user quota"})
 	}
 	return c.JSON(quota)
+}
+
+func (h *Handler) AdminCompareUsers(c *fiber.Ctx) error {
+	id1 := c.Query("id1")
+	id2 := c.Query("id2")
+	if id1 == "" || id2 == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "id1 and id2 required"})
+	}
+	users, subs, err := h.Service.AdminCompareUsers(c.Context(), id1, id2)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to compare users"})
+	}
+	return c.JSON(fiber.Map{"users": users, "subscriptions": subs})
+}
+
+func (h *Handler) AdminGetRecipientDomains(c *fiber.Ctx) error {
+	domains, err := h.Service.AdminGetRecipientDomains(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch recipient domains"})
+	}
+	return c.JSON(domains)
 }
 
 func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {

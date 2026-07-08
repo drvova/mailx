@@ -247,6 +247,10 @@ export const adminApi = {
     runtimeStats: async () => (await api.get('/admin/system/runtime')).data as Record<string, any>,
     // User quota
     userQuota: async (id: string) => (await api.get(`/admin/user/${id}/quota`)).data as { user_id: string; tier: string; alias_count: number; recipient_count: number; credential_count: number; session_count: number; max_aliases: number; max_recipients: number; max_credentials: number; max_sessions: number },
+    // User comparison
+    compareUsers: async (id1: string, id2: string) => (await api.get('/admin/users/compare', { params: { id1, id2 } })).data as { users: AdminUser[]; subscriptions: any[] },
+    // Recipient domain breakdown
+    recipientDomains: async () => (await api.get('/admin/recipient-domains')).data as Record<string, number>,
 }
 
 export interface AdminAlias {

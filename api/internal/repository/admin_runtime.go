@@ -49,3 +49,20 @@ func (d *Database) AdminGetUserQuota(ctx context.Context, userID string) (*model
 	}
 	return &uq, nil
 }
+
+func (d *Database) AdminCompareUsers(ctx context.Context, id1, id2 string) ([]model.User, []model.Subscription, error) {
+	var users []model.User
+	d.Client.Where("id IN ?", []string{id1, id2}).Find(&users)
+	var subs []model.Subscription
+	d.Client.Where("user_id IN ?", []string{id1, id2}).Find(&subs)
+	return users, subs, nil
+}
+
+func (d *Database) AdminGetRecipientDomains(ctx context.Context) (map[string]int64, error) {
+	type row struct { Domain string; Count int64 }
+	var rows []row
+	d.Client.Model(&model.Recipient{}).Select("substring_index(email, '@', -1) as domain, count(*) as count").Group("substring_index(email, '@', -1)").Order("count desc").Limit(30).Scan(&rows)
+	result := map[string]int64{}
+	for _, r := range rows { result[r.Domain] = r.Count }
+	return result, nil
+}
