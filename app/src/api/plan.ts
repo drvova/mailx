@@ -261,7 +261,12 @@ export const adminApi = {
     bounceStats: async (days = 30) => (await api.get('/admin/bounce-stats', { params: { days } })).data as { aliases: { alias_id: string; alias_name: string; user_email: string; bounces: number }[] },
     onboardingStatus: async () => (await api.get('/admin/onboarding-status')).data as { users: { user_id: string; email: string; alias_count: number; recipient_count: number; status: string; created_at: string }[] },
     catchAllStats: async () => (await api.get('/admin/catchall-stats')).data as { total_aliases: number; catchall_aliases: number; percentage: number; by_domain: { domain: string; count: number }[] },
+    recentAudit: async () => (await api.get('/admin/recent-audit')).data as { entries: { id: number; admin_email: string; action: string; target: string; details: string; created_at: string }[]; count: number },
+    hourlyVolume: async (days = 7) => (await api.get('/admin/hourly-volume', { params: { days } })).data as { hours: { hour: number; count: number }[] },
+    topSenders: async (days = 30) => (await api.get('/admin/top-senders', { params: { days } })).data as { users: { user_id: string; email: string; sends: number }[] },
     sessionConcurrency: async () => (await api.get('/admin/session-concurrency')).data as { users: { user_id: string; email: string; active_sessions: number }[] },
+    planUsage: async () => (await api.get('/admin/plan-usage')).data as { users: { user_id: string; email: string; tier: string; alias_count: number; max_aliases: number; recipient_count: number; max_recipients: number; credential_count: number; max_credentials: number; session_count: number; max_sessions: number }[] },
+    inactiveAliases: async (days = 30) => (await api.get('/admin/inactive-aliases', { params: { days } })).data as { aliases: { alias_id: string; alias_name: string; user_id: string; days_inactive: number; created_at: string }[] },
 }
 
 export interface AdminAlias {

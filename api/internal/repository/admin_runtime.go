@@ -10,6 +10,63 @@ import (
 
 var startTime = time.Now()
 
+func (d *Database) AdminGetPlanUsage(ctx context.Context) ([]model.PlanUsage, error) {
+	var results []model.PlanUsage
+	var subs []model.Subscription
+	d.Client.Where("is_active = true AND plan_id IS NOT NULL").Find(&subs)
+	for _, sub := range subs {
+		var user model.User
+		if err := d.Client.First(&user, "id = ?", sub.UserID).Error; err != nil {
+			continue
+		}
+		var aliasCount, recipientCount, credCount, sessCount int64
+		d.Client.Model(&model.Alias{}).Where("user_id = ?", sub.UserID).Count(&aliasCount)
+		d.Client.Model(&model.Recipient{}).Where("user_id = ?", sub.UserID).Count(&recipientCount)
+		d.Client.Model(&model.Credential{}).Where("user_id = ?", sub.UserID).Count(&credCount)
+		d.Client.Model(&model.Session{}).Where("user_id = ? AND expires_at > ?", sub.UserID, time.Now()).Count(&sessCount)
+		var plan model.Plan
+		if sub.PlanID != nil {
+			if err := d.Client.First(&plan, "id = ?", *sub.PlanID).Error; err != nil {
+				plan = model.Plan{}
+			}
+		}
+		results = append(results, model.PlanUsage{
+			UserID:          sub.UserID,
+			Email:           user.Email,
+			Tier:            sub.Tier,
+			AliasCount:      aliasCount,
+			MaxAliases:      int64(plan.MaxDailyAliases),
+			RecipientCount:  recipientCount,
+			MaxRecipients:   int64(plan.MaxRecipients),
+			CredentialCount: credCount,
+			MaxCredentials:  int64(plan.MaxCredentials),
+			SessionCount:    sessCount,
+			MaxSessions:     int64(plan.MaxSessions),
+		})
+	}
+	return results, nil
+}
+
+func (d *Database) AdminGetInactiveAliases(ctx context.Context, days int) ([]model.InactiveAlias, error) {
+	cutoff := time.Now().AddDate(0, 0, -days)
+	var activeIDs []string
+	d.Client.Model(&model.Message{}).Distinct("alias_id").Where("created_at >= ?", cutoff).Pluck("alias_id", &activeIDs)
+	var aliases []model.Alias
+	if len(activeIDs) > 0 {
+		d.Client.Where("enabled = true AND id NOT IN ?", activeIDs).Order("created_at desc").Limit(100).Find(&aliases)
+	} else {
+		d.Client.Where("enabled = true").Order("created_at desc").Limit(100).Find(&aliases)
+	}
+	var results []model.InactiveAlias
+	for _, a := range aliases {
+		results = append(results, model.InactiveAlias{
+			AliasID: a.ID, AliasName: a.Name, UserID: a.UserID,
+			CreatedAt: a.CreatedAt, DaysInactive: days,
+		})
+	}
+	return results, nil
+}
+
 func (d *Database) AdminGetCatchAllStats(ctx context.Context) (map[string]interface{}, error) {
 	var total, catchAll int64
 	d.Client.Model(&model.Alias{}).Count(&total)
@@ -130,6 +187,49 @@ func (d *Database) AdminGetRecentAliases(ctx context.Context, limit int) ([]mode
 	var aliases []model.Alias
 	d.Client.Order("created_at desc").Limit(limit).Find(&aliases)
 	return aliases, nil
+}
+
+func (d *Database) AdminGetHourlyVolume(ctx context.Context, days int) ([]model.HourlyVolume, error) {
+	cutoff := time.Now().AddDate(0, 0, -days)
+	type row struct {
+		Hour  int
+		Count int64
+	}
+	var rows []row
+	d.Client.Model(&model.Message{}).
+		Select("hour(created_at) as hour, count(*) as count").
+		Where("created_at >= ?", cutoff).
+		Group("hour(created_at)").
+		Order("hour asc").
+		Scan(&rows)
+	var results []model.HourlyVolume
+	for _, r := range rows {
+		results = append(results, model.HourlyVolume{Hour: r.Hour, Count: r.Count})
+	}
+	return results, nil
+}
+
+func (d *Database) AdminGetTopSenders(ctx context.Context, days int) ([]model.UserForwardStats, error) {
+	cutoff := time.Now().AddDate(0, 0, -days)
+	type row struct {
+		UserID string
+		Email  string
+		Count  int64
+	}
+	var rows []row
+	d.Client.Model(&model.Message{}).
+		Select("messages.user_id, users.email, count(*) as count").
+		Joins("join users on users.id = messages.user_id").
+		Where("messages.created_at >= ? AND messages.type = 3", cutoff).
+		Group("messages.user_id, users.email").
+		Order("count desc").
+		Limit(20).
+		Scan(&rows)
+	var results []model.UserForwardStats
+	for _, r := range rows {
+		results = append(results, model.UserForwardStats{UserID: r.UserID, Email: r.Email, Sends: r.Count})
+	}
+	return results, nil
 }
 
 func (d *Database) AdminGetAliasForwardStats(ctx context.Context, days int) ([]model.AliasForwardStats, error) {

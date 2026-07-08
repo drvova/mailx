@@ -153,11 +153,15 @@ type AdminStore interface {
 	AdminGetRecipientDomains(context.Context) (map[string]int64, error)
 	AdminGetTopForwarders(context.Context, int) ([]model.UserForwardStats, error)
 	AdminGetMessageTypeStats(context.Context, int) (map[string]int64, error)
+	AdminGetHourlyVolume(context.Context, int) ([]model.HourlyVolume, error)
+	AdminGetTopSenders(context.Context, int) ([]model.UserForwardStats, error)
 	AdminGetRecentAliases(context.Context, int) ([]model.Alias, error)
 	AdminGetAliasForwardStats(context.Context, int) ([]model.AliasForwardStats, error)
 	AdminLogSubscriptionChange(context.Context, model.SubscriptionChange) error
 	AdminGetSubscriptionChanges(context.Context, int, int) ([]model.SubscriptionChange, int64, error)
 	AdminGetCatchAllStats(context.Context) (map[string]interface{}, error)
+	AdminGetPlanUsage(context.Context) ([]model.PlanUsage, error)
+	AdminGetInactiveAliases(context.Context, int) ([]model.InactiveAlias, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -750,6 +754,16 @@ func (s *Service) AdminGetMessageTypeStats(ctx context.Context, days int) (map[s
 	return s.Store.AdminGetMessageTypeStats(ctx, days)
 }
 
+func (s *Service) AdminGetHourlyVolume(ctx context.Context, days int) ([]model.HourlyVolume, error) {
+	if days <= 0 || days > 90 { days = 7 }
+	return s.Store.AdminGetHourlyVolume(ctx, days)
+}
+
+func (s *Service) AdminGetTopSenders(ctx context.Context, days int) ([]model.UserForwardStats, error) {
+	if days <= 0 || days > 90 { days = 30 }
+	return s.Store.AdminGetTopSenders(ctx, days)
+}
+
 func (s *Service) AdminGetRecentAliases(ctx context.Context, limit int) ([]model.Alias, error) {
 	if limit <= 0 || limit > 100 { limit = 50 }
 	return s.Store.AdminGetRecentAliases(ctx, limit)
@@ -771,4 +785,15 @@ func (s *Service) AdminGetAliasForwardStats(ctx context.Context, days int) ([]mo
 
 func (s *Service) AdminGetCatchAllStats(ctx context.Context) (map[string]interface{}, error) {
 	return s.Store.AdminGetCatchAllStats(ctx)
+}
+
+func (s *Service) AdminGetPlanUsage(ctx context.Context) ([]model.PlanUsage, error) {
+	return s.Store.AdminGetPlanUsage(ctx)
+}
+
+func (s *Service) AdminGetInactiveAliases(ctx context.Context, days int) ([]model.InactiveAlias, error) {
+	if days <= 0 {
+		days = 30
+	}
+	return s.Store.AdminGetInactiveAliases(ctx, days)
 }

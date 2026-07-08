@@ -127,12 +127,16 @@ type AdminService interface {
 	AdminGetRecipientDomains(context.Context) (map[string]int64, error)
 	AdminGetTopForwarders(context.Context, int) ([]model.UserForwardStats, error)
 	AdminGetMessageTypeStats(context.Context, int) (map[string]int64, error)
+	AdminGetHourlyVolume(context.Context, int) ([]model.HourlyVolume, error)
+	AdminGetTopSenders(context.Context, int) ([]model.UserForwardStats, error)
 	AdminGetRecentAliases(context.Context, int) ([]model.Alias, error)
 	AdminGetAliasForwardStats(context.Context, int) ([]model.AliasForwardStats, error)
 	AdminBulkDeleteSessions(context.Context, []string) error
 	AdminLogSubscriptionChange(context.Context, model.SubscriptionChange) error
 	AdminGetSubscriptionChanges(context.Context, int, int) ([]model.SubscriptionChange, int64, error)
 	AdminGetCatchAllStats(context.Context) (map[string]interface{}, error)
+	AdminGetPlanUsage(context.Context) ([]model.PlanUsage, error)
+	AdminGetInactiveAliases(context.Context, int) ([]model.InactiveAlias, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1716,6 +1720,24 @@ func (h *Handler) AdminGetMessageTypeStats(c *fiber.Ctx) error {
 	return c.JSON(stats)
 }
 
+func (h *Handler) AdminGetHourlyVolume(c *fiber.Ctx) error {
+	days := c.QueryInt("days", 7)
+	stats, err := h.Service.AdminGetHourlyVolume(c.Context(), days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch hourly volume"})
+	}
+	return c.JSON(fiber.Map{"hours": stats})
+}
+
+func (h *Handler) AdminGetTopSenders(c *fiber.Ctx) error {
+	days := c.QueryInt("days", 30)
+	stats, err := h.Service.AdminGetTopSenders(c.Context(), days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch top senders"})
+	}
+	return c.JSON(fiber.Map{"users": stats})
+}
+
 func (h *Handler) AdminGetRecentAliases(c *fiber.Ctx) error {
 	limit := c.QueryInt("limit", 50)
 	aliases, err := h.Service.AdminGetRecentAliases(c.Context(), limit)
@@ -1784,6 +1806,85 @@ func (h *Handler) AdminExportSubCSV(c *fiber.Ctx) error {
 	}
 	c.Set("Content-Type", "text/csv")
 	c.Set("Content-Disposition", "attachment; filename=subscriptions.csv")
+	return c.Send(buf.Bytes())
+}
+
+func (h *Handler) AdminExportAliasesCSV(c *fiber.Ctx) error {
+	aliases, err := h.Service.AdminExportAliases(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,name,user_id,enabled,catch_all,description,recipients,from_name,created_at\n")
+	for _, a := range aliases {
+		buf.WriteString(fmt.Sprintf("%s,%s,%s,%t,%t,%s,%s,%s,%s\n",
+			a.ID, a.Name, a.UserID, a.Enabled, a.CatchAll, a.Description, a.Recipients, a.FromName, a.CreatedAt.Format(time.RFC3339)))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=aliases.csv")
+	return c.Send(buf.Bytes())
+}
+
+func (h *Handler) AdminGetPlanUsage(c *fiber.Ctx) error {
+	usage, err := h.Service.AdminGetPlanUsage(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch plan usage"})
+	}
+	return c.JSON(fiber.Map{"users": usage})
+}
+
+func (h *Handler) AdminGetInactiveAliases(c *fiber.Ctx) error {
+	days := c.QueryInt("days", 30)
+	aliases, err := h.Service.AdminGetInactiveAliases(c.Context(), days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch inactive aliases"})
+	}
+	return c.JSON(fiber.Map{"aliases": aliases})
+}
+
+func (h *Handler) AdminGetRecentAudit(c *fiber.Ctx) error {
+	entries, _, err := h.Service.AdminGetAuditLog(c.Context(), 10, 0)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch"})
+	}
+	return c.JSON(fiber.Map{"entries": entries, "count": len(entries)})
+}
+
+func (h *Handler) AdminExportAccessKeysCSV(c *fiber.Ctx) error {
+	keys, _, err := h.Service.GetAllAccessKeysAdmin(c.Context(), 10000, 0)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,user_id,name,expires_at,last_used_at,created_at\n")
+	for _, k := range keys {
+		exp := ""
+		if k.ExpiresAt != nil {
+			exp = k.ExpiresAt.Format(time.RFC3339)
+		}
+		lu := ""
+		if k.LastUsedAt != nil {
+			lu = k.LastUsedAt.Format(time.RFC3339)
+		}
+		buf.WriteString(fmt.Sprintf("%s,%s,%s,%s,%s,%s\n", k.ID, k.UserId, k.Name, exp, lu, k.CreatedAt.Format(time.RFC3339)))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=access_keys.csv")
+	return c.Send(buf.Bytes())
+}
+
+func (h *Handler) AdminExportSessionsCSV(c *fiber.Ctx) error {
+	sessions, _, err := h.Service.GetAllSessionsAdmin(c.Context(), 10000, 0)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,user_id,token,expires_at,created_at\n")
+	for _, s := range sessions {
+		buf.WriteString(fmt.Sprintf("%s,%s,%s,%s,%s\n", s.ID, s.UserID, s.Token, s.ExpiresAt.Format(time.RFC3339), s.CreatedAt.Format(time.RFC3339)))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=sessions.csv")
 	return c.Send(buf.Bytes())
 }
 

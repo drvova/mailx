@@ -1,7 +1,19 @@
 <template>
     <div class="card-container">
-        <header class="head">
+        <header class="head flex items-center justify-between">
             <h2>Admin</h2>
+            <div class="relative" v-if="notifCount > 0">
+                <button class="cta cta-tertiary relative text-sm" @click="showNotifs = !showNotifs">
+                    Notifications <span class="bg-red-500 text-white text-xs rounded-full px-1.5 ml-1">{{ notifCount }}</span>
+                </button>
+                <div v-if="showNotifs" class="absolute right-0 mt-2 w-80 bg-white border rounded shadow-lg z-50 max-h-96 overflow-y-auto">
+                    <div class="p-2 border-b flex justify-between"><span class="font-bold text-sm">Recent Activity</span><button class="text-xs text-gray-500" @click="showNotifs = false">X</button></div>
+                    <div v-for="n in notifications" :key="n.id" class="p-2 border-b text-xs">
+                        <div class="flex justify-between"><span class="font-bold">{{ n.admin_email }}</span><span class="text-gray-500">{{ formatDate(n.created_at) }}</span></div>
+                        <div><span class="badge">{{ n.action }}</span> {{ n.target }}</div>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <!-- Global quick-search -->
@@ -45,6 +57,7 @@
                 <li><button :class="tab === 'logs' ? 'font-bold border-b-2' : ''" @click="tab = 'logs'" role="tab">Logs</button></li>
                 <li><button :class="tab === 'audit' ? 'font-bold border-b-2' : ''" @click="tab = 'audit'" role="tab">Audit</button></li>
                 <li><button :class="tab === 'subchanges' ? 'font-bold border-b-2' : ''" @click="tab = 'subchanges'" role="tab">Sub Changes</button></li>
+                <li><button :class="tab === 'usage' ? 'font-bold border-b-2' : ''" @click="tab = 'usage'" role="tab">Usage</button></li>
             </ul>
 
             <!-- STATS -->
@@ -54,6 +67,7 @@
                     <div class="flex gap-2 items-center">
                         <label class="flex items-center gap-1 text-sm"><input type="checkbox" v-model="autoRefresh" /> Auto-refresh</label>
                         <button class="cta cta-tertiary text-sm" @click="refreshAllStats">Refresh All</button>
+                        <span v-if="lastRefresh" class="text-xs text-gray-500 ml-2">Last refreshed: {{ lastRefresh }}</span>
                     </div>
                 </div>
                 <div v-if="stats" class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -80,6 +94,9 @@
                         <button class="cta cta-tertiary text-sm" @click="exportMessages">Export Messages CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportUsersEnriched">Export Users + Subs CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportSubsCSV">Export Subs CSV</button>
+                        <button class="cta cta-tertiary text-sm" @click="exportAliasesCSV">Export Aliases CSV</button>
+                        <button class="cta cta-tertiary text-sm" @click="exportKeysCSV">Export Keys CSV</button>
+                        <button class="cta cta-tertiary text-sm" @click="exportSessionsCSV">Export Sessions CSV</button>
                     </div>
                     <div v-if="subStats" class="grid grid-cols-3 gap-4 mb-4">
                         <div class="card-secondary text-center"><p class="text-2xl font-bold text-green-500">{{ subStats.active }}</p><p class="text-sm text-gray-500">Active Subs</p></div>
@@ -93,6 +110,17 @@
                                 <p class="text-lg font-bold">{{ count }}</p>
                                 <p class="text-sm text-gray-500">{{ tier }}</p>
                             </div>
+                        </div>
+                    </div>
+                    <div v-if="hourlyData.length" class="mt-4">
+                        <h3 class="font-bold mb-2">Volume by Hour (7d)</h3>
+                        <div class="flex items-end gap-0.5 h-24 bg-gray-50 rounded p-1">
+                            <div v-for="h in hourlyData" :key="h.hour" class="flex-1 flex flex-col justify-end" :title="`${h.hour}:00 — ${h.count} messages`">
+                                <div class="w-full bg-blue-500 rounded-t transition-all" :style="{ height: Math.max(2, (h.count / maxHourly * 100)) + '%' }"></div>
+                            </div>
+                        </div>
+                        <div class="flex gap-0.5 mt-1">
+                            <div v-for="h in hourlyData" :key="'l' + h.hour" class="flex-1 text-center text-xs text-gray-500">{{ h.hour }}</div>
                         </div>
                     </div>
                     <div v-if="domHealth" class="mt-4">
@@ -142,6 +170,20 @@
                                         <td>{{ u.blocks }}</td>
                                         <td>{{ u.replies }}</td>
                                         <td>{{ u.sends }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div v-if="topSendersData.length" class="mt-4">
+                        <h3 class="font-bold mb-2">Top Senders (30d)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="table text-sm">
+                                <thead><tr><th>User</th><th>Sends</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="u in topSendersData" :key="u.user_id">
+                                        <td class="max-w-[200px] truncate">{{ u.email }}</td>
+                                        <td class="font-bold text-green-500">{{ u.sends }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -778,6 +820,22 @@
                         </table>
                     </div>
                 </div>
+                <div v-if="inactiveAliasesData.length" class="mt-4">
+                    <h3 class="font-bold mb-2">Inactive Aliases (30d)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="table text-sm">
+                            <thead><tr><th>Alias</th><th>User ID</th><th>Created</th><th>Days Inactive</th></tr></thead>
+                            <tbody>
+                                <tr v-for="a in inactiveAliasesData" :key="a.alias_id">
+                                    <td class="max-w-[200px] truncate">{{ a.alias_name }}</td>
+                                    <td class="text-xs">{{ a.user_id.slice(0,8) }}...</td>
+                                    <td>{{ formatDate(a.created_at) }}</td>
+                                    <td><span class="badge badge-warning">{{ a.days_inactive }}d</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- LOGS -->
@@ -890,12 +948,32 @@
                 </div>
                 <SkeletonRows v-else :rows="5" />
             </div>
+
+            <!-- USAGE -->
+            <div v-if="tab === 'usage'" role="tabpanel">
+                <div v-if="planUsageData.length" class="overflow-x-auto">
+                    <table class="table text-sm">
+                        <thead><tr><th>User</th><th>Tier</th><th>Aliases</th><th>Recipients</th><th>Credentials</th><th>Sessions</th></tr></thead>
+                        <tbody>
+                            <tr v-for="u in planUsageData" :key="u.user_id">
+                                <td class="max-w-[150px] truncate">{{ u.email }}</td>
+                                <td><span class="badge">{{ u.tier }}</span></td>
+                                <td :class="u.alias_count >= u.max_aliases ? 'text-red-500 font-bold' : ''">{{ u.alias_count }}/{{ u.max_aliases }}</td>
+                                <td :class="u.recipient_count >= u.max_recipients ? 'text-red-500 font-bold' : ''">{{ u.recipient_count }}/{{ u.max_recipients }}</td>
+                                <td :class="u.credential_count >= u.max_credentials ? 'text-red-500 font-bold' : ''">{{ u.credential_count }}/{{ u.max_credentials }}</td>
+                                <td :class="u.session_count >= u.max_sessions ? 'text-red-500 font-bold' : ''">{{ u.session_count }}/{{ u.max_sessions }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <SkeletonRows v-else :rows="5" />
+            </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { planApi, adminApi, type Plan, type AdminUser, type AdminLog, type AdminAlias, type AdminDomain, type AdminRecipient, type AdminAccessKey, type AdminSession, type AdminCredential, type AdminInboxMessage, type AdminSubscription, type AdminAudit, type SystemStats } from '../api/plan'
 import SkeletonRows from '../components/SkeletonRows.vue'
 
@@ -1203,9 +1281,10 @@ watch(tab, (t) => {
     if (t === 'inbox' && !inboxMessages.value.length) fetchInboxMessages()
     if (t === 'messages') fetchMessages()
     if (t === 'subs') fetchSubscriptions()
-    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats(); fetchRuntime(); fetchRecipientDomains(); fetchSessConcurrency(); fetchBounceStats(); fetchOnboardingStatus(); fetchCatchAll() }
+    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats(); fetchRuntime(); fetchRecipientDomains(); fetchSessConcurrency(); fetchBounceStats(); fetchOnboardingStatus(); fetchCatchAll(); fetchInactiveAliases() }
     if (t === 'logs') fetchLogsFiltered()
     if (t === 'audit' && !auditEntries.value.length) fetchAuditLog()
+    if (t === 'usage' && !planUsageData.value.length) fetchPlanUsage()
 })
 
 const uploadPGP = async (r: AdminRecipient) => {
@@ -1236,6 +1315,12 @@ const recipDomains = ref<Record<string, number> | null>(null)
 const topForwarders = ref<any[]>([])
 const msgTypeBreakdown = ref<Record<string, number> | null>(null)
 const aliasForwardStats = ref<any[]>([])
+const notifications = ref<any[]>([])
+const notifCount = ref(0)
+const showNotifs = ref(false)
+const hourlyData = ref<any[]>([])
+const maxHourly = computed(() => Math.max(1, ...hourlyData.value.map((h: any) => h.count)))
+const topSendersData = ref<any[]>([])
 const fetchSubStats = async () => { try { subStats.value = await adminApi.subscriptionStats() } catch { /* */ } }
 const fetchDailyActivity = async () => { try { const r = await adminApi.dailyActivity(); dailyActivity.value = r.activity } catch { /* */ } }
 const fetchPlanDist = async () => { try { planDist.value = await adminApi.planDistribution() } catch { /* */ } }
@@ -1253,22 +1338,34 @@ const fetchDomainStats = async () => { try { const r = await adminApi.domainStat
 const fetchRuntime = async () => { try { runtimeInfo.value = await adminApi.runtimeStats() } catch { /* */ } }
 const fetchRecipientDomains = async () => { try { recipDomains.value = await adminApi.recipientDomains() } catch { /* */ } }
 const fetchTopForwarders = async () => { try { const r = await adminApi.topForwarders(); topForwarders.value = r.users } catch { /* */ } }
+const fetchNotifications = async () => { try { const r = await adminApi.recentAudit(); notifications.value = r.entries; notifCount.value = r.count } catch { /* */ } }
+const fetchHourlyVolume = async () => { try { const r = await adminApi.hourlyVolume(); hourlyData.value = r.hours } catch { /* */ } }
+const fetchTopSenders = async () => { try { const r = await adminApi.topSenders(); topSendersData.value = r.users } catch { /* */ } }
 const fetchMsgTypeStats = async () => { try { msgTypeBreakdown.value = await adminApi.messageTypeStats() } catch { /* */ } }
 const fetchAliasForwardStats = async () => { try { const r = await adminApi.aliasForwardStats(); aliasForwardStats.value = r.aliases } catch { /* */ } }
 const bounceStats = ref<any[]>([])
 const onboardingUsers = ref<any[]>([])
 const catchAllInfo = ref<any>(null)
+const planUsageData = ref<any[]>([])
+const inactiveAliasesData = ref<any[]>([])
 const fetchBounceStats = async () => { try { const r = await adminApi.bounceStats(); bounceStats.value = r.aliases } catch { /* */ } }
 const fetchOnboardingStatus = async () => { try { const r = await adminApi.onboardingStatus(); onboardingUsers.value = r.users } catch { /* */ } }
 const fetchCatchAll = async () => { try { catchAllInfo.value = await adminApi.catchAllStats() } catch {} }
+const fetchPlanUsage = async () => { try { const r = await adminApi.planUsage(); planUsageData.value = r.users } catch {} }
+const fetchInactiveAliases = async () => { try { const r = await adminApi.inactiveAliases(); inactiveAliasesData.value = r.aliases } catch {} }
 const exportSubsCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/subscriptions-csv`, '_blank') }
+const exportAliasesCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/aliases-csv`, '_blank') }
+const exportKeysCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/keys-csv`, '_blank') }
+const exportSessionsCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/sessions-csv`, '_blank') }
 const sessConcurrency = ref<any[]>([])
 const fetchSessConcurrency = async () => { try { const r = await adminApi.sessionConcurrency(); sessConcurrency.value = r.users } catch { /* */ } }
 const autoRefresh = ref(false)
 let refreshTimer: any
-const refreshAllStats = () => { fetchStats(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats(); fetchBounceStats() }
+const lastRefresh = ref('')
+const refreshAllStats = () => { fetchStats(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats(); fetchBounceStats(); fetchHourlyVolume(); fetchTopSenders(); lastRefresh.value = new Date().toLocaleTimeString() }
 watch(autoRefresh, (v) => { if (v) { refreshTimer = setInterval(refreshAllStats, 30000) } else { clearInterval(refreshTimer) } })
-onUnmounted(() => { clearInterval(refreshTimer) })
+let notifTimer: any
+onUnmounted(() => { clearInterval(refreshTimer); clearInterval(notifTimer) })
 const viewPlan = (p: Plan) => { planDetail.value = p }
 const compareUsers = async () => {
     const id1 = prompt('Enter first user ID:')
@@ -1309,5 +1406,5 @@ const globalSearch = async () => { if (!globalQuery.value) return; try { globalR
 const toggleCatchAll = async (a: AdminAlias) => { try { await adminApi.toggleAliasCatchAll(a.id, !a.catch_all); a.catch_all = !a.catch_all } catch { /* */ } }
 const exportUserDataFull = async (u: AdminUser) => { try { const d = await adminApi.exportUserData(u.id); alert(JSON.stringify(d, null, 2)) } catch { alert('Unable to export') } }
 
-onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats(); fetchBounceStats() })
+onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats(); fetchBounceStats(); fetchNotifications(); fetchHourlyVolume(); fetchTopSenders(); notifTimer = window.setInterval(fetchNotifications, 60000) })
 </script>

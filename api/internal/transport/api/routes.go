@@ -284,6 +284,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 
 	// Admin audit log
 	admin.Get("/audit", h.AdminGetAuditLog)
+	admin.Get("/recent-audit", h.AdminGetRecentAudit)
 
 	// Session data viewer
 	admin.Get("/session/:id/data", h.AdminGetSessionData)
@@ -337,10 +338,18 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 
 	// Top forwarders, message type stats, recent aliases
 	admin.Get("/top-forwarders", h.AdminGetTopForwarders)
+	admin.Get("/hourly-volume", h.AdminGetHourlyVolume)
+	admin.Get("/top-senders", h.AdminGetTopSenders)
 	admin.Get("/message-type-stats", h.AdminGetMessageTypeStats)
 	admin.Get("/recent-aliases", h.AdminGetRecentAliases)
 	admin.Get("/alias-forward-stats", h.AdminGetAliasForwardStats)
 	admin.Get("/catchall-stats", h.AdminGetCatchAllStats)
+
+	admin.Get("/export/aliases-csv", h.AdminExportAliasesCSV)
+	admin.Get("/export/keys-csv", h.AdminExportAccessKeysCSV)
+	admin.Get("/export/sessions-csv", h.AdminExportSessionsCSV)
+	admin.Get("/plan-usage", h.AdminGetPlanUsage)
+	admin.Get("/inactive-aliases", h.AdminGetInactiveAliases)
 
 	admin.Get("/subscription-changes", h.AdminGetSubscriptionChanges)
 
