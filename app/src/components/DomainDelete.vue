@@ -20,7 +20,7 @@
                     </article>
                     <footer>
                         <nav>
-                            <button @click.stop="deleteDomain" class="cta delete">
+                            <button @click.stop="deleteDomain" :disabled="deleting" :aria-busy="deleting" class="cta delete">
                                 Delete Domain
                             </button>
                             <button @click="close" class="cancel">
@@ -47,10 +47,12 @@ import { toast } from '../composables/useToast.ts'
 const props = defineProps(['domain'])
 const domain = ref(props.domain)
 const error = ref('')
+const deleting = ref(false)
 
 const deleteDomain = async () => {
     if (!(await appConfirm('Aliases on this domain will stop working.', { title: 'Delete this domain?', confirmLabel: 'Delete domain' }))) return
 
+    deleting.value = true
     try {
         await domainApi.delete(domain.value.id)
         toast('Domain deleted')
@@ -60,6 +62,8 @@ const deleteDomain = async () => {
         if (err instanceof ApiError) {
             error.value = err.data?.error || err.message || err.message
         }
+    } finally {
+        deleting.value = false
     }
 }
 

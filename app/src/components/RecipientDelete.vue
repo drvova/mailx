@@ -49,7 +49,7 @@
                     </article>
                     <footer>
                         <nav>
-                            <button @click.stop="deleteRecipient" class="cta delete">
+                            <button @click.stop="deleteRecipient" :disabled="deleting" :aria-busy="deleting" class="cta delete">
                                 Delete Recipient
                             </button>
                             <button @click="close" class="cancel">
@@ -80,12 +80,14 @@ const recipients = ref(props.recipients)
 const emails = ref([] as string[])
 const newEmails = ref([] as string[])
 const error = ref('')
+const deleting = ref(false)
 
 const deleteRecipient = async () => {
     if (!(await appConfirm('Aliases without recipient(s) will be disabled.', { title: 'Delete this recipient?', confirmLabel: 'Delete recipient' }))) return
 
     const data = { recipients: newEmails.value.join(',') }
 
+    deleting.value = true
     try {
         await recipientApi.delete(recipient.value.id, data)
         toast('Recipient deleted')
@@ -95,6 +97,8 @@ const deleteRecipient = async () => {
         if (err instanceof ApiError) {
             error.value = err.data?.error || err.message || err.message
         }
+    } finally {
+        deleting.value = false
     }
 }
 

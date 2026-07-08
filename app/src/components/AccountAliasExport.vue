@@ -6,6 +6,8 @@
         </p>
         <button
             @click="exportAliases"
+            :disabled="exporting"
+            :aria-busy="exporting"
             class="cta mb-4">
             Export Aliases
         </button>
@@ -19,8 +21,10 @@ import { ApiError } from '../api/api.ts'
 import { ref } from 'vue'
 
 const error = ref('')
+const exporting = ref(false)
 
 const exportAliases = async () => {
+    exporting.value = true
     try {
         const res = await aliasApi.export()
         error.value = ''
@@ -36,6 +40,8 @@ const exportAliases = async () => {
         if (err instanceof ApiError) {
             error.value = err.message
         }
+    } finally {
+        exporting.value = false
     }
 }
 </script>
