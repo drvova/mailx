@@ -127,6 +127,25 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Delete("/user/:id", h.AdminDeleteUser)
 	admin.Post("/user/assign-plan", h.AdminAssignPlan)
 
+	// Admin alias moderation
+	admin.Get("/aliases", h.AdminGetAliases)
+	admin.Delete("/alias/:id", h.AdminDeleteAlias)
+	admin.Put("/alias/:id/toggle", h.AdminToggleAlias)
+
+	// Admin domain moderation
+	admin.Get("/domains", h.AdminGetDomains)
+	admin.Delete("/domain/:id", h.AdminDeleteDomain)
+	admin.Put("/domain/:id/toggle", h.AdminToggleDomain)
+
+	// Admin recipient moderation
+	admin.Get("/recipients", h.AdminGetRecipients)
+	admin.Delete("/recipient/:id", h.AdminDeleteRecipient)
+
+	// Admin log filtering + user search + user detail
+	admin.Get("/logs/filter", h.AdminGetLogsFiltered)
+	admin.Get("/users/search", h.AdminSearchUsers)
+	admin.Get("/user/:id/detail", h.AdminGetUserDetail)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

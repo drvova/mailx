@@ -106,3 +106,93 @@ func (d *Database) AdminAssignPlan(ctx context.Context, userID string, planID st
 	sub.IsActive = true
 	return d.Client.Save(&sub).Error
 }
+
+func (d *Database) GetAllAliasesAdmin(ctx context.Context, limit, offset int, search string) ([]model.Alias, int64, error) {
+	var aliases []model.Alias
+	q := d.Client.Model(&model.Alias{})
+	if search != "" {
+		q = q.Where("name LIKE ? OR description LIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+	var total int64
+	q.Count(&total)
+	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&aliases).Error
+	return aliases, total, err
+}
+
+func (d *Database) AdminDeleteAlias(ctx context.Context, aliasID string) error {
+	return d.Client.Where("id = ?", aliasID).Delete(&model.Alias{}).Error
+}
+
+func (d *Database) AdminToggleAlias(ctx context.Context, aliasID string, enabled bool) error {
+	return d.Client.Model(&model.Alias{}).Where("id = ?", aliasID).Update("enabled", enabled).Error
+}
+
+func (d *Database) GetAllDomainsAdmin(ctx context.Context) ([]model.Domain, error) {
+	var domains []model.Domain
+	err := d.Client.Order("created_at desc").Find(&domains).Error
+	return domains, err
+}
+
+func (d *Database) AdminDeleteDomain(ctx context.Context, domainID string) error {
+	return d.Client.Where("id = ?", domainID).Delete(&model.Domain{}).Error
+}
+
+func (d *Database) AdminToggleDomain(ctx context.Context, domainID string, enabled bool) error {
+	return d.Client.Model(&model.Domain{}).Where("id = ?", domainID).Update("enabled", enabled).Error
+}
+
+func (d *Database) GetAllRecipientsAdmin(ctx context.Context, limit, offset int, search string) ([]model.Recipient, int64, error) {
+	var recipients []model.Recipient
+	q := d.Client.Model(&model.Recipient{})
+	if search != "" {
+		q = q.Where("email LIKE ?", "%"+search+"%")
+	}
+	var total int64
+	q.Count(&total)
+	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&recipients).Error
+	return recipients, total, err
+}
+
+func (d *Database) AdminDeleteRecipient(ctx context.Context, recipientID string) error {
+	return d.Client.Where("id = ?", recipientID).Delete(&model.Recipient{}).Error
+}
+
+func (d *Database) GetLogsFiltered(ctx context.Context, logType string, limit, offset int) ([]model.Log, int64, error) {
+	var logs []model.Log
+	q := d.Client.Model(&model.Log{})
+	if logType != "" {
+		q = q.Where("log_type = ?", logType)
+	}
+	var total int64
+	q.Count(&total)
+	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&logs).Error
+	return logs, total, err
+}
+
+func (d *Database) AdminSearchUsers(ctx context.Context, search string, limit, offset int) ([]model.User, int64, error) {
+	var users []model.User
+	q := d.Client.Model(&model.User{})
+	if search != "" {
+		q = q.Where("email LIKE ?", "%"+search+"%")
+	}
+	var total int64
+	q.Count(&total)
+	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&users).Error
+	return users, total, err
+}
+
+func (d *Database) AdminGetUserDetail(ctx context.Context, userID string) (model.User, model.Subscription, []model.Alias, []model.Recipient, []model.Domain, error) {
+	var user model.User
+	if err := d.Client.First(&user, "id = ?", userID).Error; err != nil {
+		return model.User{}, model.Subscription{}, nil, nil, nil, err
+	}
+	var sub model.Subscription
+	d.Client.Where("user_id = ?", userID).First(&sub)
+	var aliases []model.Alias
+	d.Client.Where("user_id = ?", userID).Order("created_at desc").Limit(50).Find(&aliases)
+	var recipients []model.Recipient
+	d.Client.Where("user_id = ?", userID).Find(&recipients)
+	var domains []model.Domain
+	d.Client.Where("user_id = ?", userID).Find(&domains)
+	return user, sub, aliases, recipients, domains, nil
+}

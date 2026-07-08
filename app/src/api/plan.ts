@@ -64,4 +64,50 @@ export const adminApi = {
     updateUser: async (data: { id: string; is_active?: boolean; is_admin?: boolean }) => api.put('/admin/user', data),
     deleteUser: async (id: string) => api.delete(`/admin/user/${id}`),
     assignPlan: async (userId: string, planId: string) => api.post('/admin/user/assign-plan', { user_id: userId, plan_id: planId }),
+    // Alias moderation
+    aliases: async (search?: string) => (await api.get('/admin/aliases', { params: search ? { search } : undefined })).data as { aliases: AdminAlias[]; total: number },
+    deleteAlias: async (id: string) => api.delete(`/admin/alias/${id}`),
+    toggleAlias: async (id: string, enabled: boolean) => api.put(`/admin/alias/${id}/toggle`, { enabled }),
+    // Domain moderation
+    domains: async () => (await api.get('/admin/domains')).data as AdminDomain[],
+    deleteDomain: async (id: string) => api.delete(`/admin/domain/${id}`),
+    toggleDomain: async (id: string, enabled: boolean) => api.put(`/admin/domain/${id}/toggle`, { enabled }),
+    // Recipient moderation
+    recipients: async (search?: string) => (await api.get('/admin/recipients', { params: search ? { search } : undefined })).data as { recipients: AdminRecipient[]; total: number },
+    deleteRecipient: async (id: string) => api.delete(`/admin/recipient/${id}`),
+    // Log filtering
+    logsFiltered: async (type?: string) => (await api.get('/admin/logs/filter', { params: type ? { type } : undefined })).data as { logs: AdminLog[]; total: number },
+    // User search + detail
+    searchUsers: async (search: string) => (await api.get('/admin/users/search', { params: { search } })).data as { users: AdminUser[]; total: number },
+    userDetail: async (id: string) => (await api.get(`/admin/user/${id}/detail`)).data as { user: AdminUser; subscription: any; aliases: AdminAlias[]; recipients: AdminRecipient[]; domains: AdminDomain[] },
+}
+
+export interface AdminAlias {
+    id: string
+    name: string
+    user_id: string
+    enabled: boolean
+    description: string
+    catch_all: boolean
+    created_at: string
+}
+
+export interface AdminDomain {
+    id: string
+    name: string
+    user_id: string
+    enabled: boolean
+    description: string
+    owner_verified_at: string | null
+    mx_verified_at: string | null
+    created_at: string
+}
+
+export interface AdminRecipient {
+    id: string
+    email: string
+    user_id: string
+    is_active: boolean
+    pgp_enabled: boolean
+    created_at: string
 }
