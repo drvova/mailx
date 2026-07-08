@@ -4,6 +4,9 @@ import (
 	"errors"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 var (
@@ -35,6 +38,13 @@ type Subscription struct {
 	Outage       bool               `gorm:"-" json:"outage"`
 	Terminated   bool               `json:"terminated"`
 	TerminatedAt *time.Time         `json:"terminated_at"`
+}
+
+func (s *Subscription) BeforeCreate(tx *gorm.DB) error {
+	if s.ID == "" {
+		s.ID = uuid.NewString()
+	}
+	return nil
 }
 
 func (s *Subscription) Active() bool {
