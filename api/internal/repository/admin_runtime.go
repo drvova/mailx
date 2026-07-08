@@ -66,3 +66,47 @@ func (d *Database) AdminGetRecipientDomains(ctx context.Context) (map[string]int
 	for _, r := range rows { result[r.Domain] = r.Count }
 	return result, nil
 }
+
+func (d *Database) AdminGetTopForwarders(ctx context.Context, days int) ([]model.UserForwardStats, error) {
+	cutoff := time.Now().AddDate(0, 0, -days)
+	type row struct { UserID string; Email string; Count int64 }
+	var rows []row
+	d.Client.Model(&model.Message{}).
+		Select("messages.user_id, users.email, count(*) as count").
+		Joins("join users on users.id = messages.user_id").
+		Where("messages.created_at >= ? AND messages.type = 0", cutoff).
+		Group("messages.user_id, users.email").
+		Order("count desc").
+		Limit(20).
+		Scan(&rows)
+	var results []model.UserForwardStats
+	for _, r := range rows {
+		// Count blocks, replies, sends for same user in same period
+		var blocks, replies, sends int64
+		d.Client.Model(&model.Message{}).Where("user_id = ? AND type = 1 AND created_at >= ?", r.UserID, cutoff).Count(&blocks)
+		d.Client.Model(&model.Message{}).Where("user_id = ? AND type = 2 AND created_at >= ?", r.UserID, cutoff).Count(&replies)
+		d.Client.Model(&model.Message{}).Where("user_id = ? AND type = 3 AND created_at >= ?", r.UserID, cutoff).Count(&sends)
+		results = append(results, model.UserForwardStats{
+			UserID: r.UserID, Email: r.Email,
+			Forwards: r.Count, Blocks: blocks, Replies: replies, Sends: sends,
+		})
+	}
+	return results, nil
+}
+
+func (d *Database) AdminGetMessageTypeStats(ctx context.Context, days int) (map[string]int64, error) {
+	cutoff := time.Now().AddDate(0, 0, -days)
+	type row struct { Type int; Count int64 }
+	var rows []row
+	d.Client.Model(&model.Message{}).Select("type, count(*) as count").Where("created_at >= ?", cutoff).Group("type").Scan(&rows)
+	result := map[string]int64{"forward": 0, "block": 0, "reply": 0, "send": 0, "bounce": 0, "inbox": 0}
+	names := map[int]string{0: "forward", 1: "block", 2: "reply", 3: "send", 4: "bounce", 5: "inbox"}
+	for _, r := range rows { result[names[r.Type]] = r.Count }
+	return result, nil
+}
+
+func (d *Database) AdminGetRecentAliases(ctx context.Context, limit int) ([]model.Alias, error) {
+	var aliases []model.Alias
+	d.Client.Order("created_at desc").Limit(limit).Find(&aliases)
+	return aliases, nil
+}

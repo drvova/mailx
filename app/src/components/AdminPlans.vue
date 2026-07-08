@@ -112,6 +112,32 @@
                             </table>
                         </div>
                     </div>
+                    <div v-if="msgTypeBreakdown" class="mt-4">
+                        <h3 class="font-bold mb-2">Message Types (30d)</h3>
+                        <div class="grid grid-cols-3 md:grid-cols-6 gap-2">
+                            <div v-for="(count, type) in msgTypeBreakdown" :key="type" class="card-secondary text-center">
+                                <p class="text-lg font-bold">{{ count }}</p>
+                                <p class="text-xs text-gray-500 capitalize">{{ type }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="topForwarders.length" class="mt-4">
+                        <h3 class="font-bold mb-2">Top Forwarders (30d)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="table text-sm">
+                                <thead><tr><th>User</th><th>Forwards</th><th>Blocks</th><th>Replies</th><th>Sends</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="u in topForwarders" :key="u.user_id">
+                                        <td class="max-w-[200px] truncate">{{ u.email }}</td>
+                                        <td class="font-bold">{{ u.forwards }}</td>
+                                        <td>{{ u.blocks }}</td>
+                                        <td>{{ u.replies }}</td>
+                                        <td>{{ u.sends }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="3" />
             </div>
@@ -1085,6 +1111,8 @@ const userQuota = ref<any>(null)
 const planDetail = ref<Plan | null>(null)
 const compareData = ref<any>(null)
 const recipDomains = ref<Record<string, number> | null>(null)
+const topForwarders = ref<any[]>([])
+const msgTypeBreakdown = ref<Record<string, number> | null>(null)
 const fetchSubStats = async () => { try { subStats.value = await adminApi.subscriptionStats() } catch { /* */ } }
 const fetchDailyActivity = async () => { try { const r = await adminApi.dailyActivity(); dailyActivity.value = r.activity } catch { /* */ } }
 const fetchPlanDist = async () => { try { planDist.value = await adminApi.planDistribution() } catch { /* */ } }
@@ -1094,6 +1122,8 @@ const purgeSessions = async () => { if (!confirm('Purge all expired sessions?'))
 const fetchDomainStats = async () => { try { const r = await adminApi.domainStats(); domainStatsData.value = r.domains } catch { /* */ } }
 const fetchRuntime = async () => { try { runtimeInfo.value = await adminApi.runtimeStats() } catch { /* */ } }
 const fetchRecipientDomains = async () => { try { recipDomains.value = await adminApi.recipientDomains() } catch { /* */ } }
+const fetchTopForwarders = async () => { try { const r = await adminApi.topForwarders(); topForwarders.value = r.users } catch { /* */ } }
+const fetchMsgTypeStats = async () => { try { msgTypeBreakdown.value = await adminApi.messageTypeStats() } catch { /* */ } }
 const viewPlan = (p: Plan) => { planDetail.value = p }
 const compareUsers = async () => {
     const id1 = prompt('Enter first user ID:')
@@ -1123,5 +1153,5 @@ const globalSearch = async () => { if (!globalQuery.value) return; try { globalR
 const toggleCatchAll = async (a: AdminAlias) => { try { await adminApi.toggleAliasCatchAll(a.id, !a.catch_all); a.catch_all = !a.catch_all } catch { /* */ } }
 const exportUserDataFull = async (u: AdminUser) => { try { const d = await adminApi.exportUserData(u.id); alert(JSON.stringify(d, null, 2)) } catch { alert('Unable to export') } }
 
-onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth() })
+onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats() })
 </script>

@@ -150,6 +150,9 @@ type AdminStore interface {
 	AdminGetUserQuota(context.Context, string) (*model.UserQuota, error)
 	AdminCompareUsers(context.Context, string, string) ([]model.User, []model.Subscription, error)
 	AdminGetRecipientDomains(context.Context) (map[string]int64, error)
+	AdminGetTopForwarders(context.Context, int) ([]model.UserForwardStats, error)
+	AdminGetMessageTypeStats(context.Context, int) (map[string]int64, error)
+	AdminGetRecentAliases(context.Context, int) ([]model.Alias, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -709,4 +712,19 @@ func (s *Service) AdminCompareUsers(ctx context.Context, id1, id2 string) ([]mod
 
 func (s *Service) AdminGetRecipientDomains(ctx context.Context) (map[string]int64, error) {
 	return s.Store.AdminGetRecipientDomains(ctx)
+}
+
+func (s *Service) AdminGetTopForwarders(ctx context.Context, days int) ([]model.UserForwardStats, error) {
+	if days <= 0 || days > 90 { days = 30 }
+	return s.Store.AdminGetTopForwarders(ctx, days)
+}
+
+func (s *Service) AdminGetMessageTypeStats(ctx context.Context, days int) (map[string]int64, error) {
+	if days <= 0 || days > 90 { days = 30 }
+	return s.Store.AdminGetMessageTypeStats(ctx, days)
+}
+
+func (s *Service) AdminGetRecentAliases(ctx context.Context, limit int) ([]model.Alias, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.AdminGetRecentAliases(ctx, limit)
 }

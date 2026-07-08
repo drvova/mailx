@@ -333,6 +333,11 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/users/compare", h.AdminCompareUsers)
 	admin.Get("/recipient-domains", h.AdminGetRecipientDomains)
 
+	// Top forwarders, message type stats, recent aliases
+	admin.Get("/top-forwarders", h.AdminGetTopForwarders)
+	admin.Get("/message-type-stats", h.AdminGetMessageTypeStats)
+	admin.Get("/recent-aliases", h.AdminGetRecentAliases)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

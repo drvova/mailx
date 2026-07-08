@@ -251,6 +251,10 @@ export const adminApi = {
     compareUsers: async (id1: string, id2: string) => (await api.get('/admin/users/compare', { params: { id1, id2 } })).data as { users: AdminUser[]; subscriptions: any[] },
     // Recipient domain breakdown
     recipientDomains: async () => (await api.get('/admin/recipient-domains')).data as Record<string, number>,
+    // Top forwarders, message stats, recent aliases
+    topForwarders: async (days = 30) => (await api.get('/admin/top-forwarders', { params: { days } })).data as { users: { user_id: string; email: string; forwards: number; blocks: number; replies: number; sends: number }[] },
+    messageTypeStats: async (days = 30) => (await api.get('/admin/message-type-stats', { params: { days } })).data as Record<string, number>,
+    recentAliases: async (limit = 50) => (await api.get('/admin/recent-aliases', { params: { limit } })).data as { aliases: AdminAlias[] },
 }
 
 export interface AdminAlias {

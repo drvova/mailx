@@ -125,6 +125,9 @@ type AdminService interface {
 	AdminGetUserQuota(context.Context, string) (*model.UserQuota, error)
 	AdminCompareUsers(context.Context, string, string) ([]model.User, []model.Subscription, error)
 	AdminGetRecipientDomains(context.Context) (map[string]int64, error)
+	AdminGetTopForwarders(context.Context, int) ([]model.UserForwardStats, error)
+	AdminGetMessageTypeStats(context.Context, int) (map[string]int64, error)
+	AdminGetRecentAliases(context.Context, int) ([]model.Alias, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1686,6 +1689,33 @@ func (h *Handler) AdminGetRecipientDomains(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch recipient domains"})
 	}
 	return c.JSON(domains)
+}
+
+func (h *Handler) AdminGetTopForwarders(c *fiber.Ctx) error {
+	days := c.QueryInt("days", 30)
+	stats, err := h.Service.AdminGetTopForwarders(c.Context(), days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch top forwarders"})
+	}
+	return c.JSON(fiber.Map{"users": stats})
+}
+
+func (h *Handler) AdminGetMessageTypeStats(c *fiber.Ctx) error {
+	days := c.QueryInt("days", 30)
+	stats, err := h.Service.AdminGetMessageTypeStats(c.Context(), days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch message stats"})
+	}
+	return c.JSON(stats)
+}
+
+func (h *Handler) AdminGetRecentAliases(c *fiber.Ctx) error {
+	limit := c.QueryInt("limit", 50)
+	aliases, err := h.Service.AdminGetRecentAliases(c.Context(), limit)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch recent aliases"})
+	}
+	return c.JSON(fiber.Map{"aliases": aliases})
 }
 
 func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {
