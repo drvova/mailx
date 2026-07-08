@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 	"ivpn.net/email/api/config"
@@ -40,6 +41,12 @@ func Run() error {
 func main() {
 	err := Run()
 	if err != nil {
+		// Write crash log to file for Zeabur
+		f, ferr := os.Create("/tmp/api-crash.log")
+		if ferr == nil {
+			f.WriteString(err.Error())
+			f.Close()
+		}
 		log.Fatal(err)
 	}
 }
