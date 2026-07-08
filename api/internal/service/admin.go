@@ -142,6 +142,7 @@ type AdminStore interface {
 	AdminGetInactiveUsers(context.Context, int) ([]model.User, int64, error)
 	AdminToggleAliasCatchAll(context.Context, string, bool) error
 	AdminExportUserData(context.Context, string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, []model.AccessKey, *model.Settings, error)
+	AdminGetExpiringAccessKeys(context.Context, int) ([]model.AccessKey, int64, error)
 	AdminBulkDeleteSessions(context.Context, []string) error
 	AdminPurgeExpiredSessions(context.Context) (int64, error)
 	AdminGetDomainWithAliasCounts(context.Context) ([]model.DomainStats, error)
@@ -168,6 +169,10 @@ type AdminStore interface {
 	AdminCleanupExpiredAliases(context.Context) (int64, error)
 	AdminCleanupOrphanedSessions(context.Context) (int64, error)
 	AdminGetCleanupStats(context.Context) (map[string]interface{}, error)
+	AdminGetAliasTrend(context.Context, string, int) ([]model.AliasTrend, error)
+	AdminGetBounceByDomain(context.Context, int) (map[string]int64, error)
+	AdminGetAccountAgeDistribution(context.Context) (map[string]int64, error)
+	AdminGetSubscriptionBreakdown(context.Context) (map[string]int64, error)
 	AdminLogLoginEvent(context.Context, model.LoginEvent) error
 	AdminGetLoginHistory(context.Context, string, int) ([]model.LoginEvent, error)
 }
@@ -716,6 +721,13 @@ func (s *Service) AdminExportUserData(ctx context.Context, userID string) (*mode
 	return s.Store.AdminExportUserData(ctx, userID)
 }
 
+func (s *Service) AdminGetExpiringAccessKeys(ctx context.Context, days int) ([]model.AccessKey, int64, error) {
+	if days <= 0 || days > 90 {
+		days = 30
+	}
+	return s.Store.AdminGetExpiringAccessKeys(ctx, days)
+}
+
 func (s *Service) AdminBulkDeleteSessions(ctx context.Context, sessionIDs []string) error {
 	return s.Store.AdminBulkDeleteSessions(ctx, sessionIDs)
 }
@@ -828,6 +840,28 @@ func (s *Service) AdminBulkVerifyDomains(ctx context.Context, domainIDs []string
 
 func (s *Service) AdminGetRecipientStats(ctx context.Context) (map[string]interface{}, error) {
 	return s.Store.AdminGetRecipientStats(ctx)
+}
+
+func (s *Service) AdminGetAliasTrend(ctx context.Context, aliasName string, days int) ([]model.AliasTrend, error) {
+	if days <= 0 || days > 90 {
+		days = 30
+	}
+	return s.Store.AdminGetAliasTrend(ctx, aliasName, days)
+}
+
+func (s *Service) AdminGetBounceByDomain(ctx context.Context, days int) (map[string]int64, error) {
+	if days <= 0 || days > 90 {
+		days = 30
+	}
+	return s.Store.AdminGetBounceByDomain(ctx, days)
+}
+
+func (s *Service) AdminGetAccountAgeDistribution(ctx context.Context) (map[string]int64, error) {
+	return s.Store.AdminGetAccountAgeDistribution(ctx)
+}
+
+func (s *Service) AdminGetSubscriptionBreakdown(ctx context.Context) (map[string]int64, error) {
+	return s.Store.AdminGetSubscriptionBreakdown(ctx)
 }
 
 func (s *Service) AdminLogLoginEvent(ctx context.Context, event model.LoginEvent) error {

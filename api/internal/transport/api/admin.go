@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -117,6 +118,7 @@ type AdminService interface {
 	AdminGetInactiveUsers(context.Context, int) ([]model.User, int64, error)
 	AdminToggleAliasCatchAll(context.Context, string, bool) error
 	AdminExportUserData(context.Context, string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, []model.AccessKey, *model.Settings, error)
+	AdminGetExpiringAccessKeys(context.Context, int) ([]model.AccessKey, int64, error)
 	AdminPurgeExpiredSessions(context.Context) (int64, error)
 	AdminGetDomainWithAliasCounts(context.Context) ([]model.DomainStats, error)
 	AdminBulkCreateAliases(context.Context, []model.Alias) error
@@ -145,6 +147,10 @@ type AdminService interface {
 	AdminGetCleanupStats(context.Context) (map[string]interface{}, error)
 	AdminLogLoginEvent(context.Context, model.LoginEvent) error
 	AdminGetLoginHistory(context.Context, string, int) ([]model.LoginEvent, error)
+	AdminGetAliasTrend(context.Context, string, int) ([]model.AliasTrend, error)
+	AdminGetBounceByDomain(context.Context, int) (map[string]int64, error)
+	AdminGetAccountAgeDistribution(context.Context) (map[string]int64, error)
+	AdminGetSubscriptionBreakdown(context.Context) (map[string]int64, error)
 	GetActivePlans(context.Context) ([]model.Plan, error)
 }
 
@@ -1612,12 +1618,16 @@ func (h *Handler) AdminExportUserData(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "User not found"})
 	}
-	return c.JSON(fiber.Map{
+	data := fiber.Map{
 		"user": user, "subscription": sub,
 		"aliases": aliases, "domains": domains,
 		"recipients": recipients, "access_keys": keys,
 		"settings": settings,
-	})
+	}
+	jsonBytes, _ := json.MarshalIndent(data, "", "  ")
+	c.Set("Content-Type", "application/json")
+	c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=user_%s_export.json", user.Email))
+	return c.Send(jsonBytes)
 }
 
 func (h *Handler) AdminPurgeExpiredSessions(c *fiber.Ctx) error {
@@ -1996,6 +2006,53 @@ func (h *Handler) AdminGetRecipientStats(c *fiber.Ctx) error {
 	stats, err := h.Service.AdminGetRecipientStats(c.Context())
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error":"Unable to fetch recipient stats"})
+	}
+	return c.JSON(stats)
+}
+
+func (h *Handler) AdminGetExpiringAccessKeys(c *fiber.Ctx) error {
+	days := c.QueryInt("days", 30)
+	keys, total, err := h.Service.AdminGetExpiringAccessKeys(c.Context(), days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch"})
+	}
+	return c.JSON(fiber.Map{"keys": keys, "total": total})
+}
+
+func (h *Handler) AdminGetAliasTrend(c *fiber.Ctx) error {
+	alias := c.Query("alias", "")
+	days := c.QueryInt("days", 30)
+	if alias == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "alias required"})
+	}
+	stats, err := h.Service.AdminGetAliasTrend(c.Context(), alias, days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch"})
+	}
+	return c.JSON(fiber.Map{"alias": alias, "days": days, "trend": stats})
+}
+
+func (h *Handler) AdminGetBounceByDomain(c *fiber.Ctx) error {
+	days := c.QueryInt("days", 30)
+	stats, err := h.Service.AdminGetBounceByDomain(c.Context(), days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch"})
+	}
+	return c.JSON(stats)
+}
+
+func (h *Handler) AdminGetAccountAgeDistribution(c *fiber.Ctx) error {
+	stats, err := h.Service.AdminGetAccountAgeDistribution(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch"})
+	}
+	return c.JSON(stats)
+}
+
+func (h *Handler) AdminGetSubscriptionBreakdown(c *fiber.Ctx) error {
+	stats, err := h.Service.AdminGetSubscriptionBreakdown(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch"})
 	}
 	return c.JSON(stats)
 }

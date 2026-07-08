@@ -274,6 +274,10 @@ export const adminApi = {
     cleanupExpiredAliases: async () => (await api.post('/admin/cleanup/expired-aliases')).data as { message:string },
     cleanupOrphanedSessions: async () => (await api.post('/admin/cleanup/orphaned-sessions')).data as { message:string },
     userLoginHistory: async (id: string) => (await api.get(`/admin/user/${id}/login-history`)).data as { events: { id: number; user_id: string; success: boolean; ip: string; created_at: string }[] },
+    aliasTrend: async (alias: string, days = 30) => (await api.get('/admin/alias-trend', { params: { alias, days } })).data as { alias: string; days: number; trend: { date: string; forwards: number; blocks: number }[] },
+    bounceByDomain: async (days = 30) => (await api.get('/admin/bounce-by-domain', { params: { days } })).data as Record<string, number>,
+    accountAgeDist: async () => (await api.get('/admin/account-age-dist')).data as Record<string, number>,
+    subscriptionBreakdown: async () => (await api.get('/admin/subscription-breakdown')).data as Record<string, number>,
 }
 
 export interface AdminAlias {

@@ -104,12 +104,30 @@
                         <div class="card-secondary text-center"><p class="text-2xl font-bold text-yellow-500">{{ subStats.grace_period }}</p><p class="text-sm text-gray-500">Grace Period</p></div>
                         <div class="card-secondary text-center"><p class="text-2xl font-bold text-red-500">{{ subStats.expired }}</p><p class="text-sm text-gray-500">Expired</p></div>
                     </div>
+                    <div v-if="subBreakdown" class="mt-4">
+                        <h3 class="font-bold mb-2">Subscription Types</h3>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div v-for="(count, type) in subBreakdown" :key="type" class="card-secondary text-center">
+                                <p class="font-bold">{{ count }}</p>
+                                <p class="text-xs text-gray-500 capitalize">{{ type.replace('_', ' ') }}</p>
+                            </div>
+                        </div>
+                    </div>
                     <div v-if="planDist" class="mt-4">
                         <h3 class="font-bold mb-2">Plan Distribution</h3>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                             <div v-for="(count, tier) in planDist" :key="tier" class="card-secondary text-center">
                                 <p class="text-lg font-bold">{{ count }}</p>
                                 <p class="text-sm text-gray-500">{{ tier }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="ageDist" class="mt-4">
+                        <h3 class="font-bold mb-2">Account Age</h3>
+                        <div class="grid grid-cols-3 md:grid-cols-6 gap-2">
+                            <div v-for="(count, bucket) in ageDist" :key="bucket" class="card-secondary text-center">
+                                <p class="font-bold">{{ count }}</p>
+                                <p class="text-xs text-gray-500">{{ bucket }}</p>
                             </div>
                         </div>
                     </div>
@@ -221,6 +239,15 @@
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                    <div v-if="bounceDomains" class="mt-4">
+                        <h3 class="font-bold mb-2">Bounce by Sender Domain (30d)</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div v-for="(count, domain) in bounceDomains" :key="domain" class="card-secondary text-center">
+                                <p class="font-bold text-red-500">{{ count }}</p>
+                                <p class="text-xs text-gray-500 max-w-[100px] truncate mx-auto">{{ domain }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -364,6 +391,7 @@
             <div v-if="tab === 'aliases'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
                     <input v-model="aliasSearch" placeholder="Search aliases..." @input="searchAliasesDeb" class="flex-1" />
+                    <button class="cta cta-tertiary text-sm" @click="viewAliasTrend">View Trend</button>
                     <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteAliases">Bulk Delete Selected</button>
                 </div>
                 <div v-if="aliases.length" class="overflow-x-auto">
@@ -1331,6 +1359,8 @@ const editUserNotes = async (u: AdminUser) => {
 const subStats = ref<any>(null)
 const dailyActivity = ref<any[]>([])
 const planDist = ref<Record<string, number> | null>(null)
+const ageDist = ref<Record<string, number> | null>(null)
+const subBreakdown = ref<Record<string, number> | null>(null)
 const domHealth = ref<{ verified: number; unverified: number } | null>(null)
 const globalQuery = ref('')
 const globalResult = ref<any>(null)
@@ -1356,6 +1386,8 @@ const topSendersData = ref<any[]>([])
 const fetchSubStats = async () => { try { subStats.value = await adminApi.subscriptionStats() } catch { /* */ } }
 const fetchDailyActivity = async () => { try { const r = await adminApi.dailyActivity(); dailyActivity.value = r.activity } catch { /* */ } }
 const fetchPlanDist = async () => { try { planDist.value = await adminApi.planDistribution() } catch { /* */ } }
+const fetchAgeDist = async () => { try { ageDist.value = await adminApi.accountAgeDist() } catch { /* */ } }
+const fetchSubBreakdown = async () => { try { subBreakdown.value = await adminApi.subscriptionBreakdown() } catch { /* */ } }
 const fetchDomainHealth = async () => { try { domHealth.value = await adminApi.domainHealth() } catch { /* */ } }
 const fetchInactiveUsers = async () => { try { const r = await adminApi.inactiveUsers(inactiveDays.value); inactiveUsers.value = r.users } catch { /* */ } }
 const toggleAllSessions = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; sessions.value.forEach(s => { (s as any)._selected = checked }) }
@@ -1379,12 +1411,14 @@ const fetchTopSenders = async () => { try { const r = await adminApi.topSenders(
 const fetchMsgTypeStats = async () => { try { msgTypeBreakdown.value = await adminApi.messageTypeStats() } catch { /* */ } }
 const fetchAliasForwardStats = async () => { try { const r = await adminApi.aliasForwardStats(); aliasForwardStats.value = r.aliases } catch { /* */ } }
 const bounceStats = ref<any[]>([])
+const bounceDomains = ref<Record<string, number> | null>(null)
 const onboardingUsers = ref<any[]>([])
 const catchAllInfo = ref<any>(null)
 const planUsageData = ref<any[]>([])
 const inactiveAliasesData = ref<any[]>([])
 const cleanupStatsData = ref<any>(null)
 const fetchBounceStats = async () => { try { const r = await adminApi.bounceStats(); bounceStats.value = r.aliases } catch { /* */ } }
+const fetchBounceByDomain = async () => { try { bounceDomains.value = await adminApi.bounceByDomain() } catch { /* */ } }
 const fetchOnboardingStatus = async () => { try { const r = await adminApi.onboardingStatus(); onboardingUsers.value = r.users } catch { /* */ } }
 const fetchCatchAll = async () => { try { catchAllInfo.value = await adminApi.catchAllStats() } catch {} }
 const fetchPlanUsage = async () => { try { const r = await adminApi.planUsage(); planUsageData.value = r.users } catch {} }
@@ -1453,7 +1487,16 @@ const bulkAliasesForUser = async (userId: string) => {
 }
 const globalSearch = async () => { if (!globalQuery.value) return; try { globalResult.value = await adminApi.globalSearch(globalQuery.value) } catch { alert('User not found') } }
 const toggleCatchAll = async (a: AdminAlias) => { try { await adminApi.toggleAliasCatchAll(a.id, !a.catch_all); a.catch_all = !a.catch_all } catch { /* */ } }
+const viewAliasTrend = async () => {
+    const name = prompt('Enter alias name:')
+    if (!name) return
+    try {
+        const r = await adminApi.aliasTrend(name)
+        const lines = r.trend.map(t => `${t.date}: ${t.forwards} fwd, ${t.blocks} blk`).join('\n')
+        alert(`Trend for ${r.alias} (${r.days}d):\n${lines}`)
+    } catch { alert('No data') }
+}
 const exportUserDataFull = async (u: AdminUser) => { try { const d = await adminApi.exportUserData(u.id); alert(JSON.stringify(d, null, 2)) } catch { alert('Unable to export') } }
 
-onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats(); fetchBounceStats(); fetchNotifications(); fetchHourlyVolume(); fetchTopSenders(); notifTimer = window.setInterval(fetchNotifications, 60000) })
+onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchAgeDist(); fetchSubBreakdown(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats(); fetchBounceStats(); fetchBounceByDomain(); fetchNotifications(); fetchHourlyVolume(); fetchTopSenders(); notifTimer = window.setInterval(fetchNotifications, 60000) })
 </script>

@@ -281,6 +281,90 @@ func (d *Database) AdminGetRecipientStats(ctx context.Context) (map[string]inter
 	}, nil
 }
 
+func (d *Database) AdminGetExpiringAccessKeys(ctx context.Context, days int) ([]model.AccessKey, int64, error) {
+	cutoff := time.Now().AddDate(0, 0, days)
+	var keys []model.AccessKey
+	d.Client.Where("expires_at IS NOT NULL AND expires_at > ? AND expires_at < ?", time.Now(), cutoff).Order("expires_at asc").Find(&keys)
+	return keys, int64(len(keys)), nil
+}
+
+func (d *Database) AdminGetAccountAgeDistribution(ctx context.Context) (map[string]int64, error) {
+	now := time.Now()
+	buckets := map[string]int64{"7d": 0, "30d": 0, "90d": 0, "180d": 0, "365d": 0, "1y+": 0}
+	var users []model.User
+	d.Client.Select("created_at").Find(&users)
+	for _, u := range users {
+		age := now.Sub(u.CreatedAt)
+		switch {
+		case age < 7*24*time.Hour:
+			buckets["7d"]++
+		case age < 30*24*time.Hour:
+			buckets["30d"]++
+		case age < 90*24*time.Hour:
+			buckets["90d"]++
+		case age < 180*24*time.Hour:
+			buckets["180d"]++
+		case age < 365*24*time.Hour:
+			buckets["365d"]++
+		default:
+			buckets["1y+"]++
+		}
+	}
+	return buckets, nil
+}
+
+func (d *Database) AdminGetSubscriptionBreakdown(ctx context.Context) (map[string]int64, error) {
+	var total, active, inactive, managed, limited, pendingDelete int64
+	d.Client.Model(&model.Subscription{}).Count(&total)
+	d.Client.Model(&model.Subscription{}).Where("is_active = true").Count(&active)
+	d.Client.Model(&model.Subscription{}).Where("is_active = false").Count(&inactive)
+	d.Client.Model(&model.Subscription{}).Where("type = 'managed'").Count(&managed)
+	d.Client.Model(&model.Subscription{}).Where("type = 'limited_access'").Count(&limited)
+	d.Client.Model(&model.Subscription{}).Where("type = 'pending_delete'").Count(&pendingDelete)
+	return map[string]int64{"total": total, "active": active, "inactive": inactive, "managed": managed, "limited_access": limited, "pending_delete": pendingDelete}, nil
+}
+
+func (d *Database) AdminGetAliasTrend(ctx context.Context, aliasName string, days int) ([]model.AliasTrend, error) {
+	if aliasName == "" {
+		return nil, nil
+	}
+	cutoff := time.Now().AddDate(0, 0, -days)
+	type row struct {
+		Date     string
+		Forwards int64
+		Blocks   int64
+	}
+	var rows []row
+	d.Client.Model(&model.Message{}).
+		Select("date(messages.created_at) as date, sum(case when messages.type = 0 then 1 else 0 end) as forwards, sum(case when messages.type = 1 then 1 else 0 end) as blocks").
+		Joins("join aliases on aliases.id = messages.alias_id").
+		Where("aliases.name = ? AND messages.created_at >= ?", aliasName, cutoff).
+		Group("date(messages.created_at)").Order("date desc").Scan(&rows)
+	var results []model.AliasTrend
+	for _, r := range rows {
+		results = append(results, model.AliasTrend{Date: r.Date, Forwards: r.Forwards, Blocks: r.Blocks})
+	}
+	return results, nil
+}
+
+func (d *Database) AdminGetBounceByDomain(ctx context.Context, days int) (map[string]int64, error) {
+	cutoff := time.Now().AddDate(0, 0, -days)
+	type row struct {
+		From  string
+		Count int64
+	}
+	var rows []row
+	d.Client.Model(&model.Log{}).
+		Select("substring_index(`from`, '@', -1) as `from`, count(*) as count").
+		Where("created_at >= ? AND type = 'bounce'", cutoff).
+		Group("substring_index(`from`, '@', -1)").Order("count desc").Limit(15).Scan(&rows)
+	result := map[string]int64{}
+	for _, r := range rows {
+		result[r.From] = r.Count
+	}
+	return result, nil
+}
+
 func (d *Database) AdminGetAliasForwardStats(ctx context.Context, days int) ([]model.AliasForwardStats, error) {
 	cutoff := time.Now().AddDate(0, 0, -days)
 	type row struct {

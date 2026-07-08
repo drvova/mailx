@@ -283,6 +283,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/inbox/message/:id/raw", h.AdminGetInboxRaw)
 	admin.Put("/alias/:id/expiry", h.AdminSetAliasExpiry)
 	admin.Put("/accesskey/:id/expiry", h.AdminSetAccessKeyExpiry)
+	admin.Get("/accesskeys/expiring", h.AdminGetExpiringAccessKeys)
 
 	// Admin audit log
 	admin.Get("/audit", h.AdminGetAuditLog)
@@ -363,6 +364,10 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/export/all-json", h.AdminExportAllData)
 
 	admin.Get("/subscription-changes", h.AdminGetSubscriptionChanges)
+	admin.Get("/alias-trend", h.AdminGetAliasTrend)
+	admin.Get("/bounce-by-domain", h.AdminGetBounceByDomain)
+	admin.Get("/account-age-distribution", h.AdminGetAccountAgeDistribution)
+	admin.Get("/subscription-breakdown", h.AdminGetSubscriptionBreakdown)
 
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
