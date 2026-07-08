@@ -18,6 +18,7 @@ type Events = {
     'domain.create': {}
     'domain.reload': {}
     'domain.update': {}
+    'theme.change': { mode: 'light' | 'dark' }
 }
 
 export default mitt<Events>()

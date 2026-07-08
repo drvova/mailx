@@ -52,8 +52,11 @@ async function request(method: string, path: string, body?: any): Promise<{ data
 
     if (!res.ok) {
         if (res.status === 401 && window.location.pathname.startsWith('/account')) {
+            // Session expired mid-task: preserve where the user was and tell
+            // them why they landed on the login page.
             localStorage.removeItem('email')
-            window.location.href = '/'
+            sessionStorage.setItem('session_expired', '1')
+            window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search)
         }
         const friendly = friendlyFailure(res.status, data)
         throw new ApiError(res.status, friendly ? { error: friendly } : data)

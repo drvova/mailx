@@ -29,10 +29,10 @@
                         {{ alias.name }}
                     </button>
                     <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                        {{ copyText }}: {{ alias.name }}
+                        {{ copied === alias.name ? 'Copied' : 'Click to copy' }}: {{ alias.name }}
                     </span>
                 </p>
-                <span class="sr-only" role="status">{{ copyText === 'Copied' ? 'Copied to clipboard' : '' }}</span>
+                <span class="sr-only" role="status">{{ copied === alias.name ? 'Copied to clipboard' : '' }}</span>
             </div>
         </td>
         <td>
@@ -110,7 +110,7 @@
                                     <span class="block text-sm break-all">{{ alias.name }}</span>
                                 </button>
                                 <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                    {{ copyText }}: {{ alias.name }}
+                                    {{ copied === alias.name ? 'Copied' : 'Click to copy' }}: {{ alias.name }}
                                 </span>
                             </p>
                         </div>
@@ -203,6 +203,7 @@ import { formatDistanceToNow } from 'date-fns'
 import dropdown from '@preline/dropdown'
 import { appConfirm } from '../composables/useConfirm.ts'
 import { toast } from '../composables/useToast.ts'
+import { useClipboard } from '../composables/useClipboard.ts'
 
 const props = defineProps(['alias', 'recipients', 'catchAll'])
 const alias = ref(props.alias)
@@ -213,7 +214,6 @@ const truncatedDescription = computed(() => {
     if (!desc) return ''
     return desc.length > 45 ? desc.slice(0, 45) + '...' : desc
 })
-const copyText = ref('Click to copy')
 const rowKey = ref(0)
 
 const updateAlias = async () => {
@@ -235,18 +235,10 @@ const deleteAlias = async () => {
     events.emit('alias.delete', { id: alias.value.id, catchAll: props.catchAll })
 }
 
+const { copied, copy } = useClipboard(2000)
+
 const copyAlias = (alias: string) => {
-    navigator.clipboard.writeText(alias).then(() => {
-        copyText.value = 'Copied'
-        setTimeout(() => {
-            copyText.value = 'Click to copy'
-        }, 2000)
-    }).catch(() => {
-        copyText.value = 'Failed to copy'
-        setTimeout(() => {
-            copyText.value = 'Click to copy'
-        }, 2000)
-    })
+    copy(alias).catch(() => toast('Failed to copy', 'error'))
 }
 
 const renderRow = () => {

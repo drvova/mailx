@@ -31,10 +31,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import ApexCharts from 'apexcharts'
+import events from '../events.ts'
 
 interface Message {
     created_at: string
@@ -97,8 +98,14 @@ const initChart = () => {
         },
     }
 
-    const chart = new ApexCharts(document.querySelector('#chart'), options)
+    chart = new ApexCharts(document.querySelector('#chart'), options)
     chart.render()
+}
+
+let chart: ApexCharts | undefined
+
+const onThemeChange = ({ mode }: { mode: 'light' | 'dark' }) => {
+    chart?.updateOptions({ theme: { mode } })
 }
 
 function getTheme(): string {
@@ -166,5 +173,11 @@ function getLast7DaysCounts(messages: Message[]): CountData[] {
 
 onMounted(() => {
     getStats()
+    events.on('theme.change', onThemeChange)
+})
+
+onUnmounted(() => {
+    events.off('theme.change', onThemeChange)
+    chart?.destroy()
 })
 </script>

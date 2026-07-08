@@ -108,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { toast } from '../composables/useToast.ts'
 import { aliasApi } from '../api/alias'
@@ -250,6 +250,15 @@ const clearSearch = () => {
     getList()
 }
 
+// Debounced live search: typing filters without requiring Enter
+let searchDebounce: number | undefined
+watch(search, () => {
+    window.clearTimeout(searchDebounce)
+    searchDebounce = window.setTimeout(() => {
+        if (search.value.trim() !== searchQuery.value) getList()
+    }, 300)
+})
+
 const handleKeydown = (event: KeyboardEvent) => {
     // Only trigger if not focused on an input or textarea
     const activeElement = document.activeElement
@@ -280,5 +289,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
     document.removeEventListener('keydown', handleKeydown)
+    window.clearTimeout(searchDebounce)
 })
 </script>

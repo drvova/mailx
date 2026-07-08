@@ -144,7 +144,10 @@ const routes: RouteRecordRaw[] = [
 
 const router = createRouter({
     history: createWebHistory(),
-    routes
+    routes,
+    scrollBehavior(_to, _from, savedPosition) {
+        return savedPosition ?? { top: 0 }
+    }
 })
 
 // Check if user is logged in

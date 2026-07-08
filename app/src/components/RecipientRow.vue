@@ -10,7 +10,7 @@
                         {{ recipient.email }}
                     </button>
                     <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                        {{ copyText }}: {{ recipient.email }}
+                        {{ copied === recipient.email ? 'Copied' : 'Click to copy' }}: {{ recipient.email }}
                     </span>
                 </p>
             </div>
@@ -82,7 +82,7 @@
                                 {{ recipient.email }}
                             </button>
                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                {{ copyText }}: {{ recipient.email }}
+                                {{ copied === recipient.email ? 'Copied' : 'Click to copy' }}: {{ recipient.email }}
                             </span>
                         </p>
                     </div>
@@ -163,11 +163,11 @@ import events from '../events.ts'
 import dropdown from '@preline/dropdown'
 import { appConfirm } from '../composables/useConfirm.ts'
 import { toast } from '../composables/useToast.ts'
+import { useClipboard } from '../composables/useClipboard.ts'
 
 const props = defineProps(['recipient', 'recipients'])
 const recipient = ref(props.recipient)
 const recipients = ref(props.recipients)
-const copyText = ref('Click to copy')
 
 const updateRecipient = async () => {
     // Toggle pgp_enabled option
@@ -224,18 +224,10 @@ const deletePgpKey = async () => {
     }
 }
 
+const { copied, copy } = useClipboard(2000)
+
 const copyAlias = (alias: string) => {
-    navigator.clipboard.writeText(alias).then(() => {
-        copyText.value = 'Copied'
-        setTimeout(() => {
-            copyText.value = 'Click to copy'
-        }, 2000)
-    }).catch(() => {
-        copyText.value = 'Failed to copy'
-        setTimeout(() => {
-            copyText.value = 'Click to copy'
-        }, 2000)
-    })
+    copy(alias).catch(() => toast('Failed to copy', 'error'))
 }
 
 onMounted(() => {

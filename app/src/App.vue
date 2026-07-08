@@ -6,11 +6,13 @@
   </router-view>
   <ConfirmDialog />
   <ToastHost />
+  <RouteAnnouncer />
 </template>
 
 <script setup lang="ts">
 import ConfirmDialog from './components/ConfirmDialog.vue'
 import ToastHost from './components/ToastHost.vue'
+import RouteAnnouncer from './components/RouteAnnouncer.vue'
 
 // Evaluate the initial theme
 if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
