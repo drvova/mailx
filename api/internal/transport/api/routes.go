@@ -261,6 +261,13 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/export/inbox", h.AdminExportInbox)
 	admin.Get("/export/messages", h.AdminExportMessages)
 
+	// Admin alias creation, recipient edit, log deletion, inbox bulk delete, subscription extend
+	admin.Post("/alias", h.AdminCreateAlias)
+	admin.Put("/recipient/:id", h.AdminUpdateRecipient)
+	admin.Delete("/log/:id", h.AdminDeleteLog)
+	admin.Post("/inbox/bulk-delete", h.AdminBulkDeleteInbox)
+	admin.Post("/subscription/:id/extend", h.AdminExtendSubscription)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

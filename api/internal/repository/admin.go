@@ -624,3 +624,32 @@ func (d *Database) AdminExportMessages(ctx context.Context) ([]model.Message, er
 	err := d.Client.Order("created_at desc").Limit(10000).Find(&msgs).Error
 	return msgs, err
 }
+
+func (d *Database) AdminCreateAlias(ctx context.Context, a model.Alias) error {
+	return d.Client.Create(&a).Error
+}
+
+func (d *Database) AdminUpdateRecipient(ctx context.Context, recipientID string, updates map[string]interface{}) error {
+	return d.Client.Model(&model.Recipient{}).Where("id = ?", recipientID).Updates(updates).Error
+}
+
+func (d *Database) AdminDeleteLog(ctx context.Context, logID string) error {
+	return d.Client.Where("id = ?", logID).Delete(&model.Log{}).Error
+}
+
+func (d *Database) AdminBulkDeleteInbox(ctx context.Context, msgIDs []uint) error {
+	return d.Client.Where("id IN ?", msgIDs).Delete(&model.InboxMessage{}).Error
+}
+
+func (d *Database) AdminExtendSubscription(ctx context.Context, subID string, days int) error {
+	var sub model.Subscription
+	if err := d.Client.First(&sub, "id = ?", subID).Error; err != nil {
+		return err
+	}
+	base := sub.ActiveUntil
+	if !base.After(time.Now()) {
+		base = time.Now()
+	}
+	sub.ActiveUntil = base.AddDate(0, 0, days)
+	return d.Client.Save(&sub).Error
+}

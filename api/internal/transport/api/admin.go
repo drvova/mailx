@@ -82,6 +82,11 @@ type AdminService interface {
 	AdminCreateDomain(context.Context, model.Domain) error
 	AdminExportInbox(context.Context) ([]model.InboxMessage, error)
 	AdminExportMessages(context.Context) ([]model.Message, error)
+	AdminCreateAlias(context.Context, model.Alias) error
+	AdminUpdateRecipient(context.Context, string, map[string]interface{}) error
+	AdminDeleteLog(context.Context, string) error
+	AdminBulkDeleteInbox(context.Context, []uint) error
+	AdminExtendSubscription(context.Context, string, int) error
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1029,4 +1034,90 @@ func (h *Handler) AdminExportMessages(c *fiber.Ctx) error {
 	c.Set("Content-Type", "text/csv")
 	c.Set("Content-Disposition", "attachment; filename=messages.csv")
 	return c.Send(buf.Bytes())
+}
+
+type AdminCreateAliasReq struct {
+	UserID  string `json:"user_id" validate:"required,uuid"`
+	Name    string `json:"name" validate:"required"`
+	Enabled bool   `json:"enabled"`
+}
+
+func (h *Handler) AdminCreateAlias(c *fiber.Ctx) error {
+	var req AdminCreateAliasReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	a := model.Alias{UserID: req.UserID, Name: req.Name, Enabled: req.Enabled}
+	if err := h.Service.AdminCreateAlias(c.Context(), a); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to create alias"})
+	}
+	return c.JSON(fiber.Map{"message": "Alias created"})
+}
+
+type AdminUpdateRecipientReq struct {
+	Email string `json:"email"`
+}
+
+func (h *Handler) AdminUpdateRecipient(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Recipient ID required"})
+	}
+	var req AdminUpdateRecipientReq
+	c.BodyParser(&req)
+	updates := map[string]interface{}{}
+	if req.Email != "" { updates["email"] = req.Email }
+	if len(updates) == 0 { return c.Status(400).JSON(fiber.Map{"error": "No updates provided"}) }
+	if err := h.Service.AdminUpdateRecipient(c.Context(), id, updates); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to update recipient"})
+	}
+	return c.JSON(fiber.Map{"message": "Recipient updated"})
+}
+
+func (h *Handler) AdminDeleteLog(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Log ID required"})
+	}
+	if err := h.Service.AdminDeleteLog(c.Context(), id); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to delete log"})
+	}
+	return c.JSON(fiber.Map{"message": "Log deleted"})
+}
+
+type AdminBulkDeleteInboxReq struct {
+	IDs []uint `json:"ids"`
+}
+
+func (h *Handler) AdminBulkDeleteInbox(c *fiber.Ctx) error {
+	var req AdminBulkDeleteInboxReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	if len(req.IDs) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "No IDs provided"})
+	}
+	if err := h.Service.AdminBulkDeleteInbox(c.Context(), req.IDs); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to delete messages"})
+	}
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d messages deleted", len(req.IDs))})
+}
+
+type AdminExtendSubReq struct {
+	Days int `json:"days"`
+}
+
+func (h *Handler) AdminExtendSubscription(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Subscription ID required"})
+	}
+	var req AdminExtendSubReq
+	if err := c.BodyParser(&req); err != nil || req.Days == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "Days required"})
+	}
+	if err := h.Service.AdminExtendSubscription(c.Context(), id, req.Days); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to extend subscription"})
+	}
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("Subscription extended by %d days", req.Days)})
 }

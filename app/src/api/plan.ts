@@ -172,6 +172,16 @@ export const adminApi = {
     // CSV exports for inbox and messages
     exportInbox: async () => (await api.get('/admin/export/inbox')).data as string,
     exportMessages: async () => (await api.get('/admin/export/messages')).data as string,
+    // Alias creation
+    createAlias: async (userId: string, name: string, enabled: boolean) => api.post('/admin/alias', { user_id: userId, name, enabled }),
+    // Recipient edit
+    updateRecipient: async (id: string, email: string) => api.put(`/admin/recipient/${id}`, { email }),
+    // Log deletion
+    deleteLog: async (id: string) => api.delete(`/admin/log/${id}`),
+    // Inbox bulk delete
+    bulkDeleteInbox: async (ids: number[]) => api.post('/admin/inbox/bulk-delete', { ids }),
+    // Subscription extend
+    extendSubscription: async (id: string, days: number) => api.post(`/admin/subscription/${id}/extend`, { days }),
 }
 
 export interface AdminAlias {

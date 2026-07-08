@@ -122,6 +122,7 @@
                             <button class="cta cta-tertiary text-sm" @click="changeEmail(userDetail.user.id)">Change Email</button>
                             <button class="cta cta-tertiary text-sm" @click="createRecipientForUser(userDetail.user.id)">Add Recipient</button>
                             <button class="cta cta-tertiary text-sm" @click="createDomainForUser(userDetail.user.id)">Add Domain</button>
+                            <button class="cta cta-tertiary text-sm" @click="createAliasForUser(userDetail.user.id)">Add Alias</button>
                         </div>
                         <h4 class="mb-2">Aliases ({{ userDetail.aliases.length }})</h4>
                         <div v-if="userDetail.aliases.length" class="overflow-x-auto mb-4">
@@ -232,6 +233,7 @@
                                     <button class="cta cta-tertiary text-sm" @click="toggleRecipient(r)">{{ r.is_active ? 'Suspend' : 'Activate' }}</button>
                                     <button v-if="r.pgp_enabled" class="cta cta-tertiary text-sm" @click="toggleRecipientPGP(r)">Disable PGP</button>
                                     <button v-if="r.pgp_enabled" class="cta cta-tertiary text-sm text-red-500" @click="removePGPKey(r)">Remove PGP Key</button>
+                                    <button class="cta cta-tertiary text-sm" @click="editRecipient(r)">Edit</button>
                                     <button class="cta cta-tertiary text-sm text-red-500" @click="deleteRecipient(r)">Delete</button>
                                 </div></td>
                             </tr>
@@ -343,12 +345,14 @@
             <div v-if="tab === 'inbox'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
                     <input v-model="inboxSearch" placeholder="Search by from or subject..." @input="searchInboxDeb" class="flex-1" />
+                    <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteInbox">Bulk Delete Selected</button>
                 </div>
                 <div v-if="inboxMessages.length" class="overflow-x-auto">
                     <table class="table">
-                        <thead><tr><th>From</th><th>Subject</th><th>Alias</th><th>Size</th><th>Date</th><th></th></tr></thead>
+                        <thead><tr><th><input type="checkbox" @click="toggleAllInbox($event)" /></th><th>From</th><th>Subject</th><th>Alias</th><th>Size</th><th>Date</th><th></th></tr></thead>
                         <tbody>
                             <tr v-for="m in inboxMessages" :key="m.id">
+                                <td><input type="checkbox" v-model="(m as any)._selected" /></td>
                                 <td>{{ m.from_name || m.from }}</td>
                                 <td class="max-w-xs truncate">{{ m.subject }}</td>
                                 <td class="text-xs text-gray-500">{{ m.alias_id.slice(0,8) }}...</td>
@@ -417,7 +421,10 @@
                                 <td><span :class="s.is_active ? 'badge badge-success' : 'badge badge-error'">{{ s.is_active ? 'Yes' : 'No' }}</span></td>
                                 <td>{{ s.active_until ? formatDate(s.active_until) : 'N/A' }}</td>
                                 <td>{{ formatDate(s.created_at) }}</td>
-                                <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteSub(s)">Delete</button></td>
+                                <td><div class="flex gap-1">
+                                    <button class="cta cta-tertiary text-sm" @click="extendSub(s)">Extend</button>
+                                    <button class="cta cta-tertiary text-sm text-red-500" @click="deleteSub(s)">Delete</button>
+                                </div></td>
                             </tr>
                         </tbody>
                     </table>
@@ -492,6 +499,7 @@
                                 <td>{{ log.status }}</td>
                                 <td class="max-w-xs truncate">{{ log.message }}</td>
                                 <td>{{ formatDate(log.created_at) }}</td>
+                                <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteLog(log)">Delete</button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -592,6 +600,25 @@ const createDomainForUser = async (userId: string) => {
     const name = prompt('Enter domain name:')
     if (!name) return
     try { await adminApi.createDomain(userId, name); alert('Domain created'); viewUser(userId) } catch { /* */ } }
+const createAliasForUser = async (userId: string) => {
+    const name = prompt('Enter alias name:')
+    if (!name) return
+    try { await adminApi.createAlias(userId, name, true); alert('Alias created'); viewUser(userId) } catch { /* */ } }
+const editRecipient = async (r: AdminRecipient) => {
+    const email = prompt('Enter new email:', r.email)
+    if (!email || email === r.email) return
+    try { await adminApi.updateRecipient(r.id, email); r.email = email } catch { /* */ } }
+const deleteLog = async (log: AdminLog) => { if (!confirm('Delete this log entry?')) return; try { await adminApi.deleteLog(log.id); logs.value = logs.value.filter(x => x.id !== log.id) } catch { /* */ } }
+const toggleAllInbox = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; inboxMessages.value.forEach(m => { (m as any)._selected = checked }) }
+const bulkDeleteInbox = async () => {
+    const selected = inboxMessages.value.filter(m => (m as any)._selected)
+    if (!selected.length) { alert('Select messages first'); return }
+    if (!confirm(`Delete ${selected.length} messages?`)) return
+    try { await adminApi.bulkDeleteInbox(selected.map(m => m.id)); inboxMessages.value = inboxMessages.value.filter(m => !selected.includes(m)) } catch { /* */ } }
+const extendSub = async (s: AdminSubscription) => {
+    const days = parseInt(prompt('Extend by how many days?', '30') || '0')
+    if (!days) return
+    try { await adminApi.extendSubscription(s.id, days); alert(`Extended by ${days} days`); fetchSubscriptions() } catch { /* */ } }
 let logSearchTimer: any
 const searchLogsDeb = () => { clearTimeout(logSearchTimer); logSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchLogs(logSearch.value, logFilter.value || undefined); logs.value = r.logs } catch { /* */ } }, 300) }
 let domainSearchTimer: any

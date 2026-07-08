@@ -108,6 +108,11 @@ type AdminStore interface {
 	AdminCreateDomain(context.Context, model.Domain) error
 	AdminExportInbox(context.Context) ([]model.InboxMessage, error)
 	AdminExportMessages(context.Context) ([]model.Message, error)
+	AdminCreateAlias(context.Context, model.Alias) error
+	AdminUpdateRecipient(context.Context, string, map[string]interface{}) error
+	AdminDeleteLog(context.Context, string) error
+	AdminBulkDeleteInbox(context.Context, []uint) error
+	AdminExtendSubscription(context.Context, string, int) error
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -467,4 +472,24 @@ func (s *Service) AdminExportInbox(ctx context.Context) ([]model.InboxMessage, e
 
 func (s *Service) AdminExportMessages(ctx context.Context) ([]model.Message, error) {
 	return s.Store.AdminExportMessages(ctx)
+}
+
+func (s *Service) AdminCreateAlias(ctx context.Context, a model.Alias) error {
+	return s.Store.AdminCreateAlias(ctx, a)
+}
+
+func (s *Service) AdminUpdateRecipient(ctx context.Context, recipientID string, updates map[string]interface{}) error {
+	return s.Store.AdminUpdateRecipient(ctx, recipientID, updates)
+}
+
+func (s *Service) AdminDeleteLog(ctx context.Context, logID string) error {
+	return s.Store.AdminDeleteLog(ctx, logID)
+}
+
+func (s *Service) AdminBulkDeleteInbox(ctx context.Context, msgIDs []uint) error {
+	return s.Store.AdminBulkDeleteInbox(ctx, msgIDs)
+}
+
+func (s *Service) AdminExtendSubscription(ctx context.Context, subID string, days int) error {
+	return s.Store.AdminExtendSubscription(ctx, subID, days)
 }
