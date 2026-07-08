@@ -3,7 +3,8 @@
         <header class="head">
             <h2>Stats</h2>
         </header>
-        <div class="card-primary pt-7">
+        <SkeletonRows v-if="!loaded && !error" :rows="4" :cols="4" />
+        <div v-if="loaded || error" class="card-primary pt-7">
             <h3>Messages in last 7 days</h3>
             <div id="chart" role="img" :aria-label="chartLabel" class="mb-5"></div>
             <h3>Messages in last 90 days</h3>
@@ -36,6 +37,7 @@ import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
 import ApexCharts from 'apexcharts'
 import events from '../events.ts'
+import SkeletonRows from './SkeletonRows.vue'
 
 interface Message {
     created_at: string
@@ -56,6 +58,7 @@ const stats = ref({
     messages: [],
 })
 const error = ref('')
+const loaded = ref(false)
 
 const getStats = async () => {
     try {
@@ -70,6 +73,8 @@ const getStats = async () => {
         if (err instanceof ApiError) {
             error.value = err.data?.error || err.message || err.message
         }
+    } finally {
+        loaded.value = true
     }
 }
 

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { userApi } from '../api/user.ts'
 import { appConfirm } from '../composables/useConfirm.ts'
+import { toast } from '../composables/useToast.ts'
 
 const signupUrl = import.meta.env.VITE_PRICING_URL
 
@@ -14,8 +15,11 @@ const logout = async () => {
     if (!(await appConfirm('End your current session?', { title: 'Log out', confirmLabel: 'Log out' }))) return
     try {
         await userApi.logout()
+    } catch {
+        toast('Failed to log out', 'error')
+    } finally {
         userApi.clearSession()
-    } catch { }
+    }
 }
 
 const heroFeatures = [

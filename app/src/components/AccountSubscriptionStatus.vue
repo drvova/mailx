@@ -37,6 +37,17 @@
             </div>
         </footer>
     </div>
+    <div v-if="error && isDashboard" class="card-tertiary md:m-8 md:mb-0 sm:mb-0 m-5" role="alert">
+        <footer>
+            <div>
+                <i class="icon alert icon-primary"></i>
+            </div>
+            <div>
+                <h4>Could not load subscription status.</h4>
+                <p>Account warnings may not be visible. Try refreshing the page.</p>
+            </div>
+        </footer>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -52,6 +63,7 @@ const sub = ref({
     outage: false,
     type: '',
 })
+const error = ref('')
 
 const route = ref('/')
 const currentRoute = useRoute()
@@ -65,6 +77,7 @@ const getSubscription = async () => {
         const res = await subscriptionApi.get()
         sub.value = res.data
     } catch (err) {
+        error.value = 'Failed to load subscription status'
     }
 }
 
