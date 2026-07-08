@@ -63,7 +63,7 @@
         </td>
         <td>
             <div class="mt-1 flex items-center gap-2">
-                <p>{{ formatDistanceToNow(new Date(alias.created_at)) }}</p>
+                <p :title="new Date(alias.created_at).toLocaleString()">{{ formatDistanceToNow(new Date(alias.created_at)) }} ago</p>
             </div>
         </td>
         <td>
@@ -100,7 +100,7 @@
             <div class="flex gap-2 justify-between">
                 <div class="text-start">
                     <div>
-                        <p class="mb-3">{{ formatDistanceToNow(new Date(alias.created_at)) }}</p>
+                        <p class="mb-3" :title="new Date(alias.created_at).toLocaleString()">{{ formatDistanceToNow(new Date(alias.created_at)) }} ago</p>
                     </div>
                     <div>
                         <div class="hs-tooltip inline-block mb-5 break-all">

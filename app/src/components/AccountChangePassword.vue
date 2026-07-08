@@ -5,23 +5,23 @@
             <label for="new-password">
                 New password:
             </label>
-            <input
+            <PasswordInput
                 v-model="password"
                 v-bind:class="{ 'error': passwordError }"
                 id="new-password"
-                type="password"
-            >
+                autocomplete="new-password"
+            />
         </div>
         <div class="mb-4 max-w-xs">
             <label for="new-password-confirm">
                 Confirm new password:
             </label>
-            <input
+            <PasswordInput
                 v-model="passwordConfirm"
                 v-bind:class="{ 'error': passwordError }"
                 id="new-password-confirm"
-                type="password"
-            >
+                autocomplete="new-password"
+            />
         </div>
         <p class="text-sm">
             Must be 12+ characters and contain uppercase, lowercase, number, and special character (e.g. -_+=~!@#$%^&*(),;.?":{}|<>)
@@ -43,6 +43,7 @@
 import { ref } from 'vue'
 import { ApiError } from '../api/api.ts'
 import { userApi } from '../api/user.ts'
+import PasswordInput from './PasswordInput.vue'
 
 const password = ref('')
 const passwordConfirm = ref('')

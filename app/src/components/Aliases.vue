@@ -51,7 +51,7 @@
                         <tr>
                             <th>Active</th>
                             <th>Description</th>
-                            <th>
+                            <th :aria-sort="sortBy === 'name' ? (sortOrder === 'ASC' ? 'ascending' : 'descending') : undefined">
                                 <button
                                 @click="sort"
                                 data-sort="name"
@@ -72,7 +72,7 @@
                                 </button>
                             </th>
                             <th>Count</th>
-                            <th>
+                            <th :aria-sort="sortBy === 'created_at' ? (sortOrder === 'ASC' ? 'ascending' : 'descending') : undefined">
                                 <button
                                 @click="sort"
                                 data-sort="created_at"

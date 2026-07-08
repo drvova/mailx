@@ -2,31 +2,31 @@
     <header class="bg-secondary fixed bottom-0 left-0 right-0 z-10">
         <nav class="mobile">
             <div class="flex flex-row items-center">
-                <router-link v-bind:class="{ 'active': route == '/account' && !route.startsWith('/account/') }" to="/account" title="Aliases">
+                <router-link v-bind:class="{ 'active': route == '/account' && !route.startsWith('/account/') }" to="/account" title="Aliases" aria-label="Aliases">
                     <i class="icon at icon-primary"></i>
                 </router-link>
-                <router-link v-bind:class="{ 'active': route == '/account/wildcard' }" to="/account/wildcard" title="Wildcard">
+                <router-link v-bind:class="{ 'active': route == '/account/wildcard' }" to="/account/wildcard" title="Wildcard" aria-label="Wildcard">
                     <i class="icon scan icon-primary"></i>
                 </router-link>
-                <router-link v-bind:class="{ 'active': route == '/account/inbox' }" to="/account/inbox" title="Temp Mail">
+                <router-link v-bind:class="{ 'active': route == '/account/inbox' }" to="/account/inbox" title="Temp Mail" aria-label="Temp Mail">
                     <i class="icon inbox icon-primary"></i>
                 </router-link>
-                <router-link v-bind:class="{ 'active': route == '/account/recipients' }" to="/account/recipients" title="Recipients">
+                <router-link v-bind:class="{ 'active': route == '/account/recipients' }" to="/account/recipients" title="Recipients" aria-label="Recipients">
                     <i class="icon inbox icon-primary"></i>
                 </router-link>
-                <!-- <router-link v-bind:class="{ 'active': route == '/account/domains' }" to="/account/domains" title="Domains">
+                <!-- <router-link v-bind:class="{ 'active': route == '/account/domains' }" to="/account/domains" title="Domains" aria-label="Domains">
                     <i class="icon global icon-primary"></i>
                 </router-link> -->
-                <router-link v-bind:class="{ 'active': route == '/account/stats' }" to="/account/stats" title="Stats">
+                <router-link v-bind:class="{ 'active': route == '/account/stats' }" to="/account/stats" title="Stats" aria-label="Stats">
                     <i class="icon chart icon-primary"></i>
                 </router-link>
-                <router-link v-bind:class="{ 'active': route == '/account/diagnostics' }" to="/account/diagnostics" title="Diagnostics">
+                <router-link v-bind:class="{ 'active': route == '/account/diagnostics' }" to="/account/diagnostics" title="Diagnostics" aria-label="Diagnostics">
                     <i class="icon alert icon-primary"></i>
                 </router-link>
-                <router-link v-bind:class="{ 'active': route == '/account/settings' }" to="/account/settings" title="Settings">
+                <router-link v-bind:class="{ 'active': route == '/account/settings' }" to="/account/settings" title="Settings" aria-label="Settings">
                     <i class="icon settings icon-primary"></i>
                 </router-link>
-                <router-link v-bind:class="{ 'active': route == '/account/profile' }" to="/account/profile" title="Account">
+                <router-link v-bind:class="{ 'active': route == '/account/profile' }" to="/account/profile" title="Account" aria-label="Account">
                     <i class="icon user icon-primary"></i>
                 </router-link>
             </div>

@@ -60,18 +60,17 @@
                                 <p v-if="emailError" class="error" role="alert">Required</p>
                             </div>
                             <div class="mb-7">
-                                <input
+                                <PasswordInput
                                     v-model="password"
                                     v-bind:class="{ 'error': passwordError }"
                                     placeholder="Password"
                                     aria-label="Password"
                                     id="password"
-                                    type="password"
                                     autocomplete="new-password"
                                     class="password"
                                     :disabled="!!rotateSessionError"
                                     @keypress.enter.prevent
-                                >
+                                />
                                 <p v-if="passwordError" class="error" role="alert">Required</p>
                             </div>
                             <p class="text-sm mb-5">Must be 12+ characters and contain uppercase, lowercase, number, and special character (e.g. -_+=~!@#$%^&*(),;.?":{}|<>)</p>
@@ -119,6 +118,7 @@ import { subscriptionApi } from '../api/subscription.ts'
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser'
 import tabs from '@preline/tabs'
 import Footer from './Footer.vue'
+import PasswordInput from './PasswordInput.vue'
 
 const email = ref('')
 const emailAuthn = ref('')

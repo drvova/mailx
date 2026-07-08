@@ -3,6 +3,7 @@
         <header class="head">
             <h2>Diagnostics</h2>
         </header>
+        <SkeletonRows v-if="!loaded && !error" :rows="3" :cols="1" />
         <div v-if="!logs.length && loaded" class="card-empty">
             <span class="bg-secondary rounded flex items-center justify-center p-2 mb-5">
                 <i class="icon alert icon-accent text-2xl"></i>
@@ -52,6 +53,7 @@ import { ApiError } from '../api/api.ts'
 import { settingsApi } from '../api/settings.ts'
 import { logApi } from '../api/log.ts'
 import FailedDeliveryLog from './FailedDeliveryLog.vue'
+import SkeletonRows from './SkeletonRows.vue'
 
 const log = {
     id: '',

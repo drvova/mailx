@@ -1,7 +1,7 @@
 <template>
     <tr class="desktop-lg">
         <td>
-            <p>{{ new Date(domain.created_at).toDateString() }}</p>
+            <p :title="new Date(domain.created_at).toLocaleString()">{{ formatDistanceToNow(new Date(domain.created_at)) }} ago</p>
         </td>
         <td>
             <p class="text-wrap break-all">{{ domain.name }}</p>
@@ -49,7 +49,7 @@
             <div class="flex gap-2 justify-between">
                 <div class="text-start">
                     <div>
-                        <p class="mb-3">{{ new Date(domain.created_at).toDateString() }}</p>
+                        <p class="mb-3" :title="new Date(domain.created_at).toLocaleString()">{{ formatDistanceToNow(new Date(domain.created_at)) }} ago</p>
                     </div>
                     <div class="hs-tooltip inline-block break-all">
                         <p class="plain text-base text-primary text-wrap">
@@ -107,6 +107,7 @@ import { domainApi } from '../api/domain.ts'
 import DomainDelete from './DomainDelete.vue'
 import DomainVerify from './DomainVerify.vue'
 import { toast } from '../composables/useToast.ts'
+import { formatDistanceToNow } from 'date-fns'
 
 const props = defineProps(['domain'])
 const domain = ref(props.domain)

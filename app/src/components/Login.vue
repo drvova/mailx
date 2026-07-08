@@ -57,17 +57,16 @@
                                 <p v-if="emailError" class="error" role="alert">Required</p>
                             </div>
                             <div class="mb-5">
-                                <input
+                                <PasswordInput
                                     v-model="password"
                                     v-bind:class="{ 'error': passwordError }"
                                     id="password"
-                                    type="password"
                                     autocomplete="current-password"
                                     placeholder="Password"
                                     aria-label="Password"
                                     class="password"
                                     @keypress.enter.prevent
-                                >
+                                />
                                 <p v-if="passwordError" class="error mb-2" role="alert">Required</p>
                                 <p class="text-right">
                                     <router-link to="/forgot-password">
@@ -136,6 +135,7 @@ import { userApi } from '../api/user.ts'
 import { startAuthentication, browserSupportsWebAuthn } from '@simplewebauthn/browser'
 import tabs from '@preline/tabs'
 import Footer from './Footer.vue'
+import PasswordInput from './PasswordInput.vue'
 
 const email = ref('')
 const emailAuthn = ref('')

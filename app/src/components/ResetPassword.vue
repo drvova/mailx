@@ -9,28 +9,26 @@
                 <h4 class="text-center mb-8">Set new password</h4>
                 <div v-if="!apiSuccess">
                     <div class="mb-5">
-                        <input
+                        <PasswordInput
                             v-model="password"
                             v-bind:class="{ 'error': passwordError }"
                             id="password-new"
-                            type="password"
                             autocomplete="new-password"
                             placeholder="New Password"
                             aria-label="New password"
                             class="password"
-                        >
+                        />
                     </div>
                     <div class="mb-3">
-                        <input
+                        <PasswordInput
                             v-model="passwordConfirm"
                             v-bind:class="{ 'error': passwordError }"
-                            id="password-new-conmfirm"
-                            type="password"
+                            id="password-new-confirm"
                             autocomplete="new-password"
                             placeholder="Confirm Password"
                             aria-label="Confirm password"
                             class="password"
-                        >
+                        />
                     </div>
                     <p class="text-sm mb-5">
                         Must be 12+ characters and contain uppercase, lowercase, number, and special character (e.g. -_+=~!@#$%^&*(),;.?":{}|<>)
@@ -63,6 +61,7 @@ import { ApiError } from '../api/api.ts'
 import { useRoute } from 'vue-router'
 import { userApi } from '../api/user.ts'
 import Footer from './Footer.vue'
+import PasswordInput from './PasswordInput.vue'
 
 const password = ref('')
 const passwordConfirm = ref('')

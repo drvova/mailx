@@ -1,7 +1,7 @@
 <template>
     <tr class="desktop-lg">
         <td>
-            <p>{{ new Date(recipient.created_at).toDateString() }}</p>
+            <p :title="new Date(recipient.created_at).toLocaleString()">{{ formatDistanceToNow(new Date(recipient.created_at)) }} ago</p>
         </td>
         <td>
             <div class="hs-tooltip inline-block">
@@ -74,7 +74,7 @@
             <div class="flex gap-2 justify-between">
                 <div class="text-start">
                     <div>
-                        <p class="mb-3">{{ new Date(recipient.created_at).toDateString() }}</p>
+                        <p class="mb-3" :title="new Date(recipient.created_at).toLocaleString()">{{ formatDistanceToNow(new Date(recipient.created_at)) }} ago</p>
                     </div>
                     <div class="hs-tooltip inline-block">
                         <p class="hs-tooltip-toggle">
@@ -164,6 +164,7 @@ import dropdown from '@preline/dropdown'
 import { appConfirm } from '../composables/useConfirm.ts'
 import { toast } from '../composables/useToast.ts'
 import { useClipboard } from '../composables/useClipboard.ts'
+import { formatDistanceToNow } from 'date-fns'
 
 const props = defineProps(['recipient', 'recipients'])
 const recipient = ref(props.recipient)
