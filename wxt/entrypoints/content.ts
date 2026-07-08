@@ -88,6 +88,7 @@ function injectButton(input: HTMLInputElement) {
 
   const button = document.createElement('button')
   button.title = 'Create Mailx alias'
+  button.setAttribute('aria-label', 'Create Mailx alias')
 
   Object.assign(button.style, {
     width: '24px',

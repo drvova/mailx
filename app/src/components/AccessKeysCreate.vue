@@ -27,7 +27,7 @@
                                     v-model="accessKey.name"
                                     v-bind:class="{ 'error': nameError }"
                                     id="accesskey_name"
-                                    type="text"
+                                    type="text" enterkeyhint="done"
                                 >
                                 <p v-if="nameError" class="error" role="alert">Required</p>
                             </div>

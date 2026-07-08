@@ -84,7 +84,7 @@
                                         v-bind:class="{ 'error': nameError }"
                                         id="domain_name"
                                         placeholder="example.net"
-                                        type="text"
+                                        type="text" inputmode="url" enterkeyhint="done"
                                     >
                                     <p v-if="nameError" class="error" role="alert">Required</p>
                                 </template>
