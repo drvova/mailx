@@ -111,7 +111,8 @@
                     <footer>
                         <nav>
                             <button
-                                v-bind:disabled="errorRecipients.length > 0"
+                                v-bind:disabled="errorRecipients.length > 0 || loading"
+                                :aria-busy="loading"
                                 @click="postAlias"
                                 class="cta">
                                 Create and copy to clipboard

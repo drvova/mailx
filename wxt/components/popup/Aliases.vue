@@ -5,7 +5,7 @@
                 <div class="flex gap-3 items-center justify-between">
                     <div class="relative grow">
                         <form @submit.prevent="fetchAliases" autocomplete="off">
-                            <input v-model="search" class="search w-full text-xs" type="text" placeholder="Search aliases..." id="input_search">
+                            <input v-model="search" class="search w-full text-xs" type="search" placeholder="Search aliases..." id="input_search" aria-label="Search aliases">
                         </form>
                         <button v-if="searchQuery" @click.prevent="clearSearch" class="absolute top-0 right-0 bottom-0 px-2 flex items-center justify-center">
                             <i class="icon close icon-tertiary text-base"></i>
@@ -35,7 +35,7 @@
                             <i class="icon icon-secondary copy text-xs"></i>
                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0"
                                 role="tooltip">
-                                {{ copyText }}
+                                {{ copied === alias.name ? 'Copied' : 'Click to copy' }}
                             </span>
                         </button>
                     </div>
@@ -65,7 +65,7 @@ const props = defineProps<{
 const list = ref([] as Alias[])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
-const copyText = ref('Click to copy')
+const copied = ref('')
 const search = ref('')
 const searchQuery = ref('')
 const tempCreating = ref(false)
@@ -149,10 +149,8 @@ const deleteAlias = async (aliasId: string) => {
 
 const copyAlias = (alias: string) => {
     navigator.clipboard.writeText(alias)
-    copyText.value = 'Copied'
-    setTimeout(() => {
-        copyText.value = 'Click to copy'
-    }, 2000)
+    copied.value = alias
+    setTimeout(() => { copied.value = '' }, 2000)
 }
 
 const onCreateAlias = (event: { alias: Alias }) => {
