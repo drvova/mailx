@@ -40,6 +40,6 @@ func Run() error {
 func main() {
 	err := Run()
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 }
