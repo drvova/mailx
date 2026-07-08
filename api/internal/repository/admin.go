@@ -580,3 +580,27 @@ func (d *Database) AdminToggleRecipientPGP(ctx context.Context, recipientID stri
 func (d *Database) AdminRemoveRecipientPGPKey(ctx context.Context, recipientID string) error {
 	return d.Client.Model(&model.Recipient{}).Where("id = ?", recipientID).Updates(map[string]interface{}{"pgp_key": "", "pgp_enabled": false, "pgp_inline": false}).Error
 }
+
+func (d *Database) AdminUpdateAlias(ctx context.Context, aliasID string, updates map[string]interface{}) error {
+	return d.Client.Model(&model.Alias{}).Where("id = ?", aliasID).Updates(updates).Error
+}
+
+func (d *Database) AdminUpdateDomain(ctx context.Context, domainID string, updates map[string]interface{}) error {
+	return d.Client.Model(&model.Domain{}).Where("id = ?", domainID).Updates(updates).Error
+}
+
+func (d *Database) AdminMarkInboxRead(ctx context.Context, msgID uint, isRead bool) error {
+	return d.Client.Model(&model.InboxMessage{}).Where("id = ?", msgID).Update("read", isRead).Error
+}
+
+func (d *Database) AdminGetAllUsersPaginated(ctx context.Context, limit, offset int, search string) ([]model.User, int64, error) {
+	q := d.Client.Model(&model.User{})
+	if search != "" {
+		q = q.Where("email LIKE ?", "%"+search+"%")
+	}
+	var total int64
+	q.Count(&total)
+	var users []model.User
+	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&users).Error
+	return users, total, err
+}

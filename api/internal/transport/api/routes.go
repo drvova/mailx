@@ -243,6 +243,16 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Put("/recipient/:id/pgp", h.AdminToggleRecipientPGP)
 	admin.Delete("/recipient/:id/pgp", h.AdminRemoveRecipientPGPKey)
 
+	// Admin alias/domain edit
+	admin.Put("/alias/:id", h.AdminUpdateAlias)
+	admin.Put("/domain/:id", h.AdminUpdateDomain)
+
+	// Admin inbox mark as read
+	admin.Put("/inbox/message/:id/read", h.AdminMarkInboxRead)
+
+	// Admin paginated users
+	admin.Get("/users/paginated", h.AdminGetUsersPaginated)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

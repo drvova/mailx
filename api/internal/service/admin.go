@@ -100,6 +100,10 @@ type AdminStore interface {
 	SearchMessages(context.Context, string, string, int, int) ([]model.Message, int64, error)
 	AdminToggleRecipientPGP(context.Context, string, bool) error
 	AdminRemoveRecipientPGPKey(context.Context, string) error
+	AdminUpdateAlias(context.Context, string, map[string]interface{}) error
+	AdminUpdateDomain(context.Context, string, map[string]interface{}) error
+	AdminMarkInboxRead(context.Context, uint, bool) error
+	AdminGetAllUsersPaginated(context.Context, int, int, string) ([]model.User, int64, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -426,4 +430,21 @@ func (s *Service) AdminToggleRecipientPGP(ctx context.Context, recipientID strin
 
 func (s *Service) AdminRemoveRecipientPGPKey(ctx context.Context, recipientID string) error {
 	return s.Store.AdminRemoveRecipientPGPKey(ctx, recipientID)
+}
+
+func (s *Service) AdminUpdateAlias(ctx context.Context, aliasID string, updates map[string]interface{}) error {
+	return s.Store.AdminUpdateAlias(ctx, aliasID, updates)
+}
+
+func (s *Service) AdminUpdateDomain(ctx context.Context, domainID string, updates map[string]interface{}) error {
+	return s.Store.AdminUpdateDomain(ctx, domainID, updates)
+}
+
+func (s *Service) AdminMarkInboxRead(ctx context.Context, msgID uint, isRead bool) error {
+	return s.Store.AdminMarkInboxRead(ctx, msgID, isRead)
+}
+
+func (s *Service) AdminGetAllUsersPaginated(ctx context.Context, limit, offset int, search string) ([]model.User, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.AdminGetAllUsersPaginated(ctx, limit, offset, search)
 }

@@ -158,6 +158,14 @@ export const adminApi = {
     // Recipient PGP management
     toggleRecipientPGP: async (id: string, pgpEnabled: boolean) => api.put(`/admin/recipient/${id}/pgp`, { pgp_enabled: pgpEnabled }),
     removeRecipientPGPKey: async (id: string) => api.delete(`/admin/recipient/${id}/pgp`),
+    // Alias edit
+    updateAlias: async (id: string, data: { description?: string; recipients?: string; from_name?: string }) => api.put(`/admin/alias/${id}`, data),
+    // Domain edit
+    updateDomain: async (id: string, data: { description?: string; recipient?: string; from_name?: string }) => api.put(`/admin/domain/${id}`, data),
+    // Inbox mark as read
+    markInboxRead: async (id: number, isRead: boolean) => api.put(`/admin/inbox/message/${id}/read`, { is_read: isRead }),
+    // Paginated users
+    usersPaginated: async (limit: number, offset: number, search?: string) => (await api.get('/admin/users/paginated', { params: { limit, offset, ...(search ? { search } : {}) } })).data as { users: AdminUser[]; total: number; limit: number; offset: number },
 }
 
 export interface AdminAlias {
@@ -166,6 +174,8 @@ export interface AdminAlias {
     user_id: string
     enabled: boolean
     description: string
+    recipients: string
+    from_name: string
     catch_all: boolean
     created_at: string
 }
@@ -176,6 +186,8 @@ export interface AdminDomain {
     user_id: string
     enabled: boolean
     description: string
+    recipient: string
+    from_name: string
     owner_verified_at: string | null
     mx_verified_at: string | null
     created_at: string

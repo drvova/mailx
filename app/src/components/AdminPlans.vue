@@ -75,6 +75,11 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="usersTotal > 50" class="flex items-center justify-between mt-4">
+                        <button class="cta cta-tertiary text-sm" :disabled="usersOffset === 0" @click="prevUsers">Prev</button>
+                        <span class="text-sm text-gray-500">{{ usersOffset + 1 }}-{{ Math.min(usersOffset + 50, usersTotal) }} of {{ usersTotal }}</span>
+                        <button class="cta cta-tertiary text-sm" :disabled="usersOffset + 50 >= usersTotal" @click="nextUsers">Next</button>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="5" />
 
@@ -154,6 +159,7 @@
                                 <td>{{ formatDate(a.created_at) }}</td>
                                 <td><div class="flex gap-1">
                                     <button class="cta cta-tertiary text-sm" @click="toggleAlias(a)">{{ a.enabled ? 'Disable' : 'Enable' }}</button>
+                                    <button class="cta cta-tertiary text-sm" @click="editAlias(a)">Edit</button>
                                     <button class="cta cta-tertiary text-sm text-red-500" @click="deleteAlias(a)">Delete</button>
                                 </div></td>
                             </tr>
@@ -182,6 +188,7 @@
                                 <td><div class="flex gap-1">
                                     <button class="cta cta-tertiary text-sm" @click="toggleDomain(d)">{{ d.enabled ? 'Disable' : 'Enable' }}</button>
                                     <button class="cta cta-tertiary text-sm" @click="verifyDomain(d)">{{ d.mx_verified_at ? 'Unverify' : 'Verify' }}</button>
+                                    <button class="cta cta-tertiary text-sm" @click="editDomain(d)">Edit</button>
                                     <button class="cta cta-tertiary text-sm text-red-500" @click="deleteDomain(d)">Delete</button>
                                 </div></td>
                             </tr>
@@ -333,7 +340,10 @@
                                 <td class="text-xs text-gray-500">{{ m.alias_id.slice(0,8) }}...</td>
                                 <td>{{ Math.round(m.size / 1024) }}KB</td>
                                 <td>{{ formatDate(m.created_at) }}</td>
-                                <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteInboxMsg(m)">Delete</button></td>
+                                <td><div class="flex gap-1">
+                                    <button class="cta cta-tertiary text-sm" @click="markInboxRead(m)">{{ m.read ? 'Unread' : 'Read' }}</button>
+                                    <button class="cta cta-tertiary text-sm text-red-500" @click="deleteInboxMsg(m)">Delete</button>
+                                </div></td>
                             </tr>
                         </tbody>
                     </table>
@@ -507,6 +517,8 @@ const showForm = ref(false)
 const editing = ref(false)
 const formError = ref('')
 const userSearch = ref('')
+const usersTotal = ref(0)
+const usersOffset = ref(0)
 const aliasSearch = ref('')
 const recipientSearch = ref('')
 const logFilter = ref('')
@@ -520,7 +532,9 @@ const form = ref<Partial<Plan>>(emptyForm())
 const formatDate = (d: string) => new Date(d).toLocaleDateString()
 
 const fetchStats = async () => { try { stats.value = await adminApi.stats() } catch { /* */ } }
-const fetchUsers = async () => { try { users.value = await adminApi.users() } catch { /* */ } }
+const fetchUsers = async () => { try { const r = await adminApi.usersPaginated(50, usersOffset.value, userSearch.value || undefined); users.value = r.users; usersTotal.value = r.total } catch { /* */ } }
+const nextUsers = () => { usersOffset.value += 50; fetchUsers() }
+const prevUsers = () => { usersOffset.value = Math.max(0, usersOffset.value - 50); fetchUsers() }
 const fetchAliases = async () => { try { const r = await adminApi.aliases(aliasSearch.value || undefined); aliases.value = r.aliases } catch { /* */ } }
 const fetchDomains = async () => { try { domains.value = await adminApi.domains() } catch { /* */ } }
 const fetchRecipients = async () => { try { const r = await adminApi.recipients(recipientSearch.value || undefined); recipients.value = r.recipients } catch { /* */ } }
@@ -539,12 +553,29 @@ const fetchMessages = async () => { try { const r = await adminApi.messages(msgT
 const searchMessagesDeb = () => { clearTimeout(msgSearchTimer); msgSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchMessages(msgSearch.value || undefined, msgTypeFilter.value || undefined); messages.value = r.messages } catch { /* */ } }, 300) }
 const toggleRecipientPGP = async (r: AdminRecipient) => { if (!confirm('Disable PGP for this recipient?')) return; try { await adminApi.toggleRecipientPGP(r.id, false); r.pgp_enabled = false } catch { /* */ } }
 const removePGPKey = async (r: AdminRecipient) => { if (!confirm('Permanently remove PGP key?')) return; try { await adminApi.removeRecipientPGPKey(r.id); r.pgp_enabled = false } catch { /* */ } }
+const editAlias = async (a: AdminAlias) => {
+    const desc = prompt('Description:', a.description)
+    if (desc === null) return
+    const rcps = prompt('Recipients (comma-separated):', a.recipients)
+    if (rcps === null) return
+    const fn = prompt('From name:', a.from_name)
+    if (fn === null) return
+    try { await adminApi.updateAlias(a.id, { description: desc, recipients: rcps, from_name: fn }); a.description = desc; a.recipients = rcps; a.from_name = fn } catch { /* */ } }
+const editDomain = async (d: AdminDomain) => {
+    const desc = prompt('Description:', d.description)
+    if (desc === null) return
+    const rcp = prompt('Recipient:', d.recipient || '')
+    if (rcp === null) return
+    const fn = prompt('From name:', d.from_name || '')
+    if (fn === null) return
+    try { await adminApi.updateDomain(d.id, { description: desc, recipient: rcp, from_name: fn }); d.description = desc; d.recipient = rcp; d.from_name = fn } catch { /* */ } }
+const markInboxRead = async (m: AdminInboxMessage) => { try { await adminApi.markInboxRead(m.id, !m.read); m.read = !m.read } catch { /* */ } }
 let logSearchTimer: any
 const searchLogsDeb = () => { clearTimeout(logSearchTimer); logSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchLogs(logSearch.value, logFilter.value || undefined); logs.value = r.logs } catch { /* */ } }, 300) }
 let domainSearchTimer: any
 const searchDomainsDeb = () => { clearTimeout(domainSearchTimer); domainSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchDomains(domainSearch.value); domains.value = r.domains } catch { /* */ } }, 300) }
 
-const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(async () => { if (!userSearch.value) { fetchUsers(); return }; try { const r = await adminApi.searchUsers(userSearch.value); users.value = r.users } catch { /* */ } }, 300) }
+const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { usersOffset.value = 0; fetchUsers() }, 300) }
 const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(fetchAliases, 300) }
 const searchRecipientsDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(fetchRecipients, 300) }
 

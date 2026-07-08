@@ -73,6 +73,10 @@ type AdminService interface {
 	SearchMessages(context.Context, string, string, int, int) ([]model.Message, int64, error)
 	AdminToggleRecipientPGP(context.Context, string, bool) error
 	AdminRemoveRecipientPGPKey(context.Context, string) error
+	AdminUpdateAlias(context.Context, string, map[string]interface{}) error
+	AdminUpdateDomain(context.Context, string, map[string]interface{}) error
+	AdminMarkInboxRead(context.Context, uint, bool) error
+	AdminGetAllUsersPaginated(context.Context, int, int, string) ([]model.User, int64, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -879,4 +883,81 @@ func (h *Handler) AdminRemoveRecipientPGPKey(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to remove PGP key"})
 	}
 	return c.JSON(fiber.Map{"message": "PGP key removed"})
+}
+
+type AdminUpdateAliasReq struct {
+	Description string `json:"description"`
+	Recipients  string `json:"recipients"`
+	FromName    string `json:"from_name"`
+}
+
+func (h *Handler) AdminUpdateAlias(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Alias ID required"})
+	}
+	var req AdminUpdateAliasReq
+	c.BodyParser(&req)
+	updates := map[string]interface{}{}
+	if req.Description != "" { updates["description"] = req.Description }
+	if req.Recipients != "" { updates["recipients"] = req.Recipients }
+	if req.FromName != "" { updates["from_name"] = req.FromName }
+	if len(updates) == 0 { return c.Status(400).JSON(fiber.Map{"error": "No updates provided"}) }
+	if err := h.Service.AdminUpdateAlias(c.Context(), id, updates); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to update alias"})
+	}
+	return c.JSON(fiber.Map{"message": "Alias updated"})
+}
+
+type AdminUpdateDomainReq struct {
+	Description string `json:"description"`
+	Recipient   string `json:"recipient"`
+	FromName    string `json:"from_name"`
+}
+
+func (h *Handler) AdminUpdateDomain(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Domain ID required"})
+	}
+	var req AdminUpdateDomainReq
+	c.BodyParser(&req)
+	updates := map[string]interface{}{}
+	if req.Description != "" { updates["description"] = req.Description }
+	if req.Recipient != "" { updates["recipient"] = req.Recipient }
+	if req.FromName != "" { updates["from_name"] = req.FromName }
+	if len(updates) == 0 { return c.Status(400).JSON(fiber.Map{"error": "No updates provided"}) }
+	if err := h.Service.AdminUpdateDomain(c.Context(), id, updates); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to update domain"})
+	}
+	return c.JSON(fiber.Map{"message": "Domain updated"})
+}
+
+type AdminMarkReadReq struct {
+	IsRead bool `json:"is_read"`
+}
+
+func (h *Handler) AdminMarkInboxRead(c *fiber.Ctx) error {
+	id := c.Params("id")
+	msgID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid message ID"})
+	}
+	var req AdminMarkReadReq
+	c.BodyParser(&req)
+	if err := h.Service.AdminMarkInboxRead(c.Context(), uint(msgID), req.IsRead); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to update message"})
+	}
+	return c.JSON(fiber.Map{"message": "Message updated"})
+}
+
+func (h *Handler) AdminGetUsersPaginated(c *fiber.Ctx) error {
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	search := c.Query("search", "")
+	users, total, err := h.Service.AdminGetAllUsersPaginated(c.Context(), limit, offset, search)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch users"})
+	}
+	return c.JSON(fiber.Map{"users": users, "total": total, "limit": limit, "offset": offset})
 }
