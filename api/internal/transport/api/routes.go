@@ -236,6 +236,13 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	// Admin config viewer (redacted)
 	admin.Get("/system/config", h.AdminGetConfig)
 
+	// Admin message search
+	admin.Get("/messages/search", h.AdminSearchMessages)
+
+	// Admin recipient PGP management
+	admin.Put("/recipient/:id/pgp", h.AdminToggleRecipientPGP)
+	admin.Delete("/recipient/:id/pgp", h.AdminRemoveRecipientPGPKey)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

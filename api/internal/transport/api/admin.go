@@ -70,6 +70,9 @@ type AdminService interface {
 	AdminExportDomains(context.Context) ([]model.Domain, error)
 	AdminExportLogs(context.Context) ([]model.Log, error)
 	AdminBulkDeleteUsers(context.Context, []string) error
+	SearchMessages(context.Context, string, string, int, int) ([]model.Message, int64, error)
+	AdminToggleRecipientPGP(context.Context, string, bool) error
+	AdminRemoveRecipientPGPKey(context.Context, string) error
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -836,4 +839,44 @@ func (h *Handler) AdminGetConfig(c *fiber.Ctx) error {
 		"smtp_configured":     false,
 		"oxapay_configured":   false,
 	})
+}
+
+func (h *Handler) AdminSearchMessages(c *fiber.Ctx) error {
+	search := c.Query("search", "")
+	msgType := c.Query("type", "")
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	msgs, total, err := h.Service.SearchMessages(c.Context(), search, msgType, limit, offset)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to search messages"})
+	}
+	return c.JSON(fiber.Map{"messages": msgs, "total": total})
+}
+
+type AdminTogglePGPReq struct {
+	PGPEnabled bool `json:"pgp_enabled"`
+}
+
+func (h *Handler) AdminToggleRecipientPGP(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Recipient ID required"})
+	}
+	var req AdminTogglePGPReq
+	c.BodyParser(&req)
+	if err := h.Service.AdminToggleRecipientPGP(c.Context(), id, req.PGPEnabled); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to toggle PGP"})
+	}
+	return c.JSON(fiber.Map{"message": "PGP updated"})
+}
+
+func (h *Handler) AdminRemoveRecipientPGPKey(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Recipient ID required"})
+	}
+	if err := h.Service.AdminRemoveRecipientPGPKey(c.Context(), id); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to remove PGP key"})
+	}
+	return c.JSON(fiber.Map{"message": "PGP key removed"})
 }

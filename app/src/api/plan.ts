@@ -153,6 +153,11 @@ export const adminApi = {
     exportLogs: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/logs`,
     // Config viewer
     getConfig: async () => (await api.get('/admin/system/config')).data as Record<string, any>,
+    // Message search
+    searchMessages: async (search?: string, type?: string) => (await api.get('/admin/messages/search', { params: { ...(search ? { search } : {}), ...(type ? { type } : {}) } })).data as { messages: any[]; total: number },
+    // Recipient PGP management
+    toggleRecipientPGP: async (id: string, pgpEnabled: boolean) => api.put(`/admin/recipient/${id}/pgp`, { pgp_enabled: pgpEnabled }),
+    removeRecipientPGPKey: async (id: string) => api.delete(`/admin/recipient/${id}/pgp`),
 }
 
 export interface AdminAlias {

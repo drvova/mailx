@@ -97,6 +97,9 @@ type AdminStore interface {
 	AdminExportDomains(context.Context) ([]model.Domain, error)
 	AdminExportLogs(context.Context) ([]model.Log, error)
 	AdminBulkDeleteUsers(context.Context, []string) error
+	SearchMessages(context.Context, string, string, int, int) ([]model.Message, int64, error)
+	AdminToggleRecipientPGP(context.Context, string, bool) error
+	AdminRemoveRecipientPGPKey(context.Context, string) error
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -410,4 +413,17 @@ func (s *Service) AdminExportLogs(ctx context.Context) ([]model.Log, error) {
 
 func (s *Service) AdminBulkDeleteUsers(ctx context.Context, userIDs []string) error {
 	return s.Store.AdminBulkDeleteUsers(ctx, userIDs)
+}
+
+func (s *Service) SearchMessages(ctx context.Context, search string, msgType string, limit, offset int) ([]model.Message, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.SearchMessages(ctx, search, msgType, limit, offset)
+}
+
+func (s *Service) AdminToggleRecipientPGP(ctx context.Context, recipientID string, pgpEnabled bool) error {
+	return s.Store.AdminToggleRecipientPGP(ctx, recipientID, pgpEnabled)
+}
+
+func (s *Service) AdminRemoveRecipientPGPKey(ctx context.Context, recipientID string) error {
+	return s.Store.AdminRemoveRecipientPGPKey(ctx, recipientID)
 }

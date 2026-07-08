@@ -91,6 +91,13 @@
                             <div><p class="text-sm text-gray-500">Subscription Tier</p><p>{{ userDetail.subscription.tier || 'self-hosted' }}</p></div>
                             <div><p class="text-sm text-gray-500">Active Until</p><p>{{ userDetail.subscription.active_until ? formatDate(userDetail.subscription.active_until) : 'N/A' }}</p></div>
                         </div>
+                        <div v-if="userStats" class="grid grid-cols-5 gap-2 mb-4 text-center">
+                            <div class="card-secondary"><p class="text-lg font-bold">{{ userStats.forwards }}</p><p class="text-xs text-gray-500">Forwards</p></div>
+                            <div class="card-secondary"><p class="text-lg font-bold">{{ userStats.blocks }}</p><p class="text-xs text-gray-500">Blocks</p></div>
+                            <div class="card-secondary"><p class="text-lg font-bold">{{ userStats.replies }}</p><p class="text-xs text-gray-500">Replies</p></div>
+                            <div class="card-secondary"><p class="text-lg font-bold">{{ userStats.sends }}</p><p class="text-xs text-gray-500">Sends</p></div>
+                            <div class="card-secondary"><p class="text-lg font-bold">{{ userStats.aliases }}</p><p class="text-xs text-gray-500">Aliases</p></div>
+                        </div>
                         <div class="mb-4">
                             <label class="text-sm text-gray-500">Assign Plan</label>
                             <select v-model="selectedPlan" @change="assignPlan(userDetail.user.id)" class="max-w-xs">
@@ -202,6 +209,8 @@
                                 <td>{{ formatDate(r.created_at) }}</td>
                                 <td><div class="flex gap-1">
                                     <button class="cta cta-tertiary text-sm" @click="toggleRecipient(r)">{{ r.is_active ? 'Suspend' : 'Activate' }}</button>
+                                    <button v-if="r.pgp_enabled" class="cta cta-tertiary text-sm" @click="toggleRecipientPGP(r)">Disable PGP</button>
+                                    <button v-if="r.pgp_enabled" class="cta cta-tertiary text-sm text-red-500" @click="removePGPKey(r)">Remove PGP Key</button>
                                     <button class="cta cta-tertiary text-sm text-red-500" @click="deleteRecipient(r)">Delete</button>
                                 </div></td>
                             </tr>
@@ -335,6 +344,7 @@
             <!-- MESSAGES -->
             <div v-if="tab === 'messages'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
+                    <input v-model="msgSearch" placeholder="Search by user/alias ID..." @input="searchMessagesDeb" class="flex-1" />
                     <select v-model="msgTypeFilter" @change="fetchMessages" class="max-w-xs">
                         <option value="">All Types</option>
                         <option value="0">Forward</option>
@@ -526,6 +536,9 @@ const fetchTableSizes = async () => { try { tableSizes.value = await adminApi.ta
 const fetchRecentSignups = async () => { try { const r = await adminApi.recentSignups(7); recentSignups.value = r.users } catch { /* */ } }
 const fetchConfig = async () => { try { configInfo.value = await adminApi.getConfig() } catch { /* */ } }
 const fetchMessages = async () => { try { const r = await adminApi.messages(msgTypeFilter.value || undefined); messages.value = r.messages } catch { /* */ } }
+const searchMessagesDeb = () => { clearTimeout(msgSearchTimer); msgSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchMessages(msgSearch.value || undefined, msgTypeFilter.value || undefined); messages.value = r.messages } catch { /* */ } }, 300) }
+const toggleRecipientPGP = async (r: AdminRecipient) => { if (!confirm('Disable PGP for this recipient?')) return; try { await adminApi.toggleRecipientPGP(r.id, false); r.pgp_enabled = false } catch { /* */ } }
+const removePGPKey = async (r: AdminRecipient) => { if (!confirm('Permanently remove PGP key?')) return; try { await adminApi.removeRecipientPGPKey(r.id); r.pgp_enabled = false } catch { /* */ } }
 let logSearchTimer: any
 const searchLogsDeb = () => { clearTimeout(logSearchTimer); logSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchLogs(logSearch.value, logFilter.value || undefined); logs.value = r.logs } catch { /* */ } }, 300) }
 let domainSearchTimer: any
@@ -535,12 +548,12 @@ const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeo
 const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(fetchAliases, 300) }
 const searchRecipientsDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(fetchRecipients, 300) }
 
-const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || '' } catch { /* */ } }
+const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || ''; userStats.value = await adminApi.userStats(id) } catch { /* */ } }
 const assignPlan = async (userId: string) => { if (!selectedPlan.value) return; try { await adminApi.assignPlan(userId, selectedPlan.value); viewUser(userId) } catch { /* */ } }
 
-const toggleUser = async (u: AdminUser) => { try { await adminApi.updateUser({ id: u.id, is_active: !u.is_active }); u.is_active = !u.is_active } catch { /* */ } }
-const toggleAdmin = async (u: AdminUser) => { try { await adminApi.updateUser({ id: u.id, is_admin: !u.is_admin }); u.is_admin = !u.is_admin } catch { /* */ } }
-const deleteUser = async (u: AdminUser) => { if (!confirm(`Delete ${u.email}? Removes all data.`)) return; deleting.value = u.id; try { await adminApi.deleteUser(u.id); users.value = users.value.filter(x => x.id !== u.id) } catch { /* */ } finally { deleting.value = '' } }
+const toggleUser = async (u: AdminUser) => { if (u.email === localStorage.getItem('email')) { alert('Cannot suspend your own account'); return } try { await adminApi.updateUser({ id: u.id, is_active: !u.is_active }); u.is_active = !u.is_active } catch { /* */ } }
+const toggleAdmin = async (u: AdminUser) => { if (u.email === localStorage.getItem('email')) { alert('Cannot modify your own admin role'); return } try { await adminApi.updateUser({ id: u.id, is_admin: !u.is_admin }); u.is_admin = !u.is_admin } catch { /* */ } }
+const deleteUser = async (u: AdminUser) => { if (u.email === localStorage.getItem('email')) { alert('Cannot delete your own account'); return } if (!confirm(`Delete ${u.email}? Removes all data.`)) return; deleting.value = u.id; try { await adminApi.deleteUser(u.id); users.value = users.value.filter(x => x.id !== u.id) } catch { /* */ } finally { deleting.value = '' } }
 
 const toggleAlias = async (a: AdminAlias) => { try { await adminApi.toggleAlias(a.id, !a.enabled); a.enabled = !a.enabled } catch { /* */ } }
 const deleteAlias = async (a: AdminAlias) => { if (!confirm(`Delete alias ${a.name}?`)) return; try { await adminApi.deleteAlias(a.id); aliases.value = aliases.value.filter(x => x.id !== a.id) } catch { /* */ } }
@@ -598,6 +611,9 @@ const inboxSearch = ref('')
 const logSearch = ref('')
 const domainSearch = ref('')
 const msgTypeFilter = ref('')
+const msgSearch = ref('')
+const userStats = ref<any>(null)
+let msgSearchTimer: any
 const messages = ref<any[]>([])
 let inboxSearchTimer: any
 const searchInboxDeb = () => { clearTimeout(inboxSearchTimer); inboxSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchInbox(inboxSearch.value); inboxMessages.value = r.messages } catch { /* */ } }, 300) }

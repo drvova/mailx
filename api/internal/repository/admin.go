@@ -557,3 +557,26 @@ func (d *Database) AdminBulkDeleteUsers(ctx context.Context, userIDs []string) e
 		return tx.Where("id IN ?", userIDs).Delete(&model.User{}).Error
 	})
 }
+
+func (d *Database) SearchMessages(ctx context.Context, search string, msgType string, limit, offset int) ([]model.Message, int64, error) {
+	var msgs []model.Message
+	q := d.Client.Model(&model.Message{})
+	if msgType != "" {
+		q = q.Where("type = ?", msgType)
+	}
+	if search != "" {
+		q = q.Where("user_id LIKE ? OR alias_id LIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+	var total int64
+	q.Count(&total)
+	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&msgs).Error
+	return msgs, total, err
+}
+
+func (d *Database) AdminToggleRecipientPGP(ctx context.Context, recipientID string, pgpEnabled bool) error {
+	return d.Client.Model(&model.Recipient{}).Where("id = ?", recipientID).Update("pgp_enabled", pgpEnabled).Error
+}
+
+func (d *Database) AdminRemoveRecipientPGPKey(ctx context.Context, recipientID string) error {
+	return d.Client.Model(&model.Recipient{}).Where("id = ?", recipientID).Updates(map[string]interface{}{"pgp_key": "", "pgp_enabled": false, "pgp_inline": false}).Error
+}
