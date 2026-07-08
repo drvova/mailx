@@ -12,7 +12,6 @@ import (
 
 	"slices"
 
-	"github.com/google/uuid"
 	"ivpn.net/email/api/internal/client/mailer"
 	"ivpn.net/email/api/internal/model"
 	"ivpn.net/email/api/internal/utils"
@@ -129,7 +128,6 @@ func (s *Service) CreateUserSelfSignup(ctx context.Context, user model.User) (mo
 	}
 
 	sub := model.Subscription{
-		ID:          uuid.NewString(),
 		UserID:      user.ID,
 		Type:        "self",
 		ActiveUntil: time.Now().AddDate(100, 0, 0),
