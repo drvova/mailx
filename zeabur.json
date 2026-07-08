@@ -1,0 +1,71 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "source": {
+        "type": "dockerfile",
+        "dockerfile": "api/Dockerfile"
+      },
+      "ports": [
+        {
+          "id": "web",
+          "port": 3000,
+          "type": "HTTP"
+        }
+      ],
+      "env": [
+        { "key": "DB_HOSTS", "value": "${DB_HOSTS}" },
+        { "key": "DB_PORT", "value": "3306" },
+        { "key": "DB_NAME", "value": "${DB_NAME}" },
+        { "key": "DB_USER", "value": "${DB_USER}" },
+        { "key": "DB_PASSWORD", "value": "${DB_PASSWORD}" },
+        { "key": "API_ALLOW_ORIGIN", "value": "${ZEABUR_WEB_URL}" }
+      ]
+    },
+    {
+      "name": "app",
+      "source": {
+        "type": "dockerfile",
+        "dockerfile": "app/Dockerfile"
+      },
+      "build_args": [
+        { "key": "VITE_API_URL", "value": "/api" },
+        { "key": "VITE_DOMAINS", "value": "${VITE_DOMAINS}" },
+        { "key": "VITE_APP_NAME", "value": "FreeTheMail" }
+      ],
+      "ports": [
+        {
+          "id": "web",
+          "port": 80,
+          "type": "HTTP"
+        }
+      ],
+      "env": [
+        { "key": "API_UPSTREAM", "value": "http://api.zeabur.internal:3000/" }
+      ]
+    },
+    {
+      "name": "db",
+      "source": {
+        "type": "image",
+        "image": "mysql:8"
+      },
+      "ports": [
+        {
+          "id": "db",
+          "port": 3306,
+          "type": "TCP"
+        }
+      ],
+      "env": [
+        { "key": "MYSQL_DATABASE", "value": "email" },
+        { "key": "MYSQL_USER", "value": "email" },
+        { "key": "MYSQL_PASSWORD", "value": "${DB_PASSWORD}" },
+        { "key": "MYSQL_ROOT_PASSWORD", "value": "${DB_PASSWORD}" }
+      ],
+      "volumes": [
+        { "id": "db-data", "path": "/var/lib/mysql" }
+      ]
+    }
+  ]
+}

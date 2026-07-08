@@ -10,8 +10,16 @@ services:
     restart: unless-stopped
 
   app:
-    build: ./app
-    env_file: ./app/.env
+    build:
+      context: ./app
+      args:
+        VITE_API_URL: /api
+        VITE_DOMAINS: ${VITE_DOMAINS:-example1.net,example2.net}
+        VITE_APP_NAME: FreeTheMail
+        VITE_RESYNC_URL: ${VITE_RESYNC_URL:-}
+        VITE_PRICING_URL: ${VITE_PRICING_URL:-}
+    environment:
+      - API_UPSTREAM=http://api:3000/
     ports:
       - "80:80"
     depends_on:
