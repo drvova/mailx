@@ -22,10 +22,10 @@
                 <p v-if="otpError" class="error" role="alert">Required</p>
             </div>
             <div class="flex flex-row gap-2">
-                <button @click="confirmEmail" class="cta">
+                <button @click="confirmEmail" :disabled="saving" :aria-busy="saving" class="cta">
                     Verify
                 </button>
-                <button @click="sendOtp" class="cancel">
+                <button @click="sendOtp" :disabled="resending" :aria-busy="resending" class="cancel">
                     Resend OTP
                 </button>
             </div>
@@ -55,6 +55,8 @@ const otpError = ref(false)
 const confirmSuccess = ref('')
 const resendSuccess = ref('')
 const error = ref('')
+const saving = ref(false)
+const resending = ref(false)
 const props = defineProps(['dashboard'])
 const isDashboard = props.dashboard
 
@@ -76,6 +78,7 @@ const confirmEmail = async () => {
         otp: otp.value + ''
     }
 
+    saving.value = true
     try {
         const response = await userApi.activate(req)
         confirmSuccess.value = response.data.message
@@ -89,10 +92,13 @@ const confirmEmail = async () => {
                 error.value = 'Too many requests, please try again later.'
             }
         }
+    } finally {
+        saving.value = false
     }
 }
 
 const sendOtp = async () => {
+    resending.value = true
     try {
         const response = await userApi.sendOtp()
         resendSuccess.value = response.data.message
@@ -106,6 +112,8 @@ const sendOtp = async () => {
                 error.value = 'Too many requests, please try again later.'
             }
         }
+    } finally {
+        resending.value = false
     }
 }
 

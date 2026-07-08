@@ -32,11 +32,11 @@
                                                 <td>
                                                     <div class="hs-tooltip inline-block">
                                                         <div class="hs-tooltip-toggle">
-                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard('@')">
+                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy('@').catch(() => toast('Failed to copy', 'error'))">
                                                                 @
                                                             </button>
                                                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                                {{ copyText }}
+                                                                {{ copied === '@' ? 'Copied' : 'Click to copy' }}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -44,11 +44,11 @@
                                                 <td>
                                                     <div class="hs-tooltip inline-block">
                                                         <div class="hs-tooltip-toggle">
-                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard(mx_host + '.')">
+                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy(mx_host + '.').catch(() => toast('Failed to copy', 'error'))">
                                                                 {{ mx_host }}.
                                                             </button>
                                                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                                {{ copyText }}
+                                                                {{ copied === mx_host + '.' ? 'Copied' : 'Click to copy' }}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -60,11 +60,11 @@
                                             <td>
                                                 <div class="hs-tooltip inline-block">
                                                     <div class="hs-tooltip-toggle">
-                                                        <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard('@')">
+                                                        <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy('@').catch(() => toast('Failed to copy', 'error'))">
                                                             @
                                                         </button>
                                                         <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                            {{ copyText }}
+                                                            {{ copied === '@' ? 'Copied' : 'Click to copy' }}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -72,11 +72,11 @@
                                             <td>
                                                 <div class="hs-tooltip inline-block">
                                                         <div class="hs-tooltip-toggle">
-                                                        <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard('v=spf1 include:spf.' + config.domain + ' -all')">
+                                                        <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy('v=spf1 include:spf.' + config.domain + ' -all').catch(() => toast('Failed to copy', 'error'))">
                                                             v=spf1 include:spf.{{ config.domain }} -all
                                                         </button>
                                                         <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                            {{ copyText }}
+                                                            {{ copied === 'v=spf1 include:spf.' + config.domain + ' -all' ? 'Copied' : 'Click to copy' }}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -88,11 +88,11 @@
                                                 <td>
                                                     <div class="hs-tooltip inline-block">
                                                         <div class="hs-tooltip-toggle">
-                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard(selector + '._domainkey')">
+                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy(selector + '._domainkey').catch(() => toast('Failed to copy', 'error'))">
                                                                 {{ selector }}._domainkey
                                                             </button>
                                                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                                {{ copyText }}
+                                                                {{ copied === selector + '._domainkey' ? 'Copied' : 'Click to copy' }}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -100,11 +100,11 @@
                                                 <td>
                                                     <div class="hs-tooltip inline-block">
                                                         <div class="hs-tooltip-toggle">
-                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard(selector + '._domainkey.' + config.domain + '.')">
+                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy(selector + '._domainkey.' + config.domain + '.').catch(() => toast('Failed to copy', 'error'))">
                                                                 {{ selector }}._domainkey.{{ config.domain }}.
                                                             </button>
                                                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                                {{ copyText }}
+                                                                {{ copied === selector + '._domainkey.' + config.domain + '.' ? 'Copied' : 'Click to copy' }}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -116,11 +116,11 @@
                                             <td>
                                                 <div class="hs-tooltip inline-block">
                                                     <div class="hs-tooltip-toggle">
-                                                        <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard('_dmarc')">
+                                                        <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy('_dmarc').catch(() => toast('Failed to copy', 'error'))">
                                                             _dmarc
                                                         </button>
                                                         <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                            {{ copyText }}
+                                                            {{ copied === '_dmarc' ? 'Copied' : 'Click to copy' }}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -128,11 +128,11 @@
                                             <td>
                                                 <div class="hs-tooltip inline-block">
                                                     <div class="hs-tooltip-toggle">
-                                                        <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard('v=DMARC1; p=quarantine; adkim=s')">
+                                                        <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy('v=DMARC1; p=quarantine; adkim=s').catch(() => toast('Failed to copy', 'error'))">
                                                             v=DMARC1; p=quarantine; adkim=s
                                                         </button>
                                                         <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                            {{ copyText }}
+                                                            {{ copied === 'v=DMARC1; p=quarantine; adkim=s' ? 'Copied' : 'Click to copy' }}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -179,11 +179,13 @@ import overlay from '@preline/overlay'
 import { domainApi } from '../api/domain.ts'
 import events from '../events.ts'
 import tooltip from '@preline/tooltip'
+import { useClipboard } from '../composables/useClipboard.ts'
+import { toast } from '../composables/useToast.ts'
 
 const props = defineProps(['domain'])
 const domain = ref(props.domain)
 const error = ref('')
-const copyText = ref('Click to copy')
+const { copied, copy } = useClipboard(2000)
 
 const config = ref({
     verify: '',
@@ -233,14 +235,6 @@ const addEvents = () => {
     modal.element.on('open', () => {
         tooltip.autoInit()
     })
-}
-
-const copyToClipboard = (txt: string) => {
-    navigator.clipboard.writeText(txt)
-    copyText.value = 'Copied'
-    setTimeout(() => {
-        copyText.value = 'Click to copy'
-    }, 2000)
 }
 
 onMounted(() => {

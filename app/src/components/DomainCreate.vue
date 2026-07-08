@@ -38,7 +38,7 @@
                                             <td>
                                                 <div class="hs-tooltip inline-block">
                                                     <div class="hs-tooltip-toggle">
-                                                        <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard('@')">
+                                                        <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy('@').catch(() => toast('Failed to copy', 'error'))">
                                                             @
                                                         </button>
                                                         <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
@@ -50,7 +50,7 @@
                                             <td>
                                                 <div class="hs-tooltip break-all">
                                                     <div class="hs-tooltip-toggle">
-                                                        <button class="plain max-w-[320px] text-[13px] p-0   plain truncate text-wrap text-end" @click="copyToClipboard('mailx-verify=' + config.verify)">
+                                                        <button class="plain max-w-[320px] text-[13px] p-0   plain truncate text-wrap text-end" @click="copy('mailx-verify=' + config.verify).catch(() => toast('Failed to copy', 'error'))">
                                                             mailx-verify={{ config.verify }}
                                                         </button>
                                                         <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
@@ -134,7 +134,7 @@
                                                     <td>
                                                         <div class="hs-tooltip inline-block">
                                                             <div class="hs-tooltip-toggle">
-                                                                <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard('@')">
+                                                                <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy('@').catch(() => toast('Failed to copy', 'error'))">
                                                                     @
                                                                 </button>
                                                                 <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
@@ -146,7 +146,7 @@
                                                     <td>
                                                         <div class="hs-tooltip inline-block">
                                                             <div class="hs-tooltip-toggle">
-                                                                <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard(mx_host + '.')">
+                                                                <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy(mx_host + '.').catch(() => toast('Failed to copy', 'error'))">
                                                                     {{ mx_host }}.
                                                                 </button>
                                                                 <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
@@ -162,7 +162,7 @@
                                                 <td>
                                                     <div class="hs-tooltip inline-block">
                                                         <div class="hs-tooltip-toggle">
-                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard('@')">
+                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy('@').catch(() => toast('Failed to copy', 'error'))">
                                                                 @
                                                             </button>
                                                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
@@ -174,7 +174,7 @@
                                                 <td>
                                                     <div class="hs-tooltip inline-block">
                                                         <div class="hs-tooltip-toggle">
-                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard('v=spf1 include:spf.' + config.domain + ' -all')">
+                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy('v=spf1 include:spf.' + config.domain + ' -all').catch(() => toast('Failed to copy', 'error'))">
                                                                 v=spf1 include:spf.{{ config.domain }} -all
                                                             </button>
                                                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
@@ -190,7 +190,7 @@
                                                     <td>
                                                         <div class="hs-tooltip inline-block">
                                                             <div class="hs-tooltip-toggle">
-                                                                <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard(selector + '._domainkey')">
+                                                                <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy(selector + '._domainkey').catch(() => toast('Failed to copy', 'error'))">
                                                                     {{ selector }}._domainkey
                                                                 </button>
                                                                 <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
@@ -202,7 +202,7 @@
                                                     <td>
                                                         <div class="hs-tooltip inline-block">
                                                             <div class="hs-tooltip-toggle">
-                                                                <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard(selector + '._domainkey.' + config.domain + '.')">
+                                                                <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy(selector + '._domainkey.' + config.domain + '.').catch(() => toast('Failed to copy', 'error'))">
                                                                     {{ selector }}._domainkey.{{ config.domain }}.
                                                                 </button>
                                                                 <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
@@ -218,7 +218,7 @@
                                                 <td>
                                                     <div class="hs-tooltip inline-block">
                                                         <div class="hs-tooltip-toggle">
-                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard('_dmarc')">
+                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy('_dmarc').catch(() => toast('Failed to copy', 'error'))">
                                                                 _dmarc
                                                             </button>
                                                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
@@ -230,7 +230,7 @@
                                                 <td>
                                                     <div class="hs-tooltip inline-block">
                                                         <div class="hs-tooltip-toggle">
-                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copyToClipboard('v=DMARC1; p=quarantine; adkim=s')">
+                                                            <button class="plain truncate max-w-[320px] text-[13px] p-0" @click="copy('v=DMARC1; p=quarantine; adkim=s').catch(() => toast('Failed to copy', 'error'))">
                                                                 v=DMARC1; p=quarantine; adkim=s
                                                             </button>
                                                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
@@ -412,10 +412,6 @@ const handleKeydown = (event: KeyboardEvent) => {
             verifyDns()
         }
     }
-}
-
-const copyToClipboard = (txt: string) => {
-    copy(txt).catch(() => {})
 }
 
 onMounted(() => {
