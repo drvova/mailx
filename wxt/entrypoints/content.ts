@@ -87,8 +87,8 @@ function injectButton(input: HTMLInputElement) {
   const shadow = host.attachShadow({ mode: 'closed' })
 
   const button = document.createElement('button')
-  button.title = 'Create Mailx alias'
-  button.setAttribute('aria-label', 'Create Mailx alias')
+  button.title = 'Create FreeTheMail alias'
+  button.setAttribute('aria-label', 'Create FreeTheMail alias')
 
   Object.assign(button.style, {
     width: '24px',

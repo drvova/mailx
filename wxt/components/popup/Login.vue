@@ -5,7 +5,7 @@
                 <h1 class="flex justify-center text-accent mb-6">
                     <span class="logo"></span>
                 </h1>
-                <h4 class="text-center mb-6">Log in with Access Key from Mailx</h4>
+                <h4 class="text-center mb-6">Log in with Access Key from FreeTheMail</h4>
                 <div>
                     <div class="mb-5">
                         <input
@@ -28,7 +28,7 @@
             </article>
             <footer>
                 <div>
-                    <p>To create an access key, go to <a href="https://mailx.net/account" target="_blank">mailx.net</a>, open <b>Account Settings</b>, and click <b>New Access Key</b>.</p>
+                    <p>To create an access key, go to <a href="https://freethemail.net/account" target="_blank">freethemail.net</a>, open <b>Account Settings</b>, and click <b>New Access Key</b>.</p>
                 </div>
             </footer>
         </form>

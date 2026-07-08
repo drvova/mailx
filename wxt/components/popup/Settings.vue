@@ -2,9 +2,9 @@
     <div class="p-4 pb-16">
         <h2 class="m-0">Settings</h2>
         <hr class="my-5">
-        <p class="text-sm my-4">Show Mailx button on email input fields:</p>
+        <p class="text-sm my-4">Show FreeTheMail button on email input fields:</p>
         <div class="flex items-center">
-            <input @change="toggleInputButton(($event.target as HTMLInputElement).checked)" v-bind:checked="preferences.input_button" type="checkbox" aria-label="Show Mailx button on email input fields">
+            <input @change="toggleInputButton(($event.target as HTMLInputElement).checked)" v-bind:checked="preferences.input_button" type="checkbox" aria-label="Show FreeTheMail button on email input fields">
         </div>
         <hr class="my-5">
         <p class="text-sm my-4">Add website description when creating alias via input button:</p>
