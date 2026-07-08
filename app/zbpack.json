@@ -1,3 +1,5 @@
 {
-    "output_dir": "dist"
+  "dockerfile": {
+    "path": "Dockerfile"
+  }
 }
