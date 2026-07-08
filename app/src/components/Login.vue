@@ -3,6 +3,9 @@
         <div></div>
         <form class="card-tertiary center" @submit.prevent="" autocomplete="off">
             <article>
+                <p v-if="sessionExpired" class="text-secondary text-sm text-center mb-6" role="status">
+                    Your session expired. Log in again to continue.
+                </p>
                 <div>
                     <div v-if="passkeySupported" v-bind:class="{ 'hidden': signupSuccess }" id="tabs-with-underline-1" role="tabpanel" aria-labelledby="tabs-with-underline-item-1">
                         <h1 class="flex justify-center text-accent mb-8">
@@ -147,6 +150,7 @@ const error = ref('')
 const isLoading = ref(false)
 const passkeySupported = ref(false)
 const signupSuccess = ref('')
+const sessionExpired = ref(false)
 const route = useRoute()
 
 const redirectAfterLogin = () => {
@@ -284,6 +288,11 @@ const onTabChange = () => {
 onMounted(() => {
     if (isLoggedIn()) {
         window.location.href = '/account'
+    }
+
+    if (sessionStorage.getItem('session_expired')) {
+        sessionExpired.value = true
+        sessionStorage.removeItem('session_expired')
     }
 
     passkeySupported.value = browserSupportsWebAuthn()
