@@ -121,6 +121,8 @@ export const adminApi = {
     // Bulk delete
     bulkDeleteAliases: async (ids: string[]) => api.post('/admin/aliases/bulk-delete', { ids }),
     bulkDeleteDomains: async (ids: string[]) => api.post('/admin/domains/bulk-delete', { ids }),
+    bulkToggleDomains: async (ids: string[], enabled: boolean) => (await api.post('/admin/domains/bulk-toggle', { ids, is_active: enabled })).data as { message: string },
+    bulkVerifyDomains: async (ids: string[]) => (await api.post('/admin/domains/bulk-verify', { ids })).data as { message: string },
     bulkDeleteRecipients: async (ids: string[]) => api.post('/admin/recipients/bulk-delete', { ids }),
     // System health
     tableSizes: async () => (await api.get('/admin/system/tables')).data as Record<string, number>,
@@ -267,6 +269,11 @@ export const adminApi = {
     sessionConcurrency: async () => (await api.get('/admin/session-concurrency')).data as { users: { user_id: string; email: string; active_sessions: number }[] },
     planUsage: async () => (await api.get('/admin/plan-usage')).data as { users: { user_id: string; email: string; tier: string; alias_count: number; max_aliases: number; recipient_count: number; max_recipients: number; credential_count: number; max_credentials: number; session_count: number; max_sessions: number }[] },
     inactiveAliases: async (days = 30) => (await api.get('/admin/inactive-aliases', { params: { days } })).data as { aliases: { alias_id: string; alias_name: string; user_id: string; days_inactive: number; created_at: string }[] },
+    recipientStats: async () => (await api.get('/admin/recipient-stats')).data as { total:number;active:number;inactive:number;pgp_enabled:number },
+    cleanupStats: async () => (await api.get('/admin/cleanup-stats')).data as { expired_aliases:number; orphaned_sessions:number },
+    cleanupExpiredAliases: async () => (await api.post('/admin/cleanup/expired-aliases')).data as { message:string },
+    cleanupOrphanedSessions: async () => (await api.post('/admin/cleanup/orphaned-sessions')).data as { message:string },
+    userLoginHistory: async (id: string) => (await api.get(`/admin/user/${id}/login-history`)).data as { events: { id: number; user_id: string; success: boolean; ip: string; created_at: string }[] },
 }
 
 export interface AdminAlias {

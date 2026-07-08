@@ -67,6 +67,41 @@ func (d *Database) AdminGetInactiveAliases(ctx context.Context, days int) ([]mod
 	return results, nil
 }
 
+func (d *Database) AdminCleanupExpiredAliases(ctx context.Context) (int64, error) {
+	now := time.Now()
+	res := d.Client.Model(&model.Alias{}).Where("expires_at IS NOT NULL AND expires_at < ?", now).Update("enabled", false)
+	return res.RowsAffected, res.Error
+}
+
+func (d *Database) AdminCleanupOrphanedSessions(ctx context.Context) (int64, error) {
+	var userIDs []string
+	d.Client.Model(&model.User{}).Pluck("id", &userIDs)
+	if len(userIDs) > 0 {
+		res := d.Client.Where("user_id NOT IN ?", userIDs).Delete(&model.Session{})
+		return res.RowsAffected, res.Error
+	}
+	res := d.Client.Where("1=1").Delete(&model.Session{})
+	return res.RowsAffected, res.Error
+}
+
+func (d *Database) AdminGetCleanupStats(ctx context.Context) (map[string]interface{}, error) {
+	now := time.Now()
+	var expiredAliases int64
+	d.Client.Model(&model.Alias{}).Where("expires_at IS NOT NULL AND expires_at < ?", now).Count(&expiredAliases)
+	var userIDs []string
+	d.Client.Model(&model.User{}).Pluck("id", &userIDs)
+	var orphanedSessions int64
+	if len(userIDs) > 0 {
+		d.Client.Model(&model.Session{}).Where("user_id NOT IN ?", userIDs).Count(&orphanedSessions)
+	} else {
+		d.Client.Model(&model.Session{}).Count(&orphanedSessions)
+	}
+	return map[string]interface{}{
+		"expired_aliases":   expiredAliases,
+		"orphaned_sessions": orphanedSessions,
+	}, nil
+}
+
 func (d *Database) AdminGetCatchAllStats(ctx context.Context) (map[string]interface{}, error) {
 	var total, catchAll int64
 	d.Client.Model(&model.Alias{}).Count(&total)
@@ -230,6 +265,20 @@ func (d *Database) AdminGetTopSenders(ctx context.Context, days int) ([]model.Us
 		results = append(results, model.UserForwardStats{UserID: r.UserID, Email: r.Email, Sends: r.Count})
 	}
 	return results, nil
+}
+
+func (d *Database) AdminGetRecipientStats(ctx context.Context) (map[string]interface{}, error) {
+	var total, active, inactive, pgpCount int64
+	d.Client.Model(&model.Recipient{}).Count(&total)
+	d.Client.Model(&model.Recipient{}).Where("is_active = true").Count(&active)
+	d.Client.Model(&model.Recipient{}).Where("is_active = false").Count(&inactive)
+	d.Client.Model(&model.Recipient{}).Where("pgp_enabled = true").Count(&pgpCount)
+	return map[string]interface{}{
+		"total":       total,
+		"active":      active,
+		"inactive":    inactive,
+		"pgp_enabled": pgpCount,
+	}, nil
 }
 
 func (d *Database) AdminGetAliasForwardStats(ctx context.Context, days int) ([]model.AliasForwardStats, error) {

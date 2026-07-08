@@ -142,6 +142,19 @@ func (d *Database) AdminToggleDomain(ctx context.Context, domainID string, enabl
 	return d.Client.Model(&model.Domain{}).Where("id = ?", domainID).Update("enabled", enabled).Error
 }
 
+func (d *Database) AdminBulkToggleDomains(ctx context.Context, domainIDs []string, enabled bool) error {
+	return d.Client.Model(&model.Domain{}).Where("id IN ?", domainIDs).Update("enabled", enabled).Error
+}
+
+func (d *Database) AdminBulkVerifyDomains(ctx context.Context, domainIDs []string) error {
+	now := time.Now()
+	return d.Client.Model(&model.Domain{}).Where("id IN ?", domainIDs).Updates(map[string]interface{}{
+		"owner_verified_at": now,
+		"mx_verified_at":    now,
+		"send_verified_at":  now,
+	}).Error
+}
+
 func (d *Database) GetAllRecipientsAdmin(ctx context.Context, limit, offset int, search string) ([]model.Recipient, int64, error) {
 	var recipients []model.Recipient
 	q := d.Client.Model(&model.Recipient{})
@@ -697,6 +710,16 @@ func (d *Database) AdminSetAccessKeyExpiry(ctx context.Context, keyID string, ex
 
 func (d *Database) AdminLogAudit(ctx context.Context, entry model.AdminAudit) error {
 	return d.Client.Create(&entry).Error
+}
+
+func (d *Database) AdminLogLoginEvent(ctx context.Context, event model.LoginEvent) error {
+	return d.Client.Create(&event).Error
+}
+
+func (d *Database) AdminGetLoginHistory(ctx context.Context, userID string, limit int) ([]model.LoginEvent, error) {
+	var events []model.LoginEvent
+	err := d.Client.Where("user_id = ?", userID).Order("created_at desc").Limit(limit).Find(&events).Error
+	return events, err
 }
 
 func (d *Database) AdminGetAuditLog(ctx context.Context, limit, offset int) ([]model.AdminAudit, int64, error) {

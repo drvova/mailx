@@ -97,6 +97,7 @@
                         <button class="cta cta-tertiary text-sm" @click="exportAliasesCSV">Export Aliases CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportKeysCSV">Export Keys CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportSessionsCSV">Export Sessions CSV</button>
+                    <button class="cta cta-tertiary text-sm" @click="exportAllJson">Export All JSON</button>
                     </div>
                     <div v-if="subStats" class="grid grid-cols-3 gap-4 mb-4">
                         <div class="card-secondary text-center"><p class="text-2xl font-bold text-green-500">{{ subStats.active }}</p><p class="text-sm text-gray-500">Active Subs</p></div>
@@ -288,6 +289,16 @@
                             </div>
                             <div><p class="text-sm text-gray-500">Notes</p><p class="text-xs">{{ userDetail.user.notes || 'none' }}</p><button class="cta cta-tertiary text-sm mt-1" @click="editUserNotes(userDetail.user)">Edit Notes</button></div>
                         </div>
+                        <div v-if="loginHistory?.length" class="mt-3">
+                            <p class="text-sm text-gray-500 mb-1">Login History</p>
+                            <div class="max-h-32 overflow-y-auto text-xs">
+                                <div v-for="l in loginHistory" :key="l.id" class="flex justify-between py-1 border-b">
+                                    <span>{{ formatDate(l.created_at) }}</span>
+                                    <span :class="l.success ? 'text-green-500' : 'text-red-500'">{{ l.success ? 'OK' : 'FAIL' }}</span>
+                                    <span class="text-gray-400">{{ l.ip }}</span>
+                                </div>
+                            </div>
+                        </div>
                         <div v-if="userStats" class="grid grid-cols-5 gap-2 mb-4 text-center">
                             <div class="card-secondary"><p class="text-lg font-bold">{{ userStats.forwards }}</p><p class="text-xs text-gray-500">Forwards</p></div>
                             <div class="card-secondary"><p class="text-lg font-bold">{{ userStats.blocks }}</p><p class="text-xs text-gray-500">Blocks</p></div>
@@ -390,6 +401,9 @@
                 <div class="flex gap-2 mb-4">
                     <input v-model="domainSearch" placeholder="Search domains..." @input="searchDomainsDeb" class="flex-1" />
                     <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteDomains">Bulk Delete Selected</button>
+                    <button class="cta cta-tertiary text-sm" @click="bulkToggleDomains(true)">Bulk Enable</button>
+                    <button class="cta cta-tertiary text-sm" @click="bulkToggleDomains(false)">Bulk Disable</button>
+                    <button class="cta cta-tertiary text-sm" @click="bulkVerifyDomains">Bulk Verify</button>
                 </div>
                 <div v-if="domains.length" class="overflow-x-auto">
                     <table class="table">
@@ -418,6 +432,12 @@
 
             <!-- RECIPIENTS -->
             <div v-if="tab === 'recipients'" role="tabpanel">
+                <div v-if="rcptStats" class="flex gap-2 text-xs mb-2">
+                    <span>Total: <b>{{ rcptStats.total }}</b></span>
+                    <span class="text-green-500">Active: <b>{{ rcptStats.active }}</b></span>
+                    <span class="text-red-500">Inactive: <b>{{ rcptStats.inactive }}</b></span>
+                    <span>PGP: <b>{{ rcptStats.pgp_enabled }}</b></span>
+                </div>
                 <div class="flex gap-2 mb-4">
                     <input v-model="recipientSearch" placeholder="Search by email..." @input="searchRecipientsDeb" class="flex-1" />
                     <button class="cta cta-tertiary text-sm" @click="bulkToggleRecipients(true)">Bulk Activate</button>
@@ -836,6 +856,13 @@
                         </table>
                     </div>
                 </div>
+                <div v-if="cleanupStatsData" class="mt-4">
+                    <h3 class="font-bold mb-2">Cleanup</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-2">
+                        <div class="card-secondary"><p><b>{{ cleanupStatsData.expired_aliases }}</b> expired aliases</p><button class="cta cta-tertiary text-sm mt-1" @click="runCleanupAliases">Disable All</button></div>
+                        <div class="card-secondary"><p><b>{{ cleanupStatsData.orphaned_sessions }}</b> orphaned sessions</p><button class="cta cta-tertiary text-sm mt-1" @click="runCleanupSessions">Delete All</button></div>
+                    </div>
+                </div>
             </div>
 
             <!-- LOGS -->
@@ -903,6 +930,9 @@
 
             <!-- AUDIT -->
             <div v-if="tab === 'audit'" role="tabpanel">
+                <div class="flex justify-end mb-2">
+                    <button class="cta cta-tertiary text-sm" @click="exportAuditCSV">Export CSV</button>
+                </div>
                 <div v-if="auditEntries.length" class="overflow-x-auto">
                     <table class="table">
                         <thead><tr><th>Admin</th><th>Action</th><th>Target</th><th>Details</th><th>Date</th></tr></thead>
@@ -1005,6 +1035,7 @@ const usersTotal = ref(0)
 const usersOffset = ref(0)
 const aliasSearch = ref('')
 const recipientSearch = ref('')
+const rcptStats = ref<any>(null)
 const logFilter = ref('')
 const userDetail = ref<any>(null)
 const selectedPlan = ref('')
@@ -1021,7 +1052,7 @@ const nextUsers = () => { usersOffset.value += 50; fetchUsers() }
 const prevUsers = () => { usersOffset.value = Math.max(0, usersOffset.value - 50); fetchUsers() }
 const fetchAliases = async () => { try { const r = await adminApi.aliases(aliasSearch.value || undefined, aliasesOffset.value); aliases.value = r.aliases; aliasesTotal.value = r.total } catch { /* */ } }
 const fetchDomains = async () => { try { domains.value = await adminApi.domains() } catch { /* */ } }
-const fetchRecipients = async () => { try { const r = await adminApi.recipients(recipientSearch.value || undefined, recipientsOffset.value); recipients.value = r.recipients; recipientsTotal.value = r.total } catch { /* */ } }
+const fetchRecipients = async () => { try { const r = await adminApi.recipients(recipientSearch.value || undefined, recipientsOffset.value); recipients.value = r.recipients; recipientsTotal.value = r.total; fetchRcptStats() } catch { /* */ } }
 const fetchPlans = async () => { loadingPlans.value = true; try { plans.value = await planApi.listAll() } catch { /* */ } finally { loadingPlans.value = false } }
 const fetchLogs = async () => { try { logs.value = await adminApi.logs() } catch { /* */ } }
 const fetchLogsFiltered = async () => { try { if (logFrom.value || logTo.value) { const r = await adminApi.logsDateRange(logFrom.value, logTo.value, logFilter.value || undefined, logsOffset.value); logs.value = r.logs; logsTotal.value = r.total } else { const r = await adminApi.logsFiltered(logFilter.value || undefined, logsOffset.value); logs.value = r.logs; logsTotal.value = r.total } } catch { /* */ } }
@@ -1161,7 +1192,7 @@ const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeo
 const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { aliasesOffset.value = 0; fetchAliases() }, 300) }
 const searchRecipientsDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { recipientsOffset.value = 0; fetchRecipients() }, 300) }
 
-const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || ''; userStats.value = await adminApi.userStats(id); userSettings.value = await adminApi.getSettings(id); const la = await adminApi.userLastActive(id); lastActive.value = la.last_active ? formatDate(la.last_active) : 'Never'; userQuota.value = await adminApi.userQuota(id) } catch { /* */ } }
+const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || ''; userStats.value = await adminApi.userStats(id); userSettings.value = await adminApi.getSettings(id); const la = await adminApi.userLastActive(id); lastActive.value = la.last_active ? formatDate(la.last_active) : 'Never'; userQuota.value = await adminApi.userQuota(id); loginHistory.value = (await adminApi.userLoginHistory(id)).events } catch { /* */ } }
 const assignPlan = async (userId: string) => { if (!selectedPlan.value) return; try { await adminApi.assignPlan(userId, selectedPlan.value); viewUser(userId) } catch { /* */ } }
 
 const toggleUser = async (u: AdminUser) => { if (u.email === localStorage.getItem('email')) { alert('Cannot suspend your own account'); return } try { await adminApi.updateUser({ id: u.id, is_active: !u.is_active }); u.is_active = !u.is_active } catch { /* */ } }
@@ -1281,7 +1312,7 @@ watch(tab, (t) => {
     if (t === 'inbox' && !inboxMessages.value.length) fetchInboxMessages()
     if (t === 'messages') fetchMessages()
     if (t === 'subs') fetchSubscriptions()
-    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats(); fetchRuntime(); fetchRecipientDomains(); fetchSessConcurrency(); fetchBounceStats(); fetchOnboardingStatus(); fetchCatchAll(); fetchInactiveAliases() }
+    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats(); fetchRuntime(); fetchRecipientDomains(); fetchSessConcurrency(); fetchBounceStats(); fetchOnboardingStatus(); fetchCatchAll(); fetchInactiveAliases(); fetchCleanupStats() }
     if (t === 'logs') fetchLogsFiltered()
     if (t === 'audit' && !auditEntries.value.length) fetchAuditLog()
     if (t === 'usage' && !planUsageData.value.length) fetchPlanUsage()
@@ -1309,6 +1340,7 @@ const inactiveDays = ref(30)
 const domainStatsData = ref<any[]>([])
 const runtimeInfo = ref<any>(null)
 const userQuota = ref<any>(null)
+const loginHistory = ref<any[]>([])
 const planDetail = ref<Plan | null>(null)
 const compareData = ref<any>(null)
 const recipDomains = ref<Record<string, number> | null>(null)
@@ -1335,6 +1367,9 @@ const bulkTerminateSessions = async () => {
 }
 const purgeSessions = async () => { if (!confirm('Purge all expired sessions?')) return; try { const r = await adminApi.purgeExpiredSessions(); alert(r.message); fetchSessions() } catch { /* */ } }
 const fetchDomainStats = async () => { try { const r = await adminApi.domainStats(); domainStatsData.value = r.domains } catch { /* */ } }
+const fetchCleanupStats = async () => { try { cleanupStatsData.value = await adminApi.cleanupStats() } catch {} }
+const runCleanupAliases = async () => { if (!confirm('Disable all expired aliases?')) return; try { const r = await adminApi.cleanupExpiredAliases(); alert(r.message); fetchCleanupStats() } catch {} }
+const runCleanupSessions = async () => { if (!confirm('Delete all orphaned sessions?')) return; try { const r = await adminApi.cleanupOrphanedSessions(); alert(r.message); fetchCleanupStats() } catch {} }
 const fetchRuntime = async () => { try { runtimeInfo.value = await adminApi.runtimeStats() } catch { /* */ } }
 const fetchRecipientDomains = async () => { try { recipDomains.value = await adminApi.recipientDomains() } catch { /* */ } }
 const fetchTopForwarders = async () => { try { const r = await adminApi.topForwarders(); topForwarders.value = r.users } catch { /* */ } }
@@ -1348,6 +1383,7 @@ const onboardingUsers = ref<any[]>([])
 const catchAllInfo = ref<any>(null)
 const planUsageData = ref<any[]>([])
 const inactiveAliasesData = ref<any[]>([])
+const cleanupStatsData = ref<any>(null)
 const fetchBounceStats = async () => { try { const r = await adminApi.bounceStats(); bounceStats.value = r.aliases } catch { /* */ } }
 const fetchOnboardingStatus = async () => { try { const r = await adminApi.onboardingStatus(); onboardingUsers.value = r.users } catch { /* */ } }
 const fetchCatchAll = async () => { try { catchAllInfo.value = await adminApi.catchAllStats() } catch {} }
@@ -1357,6 +1393,8 @@ const exportSubsCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/ad
 const exportAliasesCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/aliases-csv`, '_blank') }
 const exportKeysCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/keys-csv`, '_blank') }
 const exportSessionsCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/sessions-csv`, '_blank') }
+const exportAuditCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/audit-csv`, '_blank') }
+const exportAllJson = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/all-json`, '_blank') }
 const sessConcurrency = ref<any[]>([])
 const fetchSessConcurrency = async () => { try { const r = await adminApi.sessionConcurrency(); sessConcurrency.value = r.users } catch { /* */ } }
 const autoRefresh = ref(false)
@@ -1390,6 +1428,17 @@ const bulkToggleRecipients = async (active: boolean) => {
     if (!selected.length) { alert('Select recipients first'); return }
     if (!confirm(`${active ? 'Activate' : 'Suspend'} ${selected.length} recipients?`)) return
     try { await adminApi.bulkToggleRecipients(selected.map(r => r.id), active); selected.forEach(r => r.is_active = active) } catch { /* */ } }
+const bulkToggleDomains = async (enabled: boolean) => {
+    const selected = domains.value.filter(d => (d as any)._selected)
+    if (!selected.length) { alert('Select domains first'); return }
+    if (!confirm(`${enabled ? 'Enable' : 'Disable'} ${selected.length} domains?`)) return
+    try { await adminApi.bulkToggleDomains(selected.map(d => d.id), enabled); selected.forEach(d => d.enabled = enabled) } catch { /* */ } }
+const bulkVerifyDomains = async () => {
+    const selected = domains.value.filter(d => (d as any)._selected)
+    if (!selected.length) { alert('Select domains first'); return }
+    if (!confirm(`Mark ${selected.length} domains as verified?`)) return
+    try { await adminApi.bulkVerifyDomains(selected.map(d => d.id)); selected.forEach(d => { d.owner_verified_at = new Date().toISOString(); d.mx_verified_at = new Date().toISOString() }) } catch { /* */ } }
+const fetchRcptStats = async () => { try { rcptStats.value = await adminApi.recipientStats() } catch { /* */ } }
 const bulkAliasesForUser = async (userId: string) => {
     const input = prompt('Enter alias names (comma-separated) or a number to auto-generate:')
     if (!input) return

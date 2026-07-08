@@ -189,6 +189,8 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	// Admin bulk delete for aliases/domains/recipients
 	admin.Post("/aliases/bulk-delete", h.AdminBulkDeleteAliases)
 	admin.Post("/domains/bulk-delete", h.AdminBulkDeleteDomains)
+	admin.Post("/domains/bulk-toggle", h.AdminBulkToggleDomains)
+	admin.Post("/domains/bulk-verify", h.AdminBulkVerifyDomains)
 	admin.Post("/recipients/bulk-delete", h.AdminBulkDeleteRecipients)
 
 	// Admin system health
@@ -284,7 +286,9 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 
 	// Admin audit log
 	admin.Get("/audit", h.AdminGetAuditLog)
+	admin.Get("/export/audit-csv", h.AdminExportAuditCSV)
 	admin.Get("/recent-audit", h.AdminGetRecentAudit)
+	admin.Get("/user/:id/login-history", h.AdminGetLoginHistory)
 
 	// Session data viewer
 	admin.Get("/session/:id/data", h.AdminGetSessionData)
@@ -327,6 +331,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	// Bulk alias creation, bulk recipient toggle
 	admin.Post("/aliases/bulk-create", h.AdminBulkCreateAliases)
 	admin.Post("/recipients/bulk-toggle", h.AdminBulkToggleRecipients)
+	admin.Get("/recipient-stats", h.AdminGetRecipientStats)
 
 	// System runtime and user quota
 	admin.Get("/system/runtime", h.AdminGetRuntimeStats)
@@ -350,6 +355,12 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/export/sessions-csv", h.AdminExportSessionsCSV)
 	admin.Get("/plan-usage", h.AdminGetPlanUsage)
 	admin.Get("/inactive-aliases", h.AdminGetInactiveAliases)
+
+	admin.Get("/cleanup-stats", h.AdminGetCleanupStats)
+	admin.Post("/cleanup/expired-aliases", h.AdminCleanupExpiredAliases)
+	admin.Post("/cleanup/orphaned-sessions", h.AdminCleanupOrphanedSessions)
+
+	admin.Get("/export/all-json", h.AdminExportAllData)
 
 	admin.Get("/subscription-changes", h.AdminGetSubscriptionChanges)
 

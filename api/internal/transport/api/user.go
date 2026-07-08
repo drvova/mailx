@@ -298,6 +298,9 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		})
 	}
 
+	// Log login event
+	_ = h.Service.AdminLogLoginEvent(c.Context(), model.LoginEvent{UserID: user.ID, Success: true, IP: c.IP()})
+
 	// Set token in cookie
 	c.Cookie(auth.NewCookieAuthn(token, "/", h.Cfg))
 

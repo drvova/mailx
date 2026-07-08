@@ -137,6 +137,15 @@ type AdminService interface {
 	AdminGetCatchAllStats(context.Context) (map[string]interface{}, error)
 	AdminGetPlanUsage(context.Context) ([]model.PlanUsage, error)
 	AdminGetInactiveAliases(context.Context, int) ([]model.InactiveAlias, error)
+	AdminBulkToggleDomains(context.Context, []string, bool) error
+	AdminBulkVerifyDomains(context.Context, []string) error
+	AdminGetRecipientStats(context.Context) (map[string]interface{}, error)
+	AdminCleanupExpiredAliases(context.Context) (int64, error)
+	AdminCleanupOrphanedSessions(context.Context) (int64, error)
+	AdminGetCleanupStats(context.Context) (map[string]interface{}, error)
+	AdminLogLoginEvent(context.Context, model.LoginEvent) error
+	AdminGetLoginHistory(context.Context, string, int) ([]model.LoginEvent, error)
+	GetActivePlans(context.Context) ([]model.Plan, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1330,6 +1339,21 @@ func (h *Handler) AdminSetAccessKeyExpiry(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Access key expiry updated"})
 }
 
+func (h *Handler) AdminExportAuditCSV(c *fiber.Ctx) error {
+	entries, _, err := h.Service.AdminGetAuditLog(c.Context(), 10000, 0)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,admin_email,action,target,details,created_at\n")
+	for _, e := range entries {
+		buf.WriteString(fmt.Sprintf("%d,%s,%s,%s,%s,%s\n", e.ID, e.AdminEmail, e.Action, e.Target, e.Details, e.CreatedAt.Format(time.RFC3339)))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=audit_log.csv")
+	return c.Send(buf.Bytes())
+}
+
 func (h *Handler) AdminGetAuditLog(c *fiber.Ctx) error {
 	limit := c.QueryInt("limit", 50)
 	offset := c.QueryInt("offset", 0)
@@ -1850,6 +1874,18 @@ func (h *Handler) AdminGetRecentAudit(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"entries": entries, "count": len(entries)})
 }
 
+func (h *Handler) AdminGetLoginHistory(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "User ID required"})
+	}
+	events, err := h.Service.AdminGetLoginHistory(c.Context(), id, 20)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch login history"})
+	}
+	return c.JSON(fiber.Map{"events": events})
+}
+
 func (h *Handler) AdminExportAccessKeysCSV(c *fiber.Ctx) error {
 	keys, _, err := h.Service.GetAllAccessKeysAdmin(c.Context(), 10000, 0)
 	if err != nil {
@@ -1886,6 +1922,82 @@ func (h *Handler) AdminExportSessionsCSV(c *fiber.Ctx) error {
 	c.Set("Content-Type", "text/csv")
 	c.Set("Content-Disposition", "attachment; filename=sessions.csv")
 	return c.Send(buf.Bytes())
+}
+
+func (h *Handler) AdminCleanupExpiredAliases(c *fiber.Ctx) error {
+	count, err := h.Service.AdminCleanupExpiredAliases(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Cleanup failed"})
+	}
+	h.audit(c, "cleanup_expired_aliases", "", fmt.Sprintf("count=%d", count))
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d expired aliases disabled", count)})
+}
+
+func (h *Handler) AdminCleanupOrphanedSessions(c *fiber.Ctx) error {
+	count, err := h.Service.AdminCleanupOrphanedSessions(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Cleanup failed"})
+	}
+	h.audit(c, "cleanup_orphaned_sessions", "", fmt.Sprintf("count=%d", count))
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d orphaned sessions deleted", count)})
+}
+
+func (h *Handler) AdminGetCleanupStats(c *fiber.Ctx) error {
+	stats, err := h.Service.AdminGetCleanupStats(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch"})
+	}
+	return c.JSON(stats)
+}
+
+func (h *Handler) AdminExportAllData(c *fiber.Ctx) error {
+	users, _ := h.Service.GetAllUsers(c.Context())
+	stats, _ := h.Service.GetSystemStats(c.Context())
+	plans, _ := h.Service.GetActivePlans(c.Context())
+	logs, _, _ := h.Service.GetLogsFiltered(c.Context(), "", 100, 0)
+	subs, _, _ := h.Service.GetAllSubscriptionsAdmin(c.Context(), 100, 0, "")
+
+	result := fiber.Map{
+		"stats":         stats,
+		"users":         users,
+		"plans":         plans,
+		"logs":          logs,
+		"subscriptions": subs,
+		"exported_at":   time.Now().Format(time.RFC3339),
+	}
+	return c.JSON(result)
+}
+
+func (h *Handler) AdminBulkToggleDomains(c *fiber.Ctx) error {
+	var req AdminBulkToggleReq
+	if err := c.BodyParser(&req); err != nil || len(req.IDs) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error":"ids required"})
+	}
+	if err := h.Service.AdminBulkToggleDomains(c.Context(), req.IDs, req.IsActive); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error":"Unable to bulk toggle"})
+	}
+	h.audit(c, "bulk_toggle_domains", fmt.Sprintf("%d domains", len(req.IDs)), fmt.Sprintf("enabled=%v", req.IsActive))
+	return c.JSON(fiber.Map{"message":fmt.Sprintf("%d domains updated", len(req.IDs))})
+}
+
+func (h *Handler) AdminBulkVerifyDomains(c *fiber.Ctx) error {
+	var req AdminBulkIDsReq
+	if err := c.BodyParser(&req); err != nil || len(req.IDs) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error":"ids required"})
+	}
+	if err := h.Service.AdminBulkVerifyDomains(c.Context(), req.IDs); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error":"Unable to bulk verify"})
+	}
+	h.audit(c, "bulk_verify_domains", fmt.Sprintf("%d domains", len(req.IDs)), "")
+	return c.JSON(fiber.Map{"message":fmt.Sprintf("%d domains verified", len(req.IDs))})
+}
+
+func (h *Handler) AdminGetRecipientStats(c *fiber.Ctx) error {
+	stats, err := h.Service.AdminGetRecipientStats(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error":"Unable to fetch recipient stats"})
+	}
+	return c.JSON(stats)
 }
 
 func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {

@@ -162,6 +162,14 @@ type AdminStore interface {
 	AdminGetCatchAllStats(context.Context) (map[string]interface{}, error)
 	AdminGetPlanUsage(context.Context) ([]model.PlanUsage, error)
 	AdminGetInactiveAliases(context.Context, int) ([]model.InactiveAlias, error)
+	AdminBulkToggleDomains(context.Context, []string, bool) error
+	AdminBulkVerifyDomains(context.Context, []string) error
+	AdminGetRecipientStats(context.Context) (map[string]interface{}, error)
+	AdminCleanupExpiredAliases(context.Context) (int64, error)
+	AdminCleanupOrphanedSessions(context.Context) (int64, error)
+	AdminGetCleanupStats(context.Context) (map[string]interface{}, error)
+	AdminLogLoginEvent(context.Context, model.LoginEvent) error
+	AdminGetLoginHistory(context.Context, string, int) ([]model.LoginEvent, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -796,4 +804,39 @@ func (s *Service) AdminGetInactiveAliases(ctx context.Context, days int) ([]mode
 		days = 30
 	}
 	return s.Store.AdminGetInactiveAliases(ctx, days)
+}
+
+func (s *Service) AdminCleanupExpiredAliases(ctx context.Context) (int64, error) {
+	return s.Store.AdminCleanupExpiredAliases(ctx)
+}
+
+func (s *Service) AdminCleanupOrphanedSessions(ctx context.Context) (int64, error) {
+	return s.Store.AdminCleanupOrphanedSessions(ctx)
+}
+
+func (s *Service) AdminGetCleanupStats(ctx context.Context) (map[string]interface{}, error) {
+	return s.Store.AdminGetCleanupStats(ctx)
+}
+
+func (s *Service) AdminBulkToggleDomains(ctx context.Context, domainIDs []string, enabled bool) error {
+	return s.Store.AdminBulkToggleDomains(ctx, domainIDs, enabled)
+}
+
+func (s *Service) AdminBulkVerifyDomains(ctx context.Context, domainIDs []string) error {
+	return s.Store.AdminBulkVerifyDomains(ctx, domainIDs)
+}
+
+func (s *Service) AdminGetRecipientStats(ctx context.Context) (map[string]interface{}, error) {
+	return s.Store.AdminGetRecipientStats(ctx)
+}
+
+func (s *Service) AdminLogLoginEvent(ctx context.Context, event model.LoginEvent) error {
+	return s.Store.AdminLogLoginEvent(ctx, event)
+}
+
+func (s *Service) AdminGetLoginHistory(ctx context.Context, userID string, limit int) ([]model.LoginEvent, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 20
+	}
+	return s.Store.AdminGetLoginHistory(ctx, userID, limit)
 }
