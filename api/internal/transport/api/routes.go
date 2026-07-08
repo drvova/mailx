@@ -268,6 +268,13 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Post("/inbox/bulk-delete", h.AdminBulkDeleteInbox)
 	admin.Post("/subscription/:id/extend", h.AdminExtendSubscription)
 
+	// Admin access key creation, ownership transfer, purge operations
+	admin.Post("/accesskey", h.AdminCreateAccessKey)
+	admin.Post("/alias/:id/transfer", h.AdminTransferAlias)
+	admin.Post("/domain/:id/transfer", h.AdminTransferDomain)
+	admin.Post("/logs/purge", h.AdminPurgeLogs)
+	admin.Delete("/inbox/purge-all", h.AdminPurgeAllInbox)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

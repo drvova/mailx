@@ -182,6 +182,14 @@ export const adminApi = {
     bulkDeleteInbox: async (ids: number[]) => api.post('/admin/inbox/bulk-delete', { ids }),
     // Subscription extend
     extendSubscription: async (id: string, days: number) => api.post(`/admin/subscription/${id}/extend`, { days }),
+    // Access key creation
+    createAccessKey: async (userId: string, name: string) => (await api.post('/admin/accesskey', { user_id: userId, name })).data as { key: string; message: string },
+    // Ownership transfer
+    transferAlias: async (id: string, newUserId: string) => api.post(`/admin/alias/${id}/transfer`, { new_user_id: newUserId }),
+    transferDomain: async (id: string, newUserId: string) => api.post(`/admin/domain/${id}/transfer`, { new_user_id: newUserId }),
+    // Purge operations
+    purgeLogs: async (days: number, logType?: string) => (await api.post('/admin/logs/purge', { days, ...(logType ? { log_type: logType } : {}) })).data as { message: string },
+    purgeAllInbox: async () => (await api.delete('/admin/inbox/purge-all')).data as { message: string },
 }
 
 export interface AdminAlias {

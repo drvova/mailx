@@ -123,6 +123,7 @@
                             <button class="cta cta-tertiary text-sm" @click="createRecipientForUser(userDetail.user.id)">Add Recipient</button>
                             <button class="cta cta-tertiary text-sm" @click="createDomainForUser(userDetail.user.id)">Add Domain</button>
                             <button class="cta cta-tertiary text-sm" @click="createAliasForUser(userDetail.user.id)">Add Alias</button>
+                            <button class="cta cta-tertiary text-sm" @click="createKeyForUser(userDetail.user.id)">Add API Key</button>
                         </div>
                         <h4 class="mb-2">Aliases ({{ userDetail.aliases.length }})</h4>
                         <div v-if="userDetail.aliases.length" class="overflow-x-auto mb-4">
@@ -175,6 +176,7 @@
                                 <td><div class="flex gap-1">
                                     <button class="cta cta-tertiary text-sm" @click="toggleAlias(a)">{{ a.enabled ? 'Disable' : 'Enable' }}</button>
                                     <button class="cta cta-tertiary text-sm" @click="editAlias(a)">Edit</button>
+                                    <button class="cta cta-tertiary text-sm" @click="transferAlias(a)">Transfer</button>
                                     <button class="cta cta-tertiary text-sm text-red-500" @click="deleteAlias(a)">Delete</button>
                                 </div></td>
                             </tr>
@@ -204,6 +206,7 @@
                                     <button class="cta cta-tertiary text-sm" @click="toggleDomain(d)">{{ d.enabled ? 'Disable' : 'Enable' }}</button>
                                     <button class="cta cta-tertiary text-sm" @click="verifyDomain(d)">{{ d.mx_verified_at ? 'Unverify' : 'Verify' }}</button>
                                     <button class="cta cta-tertiary text-sm" @click="editDomain(d)">Edit</button>
+                                    <button class="cta cta-tertiary text-sm" @click="transferDomain(d)">Transfer</button>
                                     <button class="cta cta-tertiary text-sm text-red-500" @click="deleteDomain(d)">Delete</button>
                                 </div></td>
                             </tr>
@@ -346,6 +349,7 @@
                 <div class="flex gap-2 mb-4">
                     <input v-model="inboxSearch" placeholder="Search by from or subject..." @input="searchInboxDeb" class="flex-1" />
                     <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteInbox">Bulk Delete Selected</button>
+                    <button class="cta cta-tertiary text-sm text-red-500" @click="purgeAllInbox">Purge All</button>
                 </div>
                 <div v-if="inboxMessages.length" class="overflow-x-auto">
                     <table class="table">
@@ -487,6 +491,7 @@
                         <option value="inactive_subscription">Inactive Subscription</option>
                     </select>
                     <input v-model="logSearch" placeholder="Search from/destination/message..." @input="searchLogsDeb" class="flex-1" />
+                    <button class="cta cta-tertiary text-sm text-red-500" @click="purgeLogs">Purge Old Logs</button>
                 </div>
                 <div v-if="logs.length" class="overflow-x-auto">
                     <table class="table">
@@ -619,6 +624,29 @@ const extendSub = async (s: AdminSubscription) => {
     const days = parseInt(prompt('Extend by how many days?', '30') || '0')
     if (!days) return
     try { await adminApi.extendSubscription(s.id, days); alert(`Extended by ${days} days`); fetchSubscriptions() } catch { /* */ } }
+const transferAlias = async (a: AdminAlias) => {
+    const newUserId = prompt('Enter new owner user ID:')
+    if (!newUserId) return
+    if (!confirm(`Transfer alias ${a.name} to user ${newUserId}?`)) return
+    try { await adminApi.transferAlias(a.id, newUserId); a.user_id = newUserId; alert('Alias transferred') } catch { /* */ } }
+const transferDomain = async (d: AdminDomain) => {
+    const newUserId = prompt('Enter new owner user ID:')
+    if (!newUserId) return
+    if (!confirm(`Transfer domain ${d.name} to user ${newUserId}?`)) return
+    try { await adminApi.transferDomain(d.id, newUserId); d.user_id = newUserId; alert('Domain transferred') } catch { /* */ } }
+const createKeyForUser = async (userId: string) => {
+    const name = prompt('Enter key name:')
+    if (!name) return
+    try { const r = await adminApi.createAccessKey(userId, name); prompt('Access key (copy now, shown once):', r.key) } catch { /* */ } }
+const purgeLogs = async () => {
+    const days = parseInt(prompt('Purge logs older than how many days?', '30') || '0')
+    if (!days) return
+    if (!confirm(`Delete ALL logs older than ${days} days?`)) return
+    try { const r = await adminApi.purgeLogs(days); alert(r.message); fetchLogs() } catch { /* */ } }
+const purgeAllInbox = async () => {
+    if (!confirm('Delete ALL inbox messages for ALL users? This is irreversible.')) return
+    if (!confirm('Are you absolutely sure? Every temp mail message will be permanently deleted.')) return
+    try { const r = await adminApi.purgeAllInbox(); alert(r.message); inboxMessages.value = [] } catch { /* */ } }
 let logSearchTimer: any
 const searchLogsDeb = () => { clearTimeout(logSearchTimer); logSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchLogs(logSearch.value, logFilter.value || undefined); logs.value = r.logs } catch { /* */ } }, 300) }
 let domainSearchTimer: any

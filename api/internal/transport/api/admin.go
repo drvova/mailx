@@ -87,6 +87,11 @@ type AdminService interface {
 	AdminDeleteLog(context.Context, string) error
 	AdminBulkDeleteInbox(context.Context, []uint) error
 	AdminExtendSubscription(context.Context, string, int) error
+	AdminCreateAccessKey(context.Context, string, string) (string, error)
+	AdminTransferAlias(context.Context, string, string) error
+	AdminTransferDomain(context.Context, string, string) error
+	AdminPurgeLogs(context.Context, int, string) (int64, error)
+	AdminPurgeAllInbox(context.Context) (int64, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1120,4 +1125,72 @@ func (h *Handler) AdminExtendSubscription(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to extend subscription"})
 	}
 	return c.JSON(fiber.Map{"message": fmt.Sprintf("Subscription extended by %d days", req.Days)})
+}
+
+type AdminCreateAccessKeyReq struct {
+	UserID string `json:"user_id" validate:"required,uuid"`
+	Name   string `json:"name" validate:"required"`
+}
+
+func (h *Handler) AdminCreateAccessKey(c *fiber.Ctx) error {
+	var req AdminCreateAccessKeyReq
+	if err := c.BodyParser(&req); err != nil || req.UserID == "" || req.Name == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "user_id and name required"})
+	}
+	key, err := h.Service.AdminCreateAccessKey(c.Context(), req.UserID, req.Name)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to create access key"})
+	}
+	return c.JSON(fiber.Map{"key": key, "message": "Access key created. Save it now - it will not be shown again."})
+}
+
+type AdminTransferReq struct {
+	NewUserID string `json:"new_user_id" validate:"required,uuid"`
+}
+
+func (h *Handler) AdminTransferAlias(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var req AdminTransferReq
+	if err := c.BodyParser(&req); err != nil || req.NewUserID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "new_user_id required"})
+	}
+	if err := h.Service.AdminTransferAlias(c.Context(), id, req.NewUserID); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to transfer alias"})
+	}
+	return c.JSON(fiber.Map{"message": "Alias transferred"})
+}
+
+func (h *Handler) AdminTransferDomain(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var req AdminTransferReq
+	if err := c.BodyParser(&req); err != nil || req.NewUserID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "new_user_id required"})
+	}
+	if err := h.Service.AdminTransferDomain(c.Context(), id, req.NewUserID); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to transfer domain"})
+	}
+	return c.JSON(fiber.Map{"message": "Domain transferred"})
+}
+
+type AdminPurgeLogsReq struct {
+	Days    int    `json:"days"`
+	LogType string `json:"log_type"`
+}
+
+func (h *Handler) AdminPurgeLogs(c *fiber.Ctx) error {
+	var req AdminPurgeLogsReq
+	c.BodyParser(&req)
+	count, err := h.Service.AdminPurgeLogs(c.Context(), req.Days, req.LogType)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to purge logs"})
+	}
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d logs purged", count)})
+}
+
+func (h *Handler) AdminPurgeAllInbox(c *fiber.Ctx) error {
+	count, err := h.Service.AdminPurgeAllInbox(c.Context())
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to purge inbox"})
+	}
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d inbox messages purged", count)})
 }

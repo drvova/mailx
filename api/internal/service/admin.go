@@ -113,6 +113,11 @@ type AdminStore interface {
 	AdminDeleteLog(context.Context, string) error
 	AdminBulkDeleteInbox(context.Context, []uint) error
 	AdminExtendSubscription(context.Context, string, int) error
+	AdminCreateAccessKey(context.Context, model.AccessKey) (model.AccessKey, error)
+	AdminTransferAlias(context.Context, string, string) error
+	AdminTransferDomain(context.Context, string, string) error
+	AdminPurgeLogs(context.Context, int, string) (int64, error)
+	AdminPurgeAllInbox(context.Context) (int64, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -492,4 +497,37 @@ func (s *Service) AdminBulkDeleteInbox(ctx context.Context, msgIDs []uint) error
 
 func (s *Service) AdminExtendSubscription(ctx context.Context, subID string, days int) error {
 	return s.Store.AdminExtendSubscription(ctx, subID, days)
+}
+
+func (s *Service) AdminCreateAccessKey(ctx context.Context, userID string, name string) (string, error) {
+	token, err := model.GenToken(48)
+	if err != nil {
+		return "", err
+	}
+	k := model.AccessKey{UserId: userID, Name: name}
+	if err := k.SetToken(token); err != nil {
+		return "", err
+	}
+	created, err := s.Store.AdminCreateAccessKey(ctx, k)
+	if err != nil {
+		return "", err
+	}
+	return created.ID + "." + token, nil
+}
+
+func (s *Service) AdminTransferAlias(ctx context.Context, aliasID string, newUserID string) error {
+	return s.Store.AdminTransferAlias(ctx, aliasID, newUserID)
+}
+
+func (s *Service) AdminTransferDomain(ctx context.Context, domainID string, newUserID string) error {
+	return s.Store.AdminTransferDomain(ctx, domainID, newUserID)
+}
+
+func (s *Service) AdminPurgeLogs(ctx context.Context, days int, logType string) (int64, error) {
+	if days <= 0 { days = 30 }
+	return s.Store.AdminPurgeLogs(ctx, days, logType)
+}
+
+func (s *Service) AdminPurgeAllInbox(ctx context.Context) (int64, error) {
+	return s.Store.AdminPurgeAllInbox(ctx)
 }

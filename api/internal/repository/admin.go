@@ -653,3 +653,30 @@ func (d *Database) AdminExtendSubscription(ctx context.Context, subID string, da
 	sub.ActiveUntil = base.AddDate(0, 0, days)
 	return d.Client.Save(&sub).Error
 }
+
+func (d *Database) AdminCreateAccessKey(ctx context.Context, k model.AccessKey) (model.AccessKey, error) {
+	err := d.Client.Create(&k).Error
+	return k, err
+}
+
+func (d *Database) AdminTransferAlias(ctx context.Context, aliasID string, newUserID string) error {
+	return d.Client.Model(&model.Alias{}).Where("id = ?", aliasID).Update("user_id", newUserID).Error
+}
+
+func (d *Database) AdminTransferDomain(ctx context.Context, domainID string, newUserID string) error {
+	return d.Client.Model(&model.Domain{}).Where("id = ?", domainID).Update("user_id", newUserID).Error
+}
+
+func (d *Database) AdminPurgeLogs(ctx context.Context, days int, logType string) (int64, error) {
+	q := d.Client.Where("created_at < ?", time.Now().AddDate(0, 0, -days))
+	if logType != "" {
+		q = q.Where("type = ?", logType)
+	}
+	res := q.Delete(&model.Log{})
+	return res.RowsAffected, res.Error
+}
+
+func (d *Database) AdminPurgeAllInbox(ctx context.Context) (int64, error) {
+	res := d.Client.Where("1 = 1").Delete(&model.InboxMessage{})
+	return res.RowsAffected, res.Error
+}
