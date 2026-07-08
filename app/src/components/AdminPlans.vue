@@ -97,6 +97,7 @@
                             <button class="cta cta-tertiary text-sm" @click="disableTotp(userDetail.user.id)">Disable 2FA</button>
                             <button class="cta cta-tertiary text-sm" @click="resetPassword(userDetail.user.id)">Reset Password</button>
                             <button class="cta cta-tertiary text-sm text-red-500" @click="purgeInbox(userDetail.user.id)">Purge Inbox</button>
+                            <button class="cta cta-tertiary text-sm" @click="impersonate(userDetail.user.id)">Login As</button>
                         </div>
                         <h4 class="mb-2">Aliases ({{ userDetail.aliases.length }})</h4>
                         <div v-if="userDetail.aliases.length" class="overflow-x-auto mb-4">
@@ -164,6 +165,7 @@
                                 <td>{{ formatDate(d.created_at) }}</td>
                                 <td><div class="flex gap-1">
                                     <button class="cta cta-tertiary text-sm" @click="toggleDomain(d)">{{ d.enabled ? 'Disable' : 'Enable' }}</button>
+                                    <button class="cta cta-tertiary text-sm" @click="verifyDomain(d)">{{ d.mx_verified_at ? 'Unverify' : 'Verify' }}</button>
                                     <button class="cta cta-tertiary text-sm text-red-500" @click="deleteDomain(d)">Delete</button>
                                 </div></td>
                             </tr>
@@ -297,6 +299,9 @@
 
             <!-- INBOX -->
             <div v-if="tab === 'inbox'" role="tabpanel">
+                <div class="flex gap-2 mb-4">
+                    <input v-model="inboxSearch" placeholder="Search by from or subject..." @input="searchInboxDeb" class="flex-1" />
+                </div>
                 <div v-if="inboxMessages.length" class="overflow-x-auto">
                     <table class="table">
                         <thead><tr><th>From</th><th>Subject</th><th>Alias</th><th>Size</th><th>Date</th><th></th></tr></thead>
@@ -514,6 +519,11 @@ const bulkDeleteRecipients = async () => { const selected = recipients.value.fil
 const toggleAllAliases = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; aliases.value.forEach(a => { (a as any)._selected = checked }) }
 const toggleAllDomains = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; domains.value.forEach(d => { (d as any)._selected = checked }) }
 const toggleAllRecipients = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; recipients.value.forEach(r => { (r as any)._selected = checked }) }
+const verifyDomain = async (d: AdminDomain) => { try { await adminApi.verifyDomain(d.id, !d.mx_verified_at); d.mx_verified_at = d.mx_verified_at ? null : new Date().toISOString() as any } catch { /* */ } }
+const impersonate = async (userId: string) => { if (!confirm('Login as this user? You will get a 24h session token.')) return; try { const r = await adminApi.impersonate(userId); document.cookie = `authn=${r.token}; path=/; secure; max-age=86400`; window.open('/account/aliases', '_blank') } catch { /* */ } }
+const inboxSearch = ref('')
+let inboxSearchTimer: any
+const searchInboxDeb = () => { clearTimeout(inboxSearchTimer); inboxSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchInbox(inboxSearch.value); inboxMessages.value = r.messages } catch { /* */ } }, 300) }
 
 const savePlan = async () => { saving.value = true; formError.value = ''; try { if (editing.value && form.value.id) { await planApi.update(form.value.id, form.value) } else { await planApi.create(form.value) }; resetForm(); await fetchPlans() } catch (err: any) { formError.value = err?.message || 'Failed' } finally { saving.value = false } }
 const editPlan = (plan: Plan) => { editing.value = true; showForm.value = true; form.value = { ...plan } }

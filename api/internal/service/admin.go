@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"ivpn.net/email/api/internal/model"
 	"ivpn.net/email/api/internal/utils"
@@ -82,6 +83,8 @@ type AdminStore interface {
 	SearchAccessKeys(context.Context, string, int, int) ([]model.AccessKey, int64, error)
 	SearchSessions(context.Context, string, int, int) ([]model.Session, int64, error)
 	SearchInboxMessages(context.Context, string, int, int) ([]model.InboxMessage, int64, error)
+	AdminVerifyDomain(context.Context, string, bool) error
+	AdminCreateSession(context.Context, string, string, time.Time) error
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -314,4 +317,39 @@ func (s *Service) GetTableSizes(ctx context.Context) (map[string]int64, error) {
 func (s *Service) GetRecentSignups(ctx context.Context, days int) ([]model.User, error) {
 	if days <= 0 { days = 7 }
 	return s.Store.GetRecentSignups(ctx, days)
+}
+
+func (s *Service) AdminVerifyDomain(ctx context.Context, domainID string, verified bool) error {
+	return s.Store.AdminVerifyDomain(ctx, domainID, verified)
+}
+
+func (s *Service) AdminImpersonateUser(ctx context.Context, userID string) (string, error) {
+	user, err := s.Store.AdminImpersonate(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	token, err := model.GenSessionToken()
+	if err != nil {
+		return "", err
+	}
+	exp := time.Now().Add(24 * time.Hour)
+	if err := s.Store.AdminCreateSession(ctx, token, user.ID, exp); err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (s *Service) SearchAccessKeys(ctx context.Context, userID string, limit, offset int) ([]model.AccessKey, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.SearchAccessKeys(ctx, userID, limit, offset)
+}
+
+func (s *Service) SearchSessions(ctx context.Context, userID string, limit, offset int) ([]model.Session, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.SearchSessions(ctx, userID, limit, offset)
+}
+
+func (s *Service) SearchInboxMessages(ctx context.Context, search string, limit, offset int) ([]model.InboxMessage, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.SearchInboxMessages(ctx, search, limit, offset)
 }

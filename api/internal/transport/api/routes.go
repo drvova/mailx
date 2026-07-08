@@ -195,6 +195,17 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/system/tables", h.AdminGetTableSizes)
 	admin.Get("/system/recent-signups", h.AdminGetRecentSignups)
 
+	// Admin domain verification override
+	admin.Put("/domain/:id/verify", h.AdminVerifyDomain)
+
+	// Admin impersonation
+	admin.Post("/user/:id/impersonate", h.AdminImpersonate)
+
+	// Admin search for keys/sessions/inbox
+	admin.Get("/accesskeys/search", h.AdminSearchAccessKeys)
+	admin.Get("/sessions/search", h.AdminSearchSessions)
+	admin.Get("/inbox/search", h.AdminSearchInbox)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

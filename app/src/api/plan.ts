@@ -123,6 +123,14 @@ export const adminApi = {
     // System health
     tableSizes: async () => (await api.get('/admin/system/tables')).data as Record<string, number>,
     recentSignups: async (days?: number) => (await api.get('/admin/system/recent-signups', { params: days ? { days } : undefined })).data as { users: AdminUser[]; count: number },
+    // Domain verification
+    verifyDomain: async (id: string, verified: boolean) => api.put(`/admin/domain/${id}/verify`, { verified }),
+    // Impersonation
+    impersonate: async (userId: string) => (await api.post(`/admin/user/${userId}/impersonate`)).data as { token: string; message: string },
+    // Search keys/sessions/inbox
+    searchAccessKeys: async (userId?: string) => (await api.get('/admin/accesskeys/search', { params: userId ? { user_id: userId } : undefined })).data as { keys: AdminAccessKey[]; total: number },
+    searchSessions: async (userId?: string) => (await api.get('/admin/sessions/search', { params: userId ? { user_id: userId } : undefined })).data as { sessions: AdminSession[]; total: number },
+    searchInbox: async (search?: string) => (await api.get('/admin/inbox/search', { params: search ? { search } : undefined })).data as { messages: AdminInboxMessage[]; total: number },
 }
 
 export interface AdminAlias {

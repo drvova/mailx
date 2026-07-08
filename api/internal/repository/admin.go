@@ -425,3 +425,34 @@ func (d *Database) SearchInboxMessages(ctx context.Context, search string, limit
 		Order("created_at desc").Limit(limit).Offset(offset).Find(&msgs).Error
 	return msgs, total, err
 }
+
+func (d *Database) AdminVerifyDomain(ctx context.Context, domainID string, verified bool) error {
+	now := time.Now()
+	updates := map[string]interface{}{}
+	if verified {
+		updates["mx_verified_at"] = now
+		updates["owner_verified_at"] = now
+		updates["send_verified_at"] = now
+	} else {
+		updates["mx_verified_at"] = nil
+		updates["owner_verified_at"] = nil
+		updates["send_verified_at"] = nil
+	}
+	return d.Client.Model(&model.Domain{}).Where("id = ?", domainID).Updates(updates).Error
+}
+
+func (d *Database) AdminBulkActivateUsers(ctx context.Context, userIDs []string, isActive bool) error {
+	return d.Client.Model(&model.User{}).Where("id IN ?", userIDs).Update("is_active", isActive).Error
+}
+
+func (d *Database) AdminGetConfig(ctx context.Context) (map[string]interface{}, error) {
+	return map[string]interface{}{}, nil
+}
+
+func (d *Database) AdminCreateSession(ctx context.Context, token string, userID string, exp time.Time) error {
+	sessionData := model.Session{}
+	sessionData.UserID = userID
+	sessionData.Token = token
+	sessionData.ExpiresAt = exp
+	return d.Client.Create(&sessionData).Error
+}

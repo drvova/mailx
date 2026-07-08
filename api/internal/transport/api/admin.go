@@ -54,6 +54,11 @@ type AdminService interface {
 	AdminBulkDeleteRecipients(context.Context, []string) error
 	GetTableSizes(context.Context) (map[string]int64, error)
 	GetRecentSignups(context.Context, int) ([]model.User, error)
+	AdminVerifyDomain(context.Context, string, bool) error
+	AdminImpersonateUser(context.Context, string) (string, error)
+	SearchAccessKeys(context.Context, string, int, int) ([]model.AccessKey, int64, error)
+	SearchSessions(context.Context, string, int, int) ([]model.Session, int64, error)
+	SearchInboxMessages(context.Context, string, int, int) ([]model.InboxMessage, int64, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -591,4 +596,67 @@ func (h *Handler) AdminGetRecentSignups(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch recent signups"})
 	}
 	return c.JSON(fiber.Map{"users": users, "count": len(users)})
+}
+
+type AdminVerifyDomainReq struct {
+	Verified bool `json:"verified"`
+}
+
+func (h *Handler) AdminVerifyDomain(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Domain ID required"})
+	}
+	var req AdminVerifyDomainReq
+	c.BodyParser(&req)
+	if err := h.Service.AdminVerifyDomain(c.Context(), id, req.Verified); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to update domain verification"})
+	}
+	return c.JSON(fiber.Map{"message": "Domain verification updated"})
+}
+
+func (h *Handler) AdminImpersonate(c *fiber.Ctx) error {
+	userID := c.Params("id")
+	if userID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "User ID required"})
+	}
+	token, err := h.Service.AdminImpersonateUser(c.Context(), userID)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to impersonate user"})
+	}
+	c.Cookie(&fiber.Cookie{Name: "authn", Value: token, HTTPOnly: true, Secure: true, MaxAge: 86400})
+	return c.JSON(fiber.Map{"token": token, "message": "Impersonation session created"})
+}
+
+func (h *Handler) AdminSearchAccessKeys(c *fiber.Ctx) error {
+	userID := c.Query("user_id", "")
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	keys, total, err := h.Service.SearchAccessKeys(c.Context(), userID, limit, offset)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to search access keys"})
+	}
+	return c.JSON(fiber.Map{"keys": keys, "total": total})
+}
+
+func (h *Handler) AdminSearchSessions(c *fiber.Ctx) error {
+	userID := c.Query("user_id", "")
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	sessions, total, err := h.Service.SearchSessions(c.Context(), userID, limit, offset)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to search sessions"})
+	}
+	return c.JSON(fiber.Map{"sessions": sessions, "total": total})
+}
+
+func (h *Handler) AdminSearchInbox(c *fiber.Ctx) error {
+	search := c.Query("search", "")
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	msgs, total, err := h.Service.SearchInboxMessages(c.Context(), search, limit, offset)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to search inbox"})
+	}
+	return c.JSON(fiber.Map{"messages": msgs, "total": total})
 }
