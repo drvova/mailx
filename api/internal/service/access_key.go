@@ -25,6 +25,7 @@ type AccessKeyStore interface {
 	PostAccessKey(context.Context, model.AccessKey) (model.AccessKey, error)
 	DeleteAccessKey(context.Context, string, string) error
 	DeleteAccessKeysByUserID(context.Context, string) error
+	UpdateAccessKeyLastUsed(context.Context, string) error
 }
 
 func (s *Service) GetAccessKeys(ctx context.Context, userId string) ([]model.AccessKey, error) {
@@ -56,6 +57,7 @@ func (s *Service) GetAccessKey(ctx context.Context, key string) (model.AccessKey
 		return model.AccessKey{}, ErrAccessKeyExpired
 	}
 
+	_ = s.Store.UpdateAccessKeyLastUsed(ctx, accessKey.ID)
 	return accessKey, nil
 }
 

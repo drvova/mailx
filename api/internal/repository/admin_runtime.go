@@ -110,3 +110,45 @@ func (d *Database) AdminGetRecentAliases(ctx context.Context, limit int) ([]mode
 	d.Client.Order("created_at desc").Limit(limit).Find(&aliases)
 	return aliases, nil
 }
+
+func (d *Database) AdminGetAliasForwardStats(ctx context.Context, days int) ([]model.AliasForwardStats, error) {
+	cutoff := time.Now().AddDate(0, 0, -days)
+	type row struct {
+		AliasID   string
+		AliasName string
+		UserEmail string
+		Count     int64
+		Type      int
+	}
+	var rows []row
+	d.Client.Model(&model.Message{}).
+		Select("messages.alias_id, aliases.name as alias_name, users.email as user_email, messages.type, count(*) as count").
+		Joins("join aliases on aliases.id = messages.alias_id").
+		Joins("join users on users.id = messages.user_id").
+		Where("messages.created_at >= ?", cutoff).
+		Group("messages.alias_id, aliases.name, users.email, messages.type").
+		Order("count desc").Limit(200).Scan(&rows)
+	result := map[string]*model.AliasForwardStats{}
+	for _, r := range rows {
+		s, ok := result[r.AliasID]
+		if !ok {
+			s = &model.AliasForwardStats{AliasID: r.AliasID, AliasName: r.AliasName, UserEmail: r.UserEmail}
+			result[r.AliasID] = s
+		}
+		switch r.Type {
+		case 0:
+			s.Forwards = r.Count
+		case 1:
+			s.Blocks = r.Count
+		case 2:
+			s.Replies = r.Count
+		case 3:
+			s.Sends = r.Count
+		}
+	}
+	var stats []model.AliasForwardStats
+	for _, s := range result {
+		stats = append(stats, *s)
+	}
+	return stats, nil
+}

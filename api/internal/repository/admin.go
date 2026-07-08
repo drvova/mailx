@@ -238,7 +238,7 @@ func (d *Database) AdminDeleteCredential(ctx context.Context, credID string) err
 	return d.Client.Where("id = ?", credID).Delete(&model.Credential{}).Error
 }
 
-func (d *Database) AdminUpdateSubscription(ctx context.Context, userID string, tier string, isActive bool, activeUntil string) error {
+func (d *Database) AdminUpdateSubscription(ctx context.Context, userID string, tier string, isActive bool, activeUntil string, adminEmail string) error {
 	updates := map[string]interface{}{}
 	if tier != "" {
 		updates["tier"] = tier
@@ -767,6 +767,18 @@ func (d *Database) AdminGetSubscriptionStats(ctx context.Context) (active, expir
 	return
 }
 
+func (d *Database) AdminLogSubscriptionChange(ctx context.Context, change model.SubscriptionChange) error {
+	return d.Client.Create(&change).Error
+}
+
+func (d *Database) AdminGetSubscriptionChanges(ctx context.Context, limit, offset int) ([]model.SubscriptionChange, int64, error) {
+	var changes []model.SubscriptionChange
+	var total int64
+	d.Client.Model(&model.SubscriptionChange{}).Count(&total)
+	err := d.Client.Order("created_at desc").Limit(limit).Offset(offset).Find(&changes).Error
+	return changes, total, err
+}
+
 func (d *Database) AdminGetDailyActivity(ctx context.Context, days int) ([]model.DailyStats, error) {
 	var results []model.DailyStats
 	start := time.Now().AddDate(0, 0, -days)
@@ -895,6 +907,10 @@ func (d *Database) AdminExportUserData(ctx context.Context, userID string) (*mod
 	var settings model.Settings
 	d.Client.Where("user_id = ?", userID).First(&settings)
 	return &user, &sub, aliases, domains, recipients, keys, &settings, nil
+}
+
+func (d *Database) AdminBulkDeleteSessions(ctx context.Context, sessionIDs []string) error {
+	return d.Client.Where("id IN ?", sessionIDs).Delete(&model.Session{}).Error
 }
 
 func (d *Database) AdminPurgeExpiredSessions(ctx context.Context) (int64, error) {

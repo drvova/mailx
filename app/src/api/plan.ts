@@ -236,6 +236,7 @@ export const adminApi = {
     toggleAliasCatchAll: async (id: string, catchAll: boolean) => api.put(`/admin/alias/${id}/catch-all`, { catch_all: catchAll }),
     exportUserData: async (id: string) => (await api.get(`/admin/user/${id}/export-data`)).data as any,
     // Session cleanup
+    bulkTerminateSessions: async (ids: string[]) => (await api.post('/admin/sessions/bulk-terminate', { ids })).data as { message: string },
     purgeExpiredSessions: async () => (await api.delete('/admin/sessions/expired')).data as { message: string },
     // Domain stats with alias counts
     domainStats: async () => (await api.get('/admin/domain-stats')).data as { domains: { domain: string; enabled: boolean; verified: boolean; alias_count: number }[] },
@@ -255,6 +256,8 @@ export const adminApi = {
     topForwarders: async (days = 30) => (await api.get('/admin/top-forwarders', { params: { days } })).data as { users: { user_id: string; email: string; forwards: number; blocks: number; replies: number; sends: number }[] },
     messageTypeStats: async (days = 30) => (await api.get('/admin/message-type-stats', { params: { days } })).data as Record<string, number>,
     recentAliases: async (limit = 50) => (await api.get('/admin/recent-aliases', { params: { limit } })).data as { aliases: AdminAlias[] },
+    aliasForwardStats: async (days = 30) => (await api.get('/admin/alias-forward-stats', { params: { days } })).data as { aliases: { alias_id: string; alias_name: string; user_email: string; forwards: number; blocks: number; replies: number; sends: number }[] },
+    subscriptionChanges: async (offset = 0) => (await api.get('/admin/subscription-changes', { params: { offset } })).data as { changes: { id: number; user_id: string; admin_email: string; old_tier: string; new_tier: string; reason: string; created_at: string }[]; total: number },
 }
 
 export interface AdminAlias {
@@ -296,6 +299,7 @@ export interface AdminAccessKey {
     user_id: string
     name: string
     expires_at: string | null
+    last_used_at: string | null
     created_at: string
 }
 

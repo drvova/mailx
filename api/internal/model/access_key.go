@@ -20,6 +20,7 @@ type AccessKey struct {
 	TokenPlain *string    `gorm:"-" json:"-"`
 	Name       string     `json:"name"`
 	ExpiresAt  *time.Time `json:"expires_at"` // nullable
+	LastUsedAt *time.Time `json:"last_used_at"` // nullable
 }
 
 func (a *AccessKey) SetToken(token string) error {

@@ -36,7 +36,7 @@ type AdminService interface {
 	AdminForceLogout(context.Context, string) error
 	GetAllCredentialsAdmin(context.Context, int, int) ([]model.Credential, int64, error)
 	AdminDeleteCredential(context.Context, string) error
-	AdminUpdateSubscription(context.Context, string, string, bool, string) error
+	AdminUpdateSubscription(context.Context, string, string, bool, string, string) error
 	AdminBulkUpdateUsers(context.Context, []string, bool) error
 	GetAllInboxMessagesAdmin(context.Context, int, int) ([]model.InboxMessage, int64, error)
 	AdminDeleteInboxMessage(context.Context, uint) error
@@ -128,6 +128,10 @@ type AdminService interface {
 	AdminGetTopForwarders(context.Context, int) ([]model.UserForwardStats, error)
 	AdminGetMessageTypeStats(context.Context, int) (map[string]int64, error)
 	AdminGetRecentAliases(context.Context, int) ([]model.Alias, error)
+	AdminGetAliasForwardStats(context.Context, int) ([]model.AliasForwardStats, error)
+	AdminBulkDeleteSessions(context.Context, []string) error
+	AdminLogSubscriptionChange(context.Context, model.SubscriptionChange) error
+	AdminGetSubscriptionChanges(context.Context, int, int) ([]model.SubscriptionChange, int64, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -440,7 +444,9 @@ func (h *Handler) AdminUpdateSubscription(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
 	}
-	if err := h.Service.AdminUpdateSubscription(c.Context(), req.UserID, req.Tier, req.IsActive, req.ActiveUntil); err != nil {
+	adminEmail, _ := c.Locals("admin_email").(string)
+	if adminEmail == "" { adminEmail = "unknown" }
+	if err := h.Service.AdminUpdateSubscription(c.Context(), req.UserID, req.Tier, req.IsActive, req.ActiveUntil, adminEmail); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to update subscription"})
 	}
 	return c.JSON(fiber.Map{"message": "Subscription updated"})
@@ -1716,6 +1722,37 @@ func (h *Handler) AdminGetRecentAliases(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch recent aliases"})
 	}
 	return c.JSON(fiber.Map{"aliases": aliases})
+}
+
+func (h *Handler) AdminGetAliasForwardStats(c *fiber.Ctx) error {
+	days := c.QueryInt("days", 30)
+	stats, err := h.Service.AdminGetAliasForwardStats(c.Context(), days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch alias stats"})
+	}
+	return c.JSON(fiber.Map{"aliases": stats})
+}
+
+func (h *Handler) AdminBulkDeleteSessions(c *fiber.Ctx) error {
+	var req AdminBulkIDsReq
+	if err := c.BodyParser(&req); err != nil || len(req.IDs) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "ids required"})
+	}
+	if err := h.Service.AdminBulkDeleteSessions(c.Context(), req.IDs); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk terminate sessions"})
+	}
+	h.audit(c, "bulk_terminate_sessions", fmt.Sprintf("%d sessions", len(req.IDs)), "")
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d sessions terminated", len(req.IDs))})
+}
+
+func (h *Handler) AdminGetSubscriptionChanges(c *fiber.Ctx) error {
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	changes, total, err := h.Service.AdminGetSubscriptionChanges(c.Context(), limit, offset)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch changes"})
+	}
+	return c.JSON(fiber.Map{"changes": changes, "total": total})
 }
 
 func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {

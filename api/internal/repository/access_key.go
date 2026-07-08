@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"ivpn.net/email/api/internal/model"
 )
@@ -37,4 +38,9 @@ func (d *Database) DeleteAccessKey(ctx context.Context, accessKeyID string, user
 
 func (d *Database) DeleteAccessKeysByUserID(ctx context.Context, userId string) error {
 	return d.Client.Where("user_id = ?", userId).Delete(&model.AccessKey{}).Error
+}
+
+func (d *Database) UpdateAccessKeyLastUsed(ctx context.Context, keyID string) error {
+	now := time.Now()
+	return d.Client.Model(&model.AccessKey{}).Where("id = ?", keyID).Update("last_used_at", &now).Error
 }

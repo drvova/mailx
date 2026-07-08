@@ -44,6 +44,7 @@
                 <li><button :class="tab === 'system' ? 'font-bold border-b-2' : ''" @click="tab = 'system'" role="tab">System</button></li>
                 <li><button :class="tab === 'logs' ? 'font-bold border-b-2' : ''" @click="tab = 'logs'" role="tab">Logs</button></li>
                 <li><button :class="tab === 'audit' ? 'font-bold border-b-2' : ''" @click="tab = 'audit'" role="tab">Audit</button></li>
+                <li><button :class="tab === 'subchanges' ? 'font-bold border-b-2' : ''" @click="tab = 'subchanges'" role="tab">Sub Changes</button></li>
             </ul>
 
             <!-- STATS -->
@@ -133,6 +134,24 @@
                                         <td>{{ u.blocks }}</td>
                                         <td>{{ u.replies }}</td>
                                         <td>{{ u.sends }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div v-if="aliasForwardStats.length" class="mt-4">
+                        <h3 class="font-bold mb-2">Top Aliases (30d)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="table text-sm">
+                                <thead><tr><th>Alias</th><th>User</th><th>Forwards</th><th>Blocks</th><th>Replies</th><th>Sends</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="a in aliasForwardStats.slice(0,20)" :key="a.alias_id">
+                                        <td class="max-w-[200px] truncate">{{ a.alias_name }}</td>
+                                        <td class="max-w-[150px] truncate text-xs">{{ a.user_email }}</td>
+                                        <td class="font-bold">{{ a.forwards }}</td>
+                                        <td>{{ a.blocks }}</td>
+                                        <td>{{ a.replies }}</td>
+                                        <td>{{ a.sends }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -374,7 +393,10 @@
             <div v-if="tab === 'plans'" role="tabpanel">
                 <div class="flex justify-between items-center mb-4">
                     <h3>Plans</h3>
-                    <button class="cta" @click="showForm = !showForm" v-if="!showForm">Create Plan</button>
+                    <div class="flex gap-2">
+                        <button class="cta cta-tertiary text-sm" @click="comparePlans">Compare Plans</button>
+                        <button class="cta" @click="showForm = !showForm" v-if="!showForm">Create Plan</button>
+                    </div>
                 </div>
                 <div v-if="showForm" class="card-secondary mb-6">
                     <h4>{{ editing ? 'Edit Plan' : 'New Plan' }}</h4>
@@ -448,13 +470,15 @@
             <!-- SESSIONS -->
             <div v-if="tab === 'sessions'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
+                    <button class="cta cta-tertiary text-sm" @click="bulkTerminateSessions">Bulk Terminate Selected</button>
                     <button class="cta cta-tertiary text-sm text-red-500" @click="purgeSessions">Purge Expired</button>
                 </div>
                 <div v-if="sessions.length" class="overflow-x-auto">
                     <table class="table">
-                        <thead><tr><th>Token</th><th>Expires</th><th>Created</th><th></th></tr></thead>
+                        <thead><tr><th><input type="checkbox" @click="toggleAllSessions($event)" /></th><th>Token</th><th>Expires</th><th>Created</th><th></th></tr></thead>
                         <tbody>
                             <tr v-for="s in sessions" :key="s.id">
+                                <td><input type="checkbox" v-model="(s as any)._selected" /></td>
                                 <td class="text-xs text-gray-500 font-mono">{{ s.token.slice(0,16) }}...</td>
                                 <td>{{ formatDate(s.expires_at) }}</td>
                                 <td>{{ formatDate(s.created_at) }}</td>
@@ -772,6 +796,30 @@
                 </div>
                 <SkeletonRows v-else :rows="5" />
             </div>
+
+            <!-- SUB CHANGES -->
+            <div v-if="tab === 'subchanges'" role="tabpanel">
+                <div v-if="subChanges.length" class="overflow-x-auto">
+                    <table class="table">
+                        <thead><tr><th>User</th><th>Admin</th><th>Old Tier</th><th>New Tier</th><th>Date</th></tr></thead>
+                        <tbody>
+                            <tr v-for="c in subChanges" :key="c.id">
+                                <td class="text-xs">{{ c.user_id.slice(0,8) }}...</td>
+                                <td>{{ c.admin_email }}</td>
+                                <td>{{ c.old_tier }}</td>
+                                <td><span class="badge">{{ c.new_tier }}</span></td>
+                                <td>{{ formatDate(c.created_at) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div v-if="subChangesTotal > 50" class="flex items-center justify-between mt-4">
+                        <button class="cta cta-tertiary text-sm" :disabled="subChangesOffset === 0" @click="subChangesOffset = Math.max(0, subChangesOffset - 50); fetchSubChanges()">Prev</button>
+                        <span class="text-sm text-gray-500">{{ subChangesOffset + 1 }}-{{ Math.min(subChangesOffset + 50, subChangesTotal) }} of {{ subChangesTotal }}</span>
+                        <button class="cta cta-tertiary text-sm" :disabled="subChangesOffset + 50 >= subChangesTotal" @click="subChangesOffset += 50; fetchSubChanges()">Next</button>
+                    </div>
+                </div>
+                <SkeletonRows v-else :rows="5" />
+            </div>
         </div>
     </div>
 </template>
@@ -875,6 +923,7 @@ const editRecipient = async (r: AdminRecipient) => {
     if (!email || email === r.email) return
     try { await adminApi.updateRecipient(r.id, email); r.email = email } catch { /* */ } }
 const fetchAuditLog = async () => { try { const r = await adminApi.auditLog(auditOffset.value); auditEntries.value = r.entries; auditTotal.value = r.total } catch { /* */ } }
+const fetchSubChanges = async () => { try { const r = await adminApi.subscriptionChanges(subChangesOffset.value); subChanges.value = r.changes; subChangesTotal.value = r.total } catch { /* */ } }
 const viewSessionData = async (s: AdminSession) => { try { const d = await adminApi.sessionData(s.id); alert(JSON.stringify(d, null, 2)) } catch { alert('Unable to load session data') } }
 const viewLog = (log: AdminLog) => { logDetail.value = log }
 const deleteLog = async (log: AdminLog) => { if (!confirm('Delete this log entry?')) return; try { await adminApi.deleteLog(log.id); logs.value = logs.value.filter(x => x.id !== log.id) } catch { /* */ } }
@@ -1061,6 +1110,9 @@ const messages = ref<any[]>([])
 const auditEntries = ref<AdminAudit[]>([])
 const auditTotal = ref(0)
 const auditOffset = ref(0)
+const subChanges = ref<any[]>([])
+const subChangesTotal = ref(0)
+const subChangesOffset = ref(0)
 const logFrom = ref('')
 const logTo = ref('')
 let inboxSearchTimer: any
@@ -1113,17 +1165,26 @@ const compareData = ref<any>(null)
 const recipDomains = ref<Record<string, number> | null>(null)
 const topForwarders = ref<any[]>([])
 const msgTypeBreakdown = ref<Record<string, number> | null>(null)
+const aliasForwardStats = ref<any[]>([])
 const fetchSubStats = async () => { try { subStats.value = await adminApi.subscriptionStats() } catch { /* */ } }
 const fetchDailyActivity = async () => { try { const r = await adminApi.dailyActivity(); dailyActivity.value = r.activity } catch { /* */ } }
 const fetchPlanDist = async () => { try { planDist.value = await adminApi.planDistribution() } catch { /* */ } }
 const fetchDomainHealth = async () => { try { domHealth.value = await adminApi.domainHealth() } catch { /* */ } }
 const fetchInactiveUsers = async () => { try { const r = await adminApi.inactiveUsers(inactiveDays.value); inactiveUsers.value = r.users } catch { /* */ } }
+const toggleAllSessions = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; sessions.value.forEach(s => { (s as any)._selected = checked }) }
+const bulkTerminateSessions = async () => {
+    const selected = sessions.value.filter(s => (s as any)._selected)
+    if (!selected.length) { alert('Select sessions first'); return }
+    if (!confirm(`Terminate ${selected.length} sessions?`)) return
+    try { await adminApi.bulkTerminateSessions(selected.map(s => s.id)); sessions.value = sessions.value.filter(s => !selected.includes(s)) } catch {}
+}
 const purgeSessions = async () => { if (!confirm('Purge all expired sessions?')) return; try { const r = await adminApi.purgeExpiredSessions(); alert(r.message); fetchSessions() } catch { /* */ } }
 const fetchDomainStats = async () => { try { const r = await adminApi.domainStats(); domainStatsData.value = r.domains } catch { /* */ } }
 const fetchRuntime = async () => { try { runtimeInfo.value = await adminApi.runtimeStats() } catch { /* */ } }
 const fetchRecipientDomains = async () => { try { recipDomains.value = await adminApi.recipientDomains() } catch { /* */ } }
 const fetchTopForwarders = async () => { try { const r = await adminApi.topForwarders(); topForwarders.value = r.users } catch { /* */ } }
 const fetchMsgTypeStats = async () => { try { msgTypeBreakdown.value = await adminApi.messageTypeStats() } catch { /* */ } }
+const fetchAliasForwardStats = async () => { try { const r = await adminApi.aliasForwardStats(); aliasForwardStats.value = r.aliases } catch { /* */ } }
 const viewPlan = (p: Plan) => { planDetail.value = p }
 const compareUsers = async () => {
     const id1 = prompt('Enter first user ID:')
@@ -1131,6 +1192,17 @@ const compareUsers = async () => {
     const id2 = prompt('Enter second user ID:')
     if (!id2) return
     try { compareData.value = await adminApi.compareUsers(id1, id2) } catch { alert('Unable to compare') } }
+const comparePlans = () => {
+    const name1 = prompt('First plan name:')
+    if (!name1) return
+    const name2 = prompt('Second plan name:')
+    if (!name2) return
+    const p1 = plans.value.find(p => p.name === name1)
+    const p2 = plans.value.find(p => p.name === name2)
+    if (!p1 || !p2) { alert('Plan(s) not found'); return }
+    const fmt = (p: Plan) => `--- ${p.display_name} ---\nPrice: ${p.price_cents/100} ${p.currency}/${p.interval}\nAliases/day: ${p.max_daily_aliases}\nRecipients: ${p.max_recipients}\nCredentials: ${p.max_credentials}\nSend/Reply: ${p.max_daily_send_reply}\nSessions: ${p.max_sessions}`
+    alert(`${fmt(p1)}\n\n${fmt(p2)}`)
+}
 const formatUptime = (s: number) => { const d = Math.floor(s/86400); const h = Math.floor((s%86400)/3600); const m = Math.floor((s%3600)/60); return d ? `${d}d ${h}h` : `${h}h ${m}m` }
 const bulkToggleRecipients = async (active: boolean) => {
     const selected = recipients.value.filter(r => (r as any)._selected)
@@ -1153,5 +1225,5 @@ const globalSearch = async () => { if (!globalQuery.value) return; try { globalR
 const toggleCatchAll = async (a: AdminAlias) => { try { await adminApi.toggleAliasCatchAll(a.id, !a.catch_all); a.catch_all = !a.catch_all } catch { /* */ } }
 const exportUserDataFull = async (u: AdminUser) => { try { const d = await adminApi.exportUserData(u.id); alert(JSON.stringify(d, null, 2)) } catch { alert('Unable to export') } }
 
-onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats() })
+onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats() })
 </script>

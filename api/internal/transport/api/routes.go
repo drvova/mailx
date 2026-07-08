@@ -318,6 +318,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/user/:id/export-data", h.AdminExportUserData)
 
 	// Session cleanup and domain stats
+	admin.Post("/sessions/bulk-terminate", h.AdminBulkDeleteSessions)
 	admin.Delete("/sessions/expired", h.AdminPurgeExpiredSessions)
 	admin.Get("/domain-stats", h.AdminGetDomainWithAliasCounts)
 
@@ -337,6 +338,9 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/top-forwarders", h.AdminGetTopForwarders)
 	admin.Get("/message-type-stats", h.AdminGetMessageTypeStats)
 	admin.Get("/recent-aliases", h.AdminGetRecentAliases)
+	admin.Get("/alias-forward-stats", h.AdminGetAliasForwardStats)
+
+	admin.Get("/subscription-changes", h.AdminGetSubscriptionChanges)
 
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)

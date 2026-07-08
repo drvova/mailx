@@ -55,7 +55,7 @@ type AdminStore interface {
 	AdminDeleteSessionsByUserID(context.Context, string) error
 	GetAllCredentialsAdmin(context.Context, int, int) ([]model.Credential, int64, error)
 	AdminDeleteCredential(context.Context, string) error
-	AdminUpdateSubscription(context.Context, string, string, bool, string) error
+	AdminUpdateSubscription(context.Context, string, string, bool, string, string) error
 	GetSuspendedUserCount(context.Context) (int64, error)
 	GetAdminCount(context.Context) (int64, error)
 	AdminBulkUpdateUsers(context.Context, []string, bool) error
@@ -142,6 +142,7 @@ type AdminStore interface {
 	AdminGetInactiveUsers(context.Context, int) ([]model.User, int64, error)
 	AdminToggleAliasCatchAll(context.Context, string, bool) error
 	AdminExportUserData(context.Context, string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, []model.AccessKey, *model.Settings, error)
+	AdminBulkDeleteSessions(context.Context, []string) error
 	AdminPurgeExpiredSessions(context.Context) (int64, error)
 	AdminGetDomainWithAliasCounts(context.Context) ([]model.DomainStats, error)
 	AdminBulkCreateAliases(context.Context, []model.Alias) error
@@ -153,6 +154,9 @@ type AdminStore interface {
 	AdminGetTopForwarders(context.Context, int) ([]model.UserForwardStats, error)
 	AdminGetMessageTypeStats(context.Context, int) (map[string]int64, error)
 	AdminGetRecentAliases(context.Context, int) ([]model.Alias, error)
+	AdminGetAliasForwardStats(context.Context, int) ([]model.AliasForwardStats, error)
+	AdminLogSubscriptionChange(context.Context, model.SubscriptionChange) error
+	AdminGetSubscriptionChanges(context.Context, int, int) ([]model.SubscriptionChange, int64, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -304,8 +308,25 @@ func (s *Service) AdminDeleteCredential(ctx context.Context, credID string) erro
 	return s.Store.AdminDeleteCredential(ctx, credID)
 }
 
-func (s *Service) AdminUpdateSubscription(ctx context.Context, userID string, tier string, isActive bool, activeUntil string) error {
-	return s.Store.AdminUpdateSubscription(ctx, userID, tier, isActive, activeUntil)
+func (s *Service) AdminUpdateSubscription(ctx context.Context, userID string, tier string, isActive bool, activeUntil string, adminEmail string) error {
+	oldSub, err := s.Store.GetSubscription(ctx, userID)
+	oldTier := ""
+	if err == nil {
+		oldTier = oldSub.Tier
+	}
+	if err := s.Store.AdminUpdateSubscription(ctx, userID, tier, isActive, activeUntil, adminEmail); err != nil {
+		return err
+	}
+	if tier != "" && tier != oldTier {
+		s.Store.AdminLogSubscriptionChange(ctx, model.SubscriptionChange{
+			UserID:     userID,
+			AdminEmail: adminEmail,
+			OldTier:    oldTier,
+			NewTier:    tier,
+			Reason:     "admin override",
+		})
+	}
+	return nil
 }
 
 func (s *Service) AdminBulkUpdateUsers(ctx context.Context, userIDs []string, isActive bool) error {
@@ -682,6 +703,10 @@ func (s *Service) AdminExportUserData(ctx context.Context, userID string) (*mode
 	return s.Store.AdminExportUserData(ctx, userID)
 }
 
+func (s *Service) AdminBulkDeleteSessions(ctx context.Context, sessionIDs []string) error {
+	return s.Store.AdminBulkDeleteSessions(ctx, sessionIDs)
+}
+
 func (s *Service) AdminPurgeExpiredSessions(ctx context.Context) (int64, error) {
 	return s.Store.AdminPurgeExpiredSessions(ctx)
 }
@@ -727,4 +752,18 @@ func (s *Service) AdminGetMessageTypeStats(ctx context.Context, days int) (map[s
 func (s *Service) AdminGetRecentAliases(ctx context.Context, limit int) ([]model.Alias, error) {
 	if limit <= 0 || limit > 100 { limit = 50 }
 	return s.Store.AdminGetRecentAliases(ctx, limit)
+}
+
+func (s *Service) AdminLogSubscriptionChange(ctx context.Context, change model.SubscriptionChange) error {
+	return s.Store.AdminLogSubscriptionChange(ctx, change)
+}
+
+func (s *Service) AdminGetSubscriptionChanges(ctx context.Context, limit, offset int) ([]model.SubscriptionChange, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.AdminGetSubscriptionChanges(ctx, limit, offset)
+}
+
+func (s *Service) AdminGetAliasForwardStats(ctx context.Context, days int) ([]model.AliasForwardStats, error) {
+	if days <= 0 || days > 90 { days = 30 }
+	return s.Store.AdminGetAliasForwardStats(ctx, days)
 }
