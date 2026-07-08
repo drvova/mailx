@@ -146,6 +146,25 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/users/search", h.AdminSearchUsers)
 	admin.Get("/user/:id/detail", h.AdminGetUserDetail)
 
+	// Admin access key moderation
+	admin.Get("/accesskeys", h.AdminGetAccessKeys)
+	admin.Delete("/accesskey/:id", h.AdminDeleteAccessKey)
+
+	// Admin session moderation
+	admin.Get("/sessions", h.AdminGetSessions)
+	admin.Delete("/session/:id", h.AdminDeleteSession)
+	admin.Delete("/user/:id/sessions", h.AdminForceLogout)
+
+	// Admin credential (passkey) moderation
+	admin.Get("/credentials", h.AdminGetCredentials)
+	admin.Delete("/credential/:id", h.AdminDeleteCredential)
+
+	// Admin subscription override
+	admin.Put("/subscription", h.AdminUpdateSubscription)
+
+	// Admin bulk operations
+	admin.Post("/users/bulk", h.AdminBulkUpdateUsers)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

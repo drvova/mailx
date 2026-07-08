@@ -80,6 +80,20 @@ export const adminApi = {
     // User search + detail
     searchUsers: async (search: string) => (await api.get('/admin/users/search', { params: { search } })).data as { users: AdminUser[]; total: number },
     userDetail: async (id: string) => (await api.get(`/admin/user/${id}/detail`)).data as { user: AdminUser; subscription: any; aliases: AdminAlias[]; recipients: AdminRecipient[]; domains: AdminDomain[] },
+    // Access key moderation
+    accessKeys: async () => (await api.get('/admin/accesskeys')).data as { keys: AdminAccessKey[]; total: number },
+    deleteAccessKey: async (id: string) => api.delete(`/admin/accesskey/${id}`),
+    // Session moderation
+    sessions: async () => (await api.get('/admin/sessions')).data as { sessions: AdminSession[]; total: number },
+    deleteSession: async (id: string) => api.delete(`/admin/session/${id}`),
+    forceLogout: async (userId: string) => api.delete(`/admin/user/${userId}/sessions`),
+    // Credential moderation
+    credentials: async () => (await api.get('/admin/credentials')).data as { credentials: AdminCredential[]; total: number },
+    deleteCredential: async (id: string) => api.delete(`/admin/credential/${id}`),
+    // Subscription override
+    updateSubscription: async (data: { user_id: string; tier?: string; is_active: boolean; active_until?: string }) => api.put('/admin/subscription', data),
+    // Bulk operations
+    bulkUpdateUsers: async (userIds: string[], isActive: boolean) => api.post('/admin/users/bulk', { user_ids: userIds, is_active: isActive }),
 }
 
 export interface AdminAlias {
@@ -109,5 +123,26 @@ export interface AdminRecipient {
     user_id: string
     is_active: boolean
     pgp_enabled: boolean
+    created_at: string
+}
+
+export interface AdminAccessKey {
+    id: string
+    user_id: string
+    name: string
+    expires_at: string | null
+    created_at: string
+}
+
+export interface AdminSession {
+    id: string
+    token: string
+    expires_at: string
+    created_at: string
+}
+
+export interface AdminCredential {
+    id: string
+    user_id: string
     created_at: string
 }

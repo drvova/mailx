@@ -196,3 +196,71 @@ func (d *Database) AdminGetUserDetail(ctx context.Context, userID string) (model
 	d.Client.Where("user_id = ?", userID).Find(&domains)
 	return user, sub, aliases, recipients, domains, nil
 }
+
+func (d *Database) GetAllAccessKeysAdmin(ctx context.Context, limit, offset int) ([]model.AccessKey, int64, error) {
+	var keys []model.AccessKey
+	var total int64
+	d.Client.Model(&model.AccessKey{}).Count(&total)
+	err := d.Client.Order("created_at desc").Limit(limit).Offset(offset).Find(&keys).Error
+	return keys, total, err
+}
+
+func (d *Database) AdminDeleteAccessKey(ctx context.Context, keyID string) error {
+	return d.Client.Where("id = ?", keyID).Delete(&model.AccessKey{}).Error
+}
+
+func (d *Database) GetAllSessionsAdmin(ctx context.Context, limit, offset int) ([]model.Session, int64, error) {
+	var sessions []model.Session
+	var total int64
+	d.Client.Model(&model.Session{}).Count(&total)
+	err := d.Client.Order("created_at desc").Limit(limit).Offset(offset).Find(&sessions).Error
+	return sessions, total, err
+}
+
+func (d *Database) AdminDeleteSession(ctx context.Context, sessionID string) error {
+	return d.Client.Where("id = ?", sessionID).Delete(&model.Session{}).Error
+}
+
+func (d *Database) AdminDeleteSessionsByUserID(ctx context.Context, userID string) error {
+	return d.Client.Where("user_id = ?", userID).Delete(&model.Session{}).Error
+}
+
+func (d *Database) GetAllCredentialsAdmin(ctx context.Context, limit, offset int) ([]model.Credential, int64, error) {
+	var creds []model.Credential
+	var total int64
+	d.Client.Model(&model.Credential{}).Count(&total)
+	err := d.Client.Order("created_at desc").Limit(limit).Offset(offset).Find(&creds).Error
+	return creds, total, err
+}
+
+func (d *Database) AdminDeleteCredential(ctx context.Context, credID string) error {
+	return d.Client.Where("id = ?", credID).Delete(&model.Credential{}).Error
+}
+
+func (d *Database) AdminUpdateSubscription(ctx context.Context, userID string, tier string, isActive bool, activeUntil string) error {
+	updates := map[string]interface{}{}
+	if tier != "" {
+		updates["tier"] = tier
+	}
+	updates["is_active"] = isActive
+	if activeUntil != "" {
+		updates["active_until"] = activeUntil
+	}
+	return d.Client.Model(&model.Subscription{}).Where("user_id = ?", userID).Updates(updates).Error
+}
+
+func (d *Database) GetSuspendedUserCount(ctx context.Context) (int64, error) {
+	var count int64
+	err := d.Client.Model(&model.User{}).Where("is_active = ?", false).Count(&count).Error
+	return count, err
+}
+
+func (d *Database) GetAdminCount(ctx context.Context) (int64, error) {
+	var count int64
+	err := d.Client.Model(&model.User{}).Where("is_admin = ?", true).Count(&count).Error
+	return count, err
+}
+
+func (d *Database) AdminBulkUpdateUsers(ctx context.Context, userIDs []string, isActive bool) error {
+	return d.Client.Model(&model.User{}).Where("id IN ?", userIDs).Update("is_active", isActive).Error
+}

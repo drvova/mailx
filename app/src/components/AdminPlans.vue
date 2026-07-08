@@ -12,6 +12,9 @@
                 <li><button :class="tab === 'domains' ? 'font-bold border-b-2' : ''" @click="tab = 'domains'" role="tab">Domains</button></li>
                 <li><button :class="tab === 'recipients' ? 'font-bold border-b-2' : ''" @click="tab = 'recipients'" role="tab">Recipients</button></li>
                 <li><button :class="tab === 'plans' ? 'font-bold border-b-2' : ''" @click="tab = 'plans'" role="tab">Plans</button></li>
+                <li><button :class="tab === 'keys' ? 'font-bold border-b-2' : ''" @click="tab = 'keys'" role="tab">API Keys</button></li>
+                <li><button :class="tab === 'sessions' ? 'font-bold border-b-2' : ''" @click="tab = 'sessions'" role="tab">Sessions</button></li>
+                <li><button :class="tab === 'passkeys' ? 'font-bold border-b-2' : ''" @click="tab = 'passkeys'" role="tab">Passkeys</button></li>
                 <li><button :class="tab === 'logs' ? 'font-bold border-b-2' : ''" @click="tab = 'logs'" role="tab">Logs</button></li>
             </ul>
 
@@ -32,12 +35,14 @@
             <div v-if="tab === 'users'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
                     <input v-model="userSearch" placeholder="Search by email..." @input="searchUsersDeb" class="flex-1" />
+                    <button class="cta cta-tertiary text-sm" @click="bulkSuspend">Bulk Suspend Selected</button>
                 </div>
                 <div v-if="users.length" class="overflow-x-auto">
                     <table class="table">
-                        <thead><tr><th>Email</th><th>Active</th><th>Admin</th><th>Joined</th><th></th></tr></thead>
+                        <thead><tr><th><input type="checkbox" @click="toggleAllUsers($event)" /></th><th>Email</th><th>Active</th><th>Admin</th><th>Joined</th><th></th></tr></thead>
                         <tbody>
                             <tr v-for="u in users" :key="u.id">
+                                <td><input type="checkbox" v-model="(u as any)._selected" /></td>
                                 <td><button class="text-blue-500 hover:underline" @click="viewUser(u.id)">{{ u.email }}</button></td>
                                 <td><span :class="u.is_active ? 'badge badge-success' : 'badge badge-error'">{{ u.is_active ? 'Active' : 'Suspended' }}</span></td>
                                 <td><span :class="u.is_admin ? 'badge badge-success' : 'badge'">{{ u.is_admin ? 'Admin' : 'User' }}</span></td>
@@ -72,6 +77,10 @@
                                 <option value="">-- Select Plan --</option>
                                 <option v-for="p in plans" :key="p.id" :value="p.id">{{ p.display_name }} ({{ p.price_cents === 0 ? 'Free' : p.price_cents / 100 }})</option>
                             </select>
+                        </div>
+                        <div class="mb-4 flex gap-2">
+                            <button class="cta cta-tertiary text-sm" @click="forceLogout(userDetail.user.id)">Force Logout</button>
+                            <button class="cta cta-tertiary text-sm" @click="overrideSub(userDetail.user.id)">Override Subscription</button>
                         </div>
                         <h4 class="mb-2">Aliases ({{ userDetail.aliases.length }})</h4>
                         <div v-if="userDetail.aliases.length" class="overflow-x-auto mb-4">
@@ -208,6 +217,60 @@
                 <div v-else-if="!loadingPlans" class="card-empty"><h3>No plans yet</h3></div>
             </div>
 
+            <!-- API KEYS -->
+            <div v-if="tab === 'keys'" role="tabpanel">
+                <div v-if="accessKeys.length" class="overflow-x-auto">
+                    <table class="table">
+                        <thead><tr><th>Name</th><th>User ID</th><th>Expires</th><th>Created</th><th></th></tr></thead>
+                        <tbody>
+                            <tr v-for="k in accessKeys" :key="k.id">
+                                <td>{{ k.name }}</td>
+                                <td class="text-xs text-gray-500">{{ k.user_id.slice(0,8) }}...</td>
+                                <td>{{ k.expires_at ? formatDate(k.expires_at) : 'Never' }}</td>
+                                <td>{{ formatDate(k.created_at) }}</td>
+                                <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteAccessKey(k)">Revoke</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <SkeletonRows v-else :rows="5" />
+            </div>
+
+            <!-- SESSIONS -->
+            <div v-if="tab === 'sessions'" role="tabpanel">
+                <div v-if="sessions.length" class="overflow-x-auto">
+                    <table class="table">
+                        <thead><tr><th>Token</th><th>Expires</th><th>Created</th><th></th></tr></thead>
+                        <tbody>
+                            <tr v-for="s in sessions" :key="s.id">
+                                <td class="text-xs text-gray-500 font-mono">{{ s.token.slice(0,16) }}...</td>
+                                <td>{{ formatDate(s.expires_at) }}</td>
+                                <td>{{ formatDate(s.created_at) }}</td>
+                                <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteSession(s)">Terminate</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <SkeletonRows v-else :rows="5" />
+            </div>
+
+            <!-- PASSKEYS -->
+            <div v-if="tab === 'passkeys'" role="tabpanel">
+                <div v-if="credentials.length" class="overflow-x-auto">
+                    <table class="table">
+                        <thead><tr><th>User ID</th><th>Created</th><th></th></tr></thead>
+                        <tbody>
+                            <tr v-for="cr in credentials" :key="cr.id">
+                                <td class="text-xs text-gray-500">{{ cr.user_id.slice(0,8) }}...</td>
+                                <td>{{ formatDate(cr.created_at) }}</td>
+                                <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteCredential(cr)">Remove</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <SkeletonRows v-else :rows="5" />
+            </div>
+
             <!-- LOGS -->
             <div v-if="tab === 'logs'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
@@ -243,7 +306,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { planApi, adminApi, type Plan, type AdminUser, type AdminLog, type AdminAlias, type AdminDomain, type AdminRecipient, type SystemStats } from '../api/plan'
+import { planApi, adminApi, type Plan, type AdminUser, type AdminLog, type AdminAlias, type AdminDomain, type AdminRecipient, type AdminAccessKey, type AdminSession, type AdminCredential, type SystemStats } from '../api/plan'
 import SkeletonRows from '../components/SkeletonRows.vue'
 
 const tab = ref('stats')
@@ -254,6 +317,9 @@ const domains = ref<AdminDomain[]>([])
 const recipients = ref<AdminRecipient[]>([])
 const plans = ref<Plan[]>([])
 const logs = ref<AdminLog[]>([])
+const accessKeys = ref<AdminAccessKey[]>([])
+const sessions = ref<AdminSession[]>([])
+const credentials = ref<AdminCredential[]>([])
 const loadingPlans = ref(true)
 const deleting = ref('')
 const saving = ref(false)
@@ -281,6 +347,9 @@ const fetchRecipients = async () => { try { const r = await adminApi.recipients(
 const fetchPlans = async () => { loadingPlans.value = true; try { plans.value = await planApi.listAll() } catch { /* */ } finally { loadingPlans.value = false } }
 const fetchLogs = async () => { try { logs.value = await adminApi.logs() } catch { /* */ } }
 const fetchLogsFiltered = async () => { try { const r = await adminApi.logsFiltered(logFilter.value || undefined); logs.value = r.logs } catch { /* */ } }
+const fetchAccessKeys = async () => { try { const r = await adminApi.accessKeys(); accessKeys.value = r.keys } catch { /* */ } }
+const fetchSessions = async () => { try { const r = await adminApi.sessions(); sessions.value = r.sessions } catch { /* */ } }
+const fetchCredentials = async () => { try { const r = await adminApi.credentials(); credentials.value = r.credentials } catch { /* */ } }
 
 const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(async () => { if (!userSearch.value) { fetchUsers(); return }; try { const r = await adminApi.searchUsers(userSearch.value); users.value = r.users } catch { /* */ } }, 300) }
 const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(fetchAliases, 300) }
@@ -301,6 +370,25 @@ const deleteDomain = async (d: AdminDomain) => { if (!confirm(`Delete domain ${d
 
 const deleteRecipient = async (r: AdminRecipient) => { if (!confirm(`Delete recipient ${r.email}?`)) return; try { await adminApi.deleteRecipient(r.id); recipients.value = recipients.value.filter(x => x.id !== r.id) } catch { /* */ } }
 
+const deleteAccessKey = async (k: AdminAccessKey) => { if (!confirm(`Revoke key "${k.name}"?`)) return; try { await adminApi.deleteAccessKey(k.id); accessKeys.value = accessKeys.value.filter(x => x.id !== k.id) } catch { /* */ } }
+const deleteSession = async (s: AdminSession) => { if (!confirm('Terminate this session?')) return; try { await adminApi.deleteSession(s.id); sessions.value = sessions.value.filter(x => x.id !== s.id) } catch { /* */ } }
+const deleteCredential = async (cr: AdminCredential) => { if (!confirm('Remove this passkey?')) return; try { await adminApi.deleteCredential(cr.id); credentials.value = credentials.value.filter(x => x.id !== cr.id) } catch { /* */ } }
+const forceLogout = async (userId: string) => { if (!confirm('Terminate ALL sessions for this user?')) return; try { await adminApi.forceLogout(userId); alert('All sessions terminated') } catch { /* */ } }
+const overrideSub = async (userId: string) => {
+    const tier = prompt('Enter tier (e.g. pro, free, self-hosted):')
+    if (!tier) return
+    const activeUntil = prompt('Enter active_until date (YYYY-MM-DD) or leave empty:') || ''
+    try { await adminApi.updateSubscription({ user_id: userId, tier, is_active: true, active_until: activeUntil }); viewUser(userId) } catch { /* */ } }
+const bulkSuspend = async () => {
+    const selected = users.value.filter(u => (u as any)._selected)
+    if (!selected.length) { alert('Select users first'); return }
+    if (!confirm(`Suspend ${selected.length} users?`)) return
+    try { await adminApi.bulkUpdateUsers(selected.map(u => u.id), false); selected.forEach(u => u.is_active = false) } catch { /* */ } }
+const toggleAllUsers = (e: Event) => {
+    const checked = (e.target as HTMLInputElement).checked
+    users.value.forEach(u => { (u as any)._selected = checked })
+}
+
 const savePlan = async () => { saving.value = true; formError.value = ''; try { if (editing.value && form.value.id) { await planApi.update(form.value.id, form.value) } else { await planApi.create(form.value) }; resetForm(); await fetchPlans() } catch (err: any) { formError.value = err?.message || 'Failed' } finally { saving.value = false } }
 const editPlan = (plan: Plan) => { editing.value = true; showForm.value = true; form.value = { ...plan } }
 const deletePlan = async (plan: Plan) => { if (!confirm(`Deactivate "${plan.display_name}"?`)) return; deleting.value = plan.id; try { await planApi.delete(plan.id); await fetchPlans() } catch { /* */ } finally { deleting.value = '' } }
@@ -310,6 +398,9 @@ watch(tab, (t) => {
     if (t === 'aliases' && !aliases.value.length) fetchAliases()
     if (t === 'domains' && !domains.value.length) fetchDomains()
     if (t === 'recipients' && !recipients.value.length) fetchRecipients()
+    if (t === 'keys' && !accessKeys.value.length) fetchAccessKeys()
+    if (t === 'sessions' && !sessions.value.length) fetchSessions()
+    if (t === 'passkeys' && !credentials.value.length) fetchCredentials()
 })
 
 onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs() })

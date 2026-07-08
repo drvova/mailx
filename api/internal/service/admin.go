@@ -39,6 +39,17 @@ type AdminStore interface {
 	GetLogsFiltered(context.Context, string, int, int) ([]model.Log, int64, error)
 	AdminSearchUsers(context.Context, string, int, int) ([]model.User, int64, error)
 	AdminGetUserDetail(context.Context, string) (model.User, model.Subscription, []model.Alias, []model.Recipient, []model.Domain, error)
+	GetAllAccessKeysAdmin(context.Context, int, int) ([]model.AccessKey, int64, error)
+	AdminDeleteAccessKey(context.Context, string) error
+	GetAllSessionsAdmin(context.Context, int, int) ([]model.Session, int64, error)
+	AdminDeleteSession(context.Context, string) error
+	AdminDeleteSessionsByUserID(context.Context, string) error
+	GetAllCredentialsAdmin(context.Context, int, int) ([]model.Credential, int64, error)
+	AdminDeleteCredential(context.Context, string) error
+	AdminUpdateSubscription(context.Context, string, string, bool, string) error
+	GetSuspendedUserCount(context.Context) (int64, error)
+	GetAdminCount(context.Context) (int64, error)
+	AdminBulkUpdateUsers(context.Context, []string, bool) error
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -145,4 +156,43 @@ func (s *Service) AdminSearchUsers(ctx context.Context, search string, limit, of
 
 func (s *Service) AdminGetUserDetail(ctx context.Context, userID string) (model.User, model.Subscription, []model.Alias, []model.Recipient, []model.Domain, error) {
 	return s.Store.AdminGetUserDetail(ctx, userID)
+}
+
+func (s *Service) GetAllAccessKeysAdmin(ctx context.Context, limit, offset int) ([]model.AccessKey, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.GetAllAccessKeysAdmin(ctx, limit, offset)
+}
+
+func (s *Service) AdminDeleteAccessKey(ctx context.Context, keyID string) error {
+	return s.Store.AdminDeleteAccessKey(ctx, keyID)
+}
+
+func (s *Service) GetAllSessionsAdmin(ctx context.Context, limit, offset int) ([]model.Session, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.GetAllSessionsAdmin(ctx, limit, offset)
+}
+
+func (s *Service) AdminDeleteSession(ctx context.Context, sessionID string) error {
+	return s.Store.AdminDeleteSession(ctx, sessionID)
+}
+
+func (s *Service) AdminForceLogout(ctx context.Context, userID string) error {
+	return s.Store.AdminDeleteSessionsByUserID(ctx, userID)
+}
+
+func (s *Service) GetAllCredentialsAdmin(ctx context.Context, limit, offset int) ([]model.Credential, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.GetAllCredentialsAdmin(ctx, limit, offset)
+}
+
+func (s *Service) AdminDeleteCredential(ctx context.Context, credID string) error {
+	return s.Store.AdminDeleteCredential(ctx, credID)
+}
+
+func (s *Service) AdminUpdateSubscription(ctx context.Context, userID string, tier string, isActive bool, activeUntil string) error {
+	return s.Store.AdminUpdateSubscription(ctx, userID, tier, isActive, activeUntil)
+}
+
+func (s *Service) AdminBulkUpdateUsers(ctx context.Context, userIDs []string, isActive bool) error {
+	return s.Store.AdminBulkUpdateUsers(ctx, userIDs, isActive)
 }

@@ -25,6 +25,15 @@ type AdminService interface {
 	GetLogsFiltered(context.Context, string, int, int) ([]model.Log, int64, error)
 	AdminSearchUsers(context.Context, string, int, int) ([]model.User, int64, error)
 	AdminGetUserDetail(context.Context, string) (model.User, model.Subscription, []model.Alias, []model.Recipient, []model.Domain, error)
+	GetAllAccessKeysAdmin(context.Context, int, int) ([]model.AccessKey, int64, error)
+	AdminDeleteAccessKey(context.Context, string) error
+	GetAllSessionsAdmin(context.Context, int, int) ([]model.Session, int64, error)
+	AdminDeleteSession(context.Context, string) error
+	AdminForceLogout(context.Context, string) error
+	GetAllCredentialsAdmin(context.Context, int, int) ([]model.Credential, int64, error)
+	AdminDeleteCredential(context.Context, string) error
+	AdminUpdateSubscription(context.Context, string, string, bool, string) error
+	AdminBulkUpdateUsers(context.Context, []string, bool) error
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -248,4 +257,112 @@ func (h *Handler) AdminGetUserDetail(c *fiber.Ctx) error {
 		"recipients": recipients,
 		"domains":    domains,
 	})
+}
+
+func (h *Handler) AdminGetAccessKeys(c *fiber.Ctx) error {
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	keys, total, err := h.Service.GetAllAccessKeysAdmin(c.Context(), limit, offset)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch access keys"})
+	}
+	return c.JSON(fiber.Map{"keys": keys, "total": total})
+}
+
+func (h *Handler) AdminDeleteAccessKey(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Key ID required"})
+	}
+	if err := h.Service.AdminDeleteAccessKey(c.Context(), id); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to delete key"})
+	}
+	return c.JSON(fiber.Map{"message": "Key revoked"})
+}
+
+func (h *Handler) AdminGetSessions(c *fiber.Ctx) error {
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	sessions, total, err := h.Service.GetAllSessionsAdmin(c.Context(), limit, offset)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch sessions"})
+	}
+	return c.JSON(fiber.Map{"sessions": sessions, "total": total})
+}
+
+func (h *Handler) AdminDeleteSession(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Session ID required"})
+	}
+	if err := h.Service.AdminDeleteSession(c.Context(), id); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to delete session"})
+	}
+	return c.JSON(fiber.Map{"message": "Session terminated"})
+}
+
+func (h *Handler) AdminForceLogout(c *fiber.Ctx) error {
+	userID := c.Params("id")
+	if userID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "User ID required"})
+	}
+	if err := h.Service.AdminForceLogout(c.Context(), userID); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to force logout"})
+	}
+	return c.JSON(fiber.Map{"message": "All sessions terminated"})
+}
+
+func (h *Handler) AdminGetCredentials(c *fiber.Ctx) error {
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	creds, total, err := h.Service.GetAllCredentialsAdmin(c.Context(), limit, offset)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch credentials"})
+	}
+	return c.JSON(fiber.Map{"credentials": creds, "total": total})
+}
+
+func (h *Handler) AdminDeleteCredential(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Credential ID required"})
+	}
+	if err := h.Service.AdminDeleteCredential(c.Context(), id); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to delete credential"})
+	}
+	return c.JSON(fiber.Map{"message": "Passkey removed"})
+}
+
+type AdminUpdateSubReq struct {
+	UserID      string `json:"user_id" validate:"required,uuid"`
+	Tier        string `json:"tier"`
+	IsActive    bool   `json:"is_active"`
+	ActiveUntil string `json:"active_until"`
+}
+
+func (h *Handler) AdminUpdateSubscription(c *fiber.Ctx) error {
+	var req AdminUpdateSubReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	if err := h.Service.AdminUpdateSubscription(c.Context(), req.UserID, req.Tier, req.IsActive, req.ActiveUntil); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to update subscription"})
+	}
+	return c.JSON(fiber.Map{"message": "Subscription updated"})
+}
+
+type AdminBulkReq struct {
+	UserIDs  []string `json:"user_ids" validate:"required"`
+	IsActive bool     `json:"is_active"`
+}
+
+func (h *Handler) AdminBulkUpdateUsers(c *fiber.Ctx) error {
+	var req AdminBulkReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	if err := h.Service.AdminBulkUpdateUsers(c.Context(), req.UserIDs, req.IsActive); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk update"})
+	}
+	return c.JSON(fiber.Map{"message": "Users updated"})
 }
