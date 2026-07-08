@@ -60,6 +60,17 @@ const validatePassword = () => {
 
     if (!password.value || !passwordConfirm.value) {
         passwordError.value = 'Please fill required fields'
+        return !passwordError.value
+    }
+
+    if (password.value.length < 12) {
+        passwordError.value = 'Password must be 12+ characters'
+        return !passwordError.value
+    }
+
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[-_+=~!@#$%^&*(),;.?":{}|<>])/.test(password.value)) {
+        passwordError.value = 'Password must contain uppercase, lowercase, number, and special character'
+        return !passwordError.value
     }
 
     if (password.value !== passwordConfirm.value) {

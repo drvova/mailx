@@ -24,7 +24,8 @@
                             <input
                                 @change="updateRecipient"
                                 v-bind:checked="pgp_inline"
-                                v-bind:disabled="!recipient.pgp_key"
+                                v-bind:disabled="!recipient.pgp_key || saving"
+                                :aria-busy="saving"
                                 type="checkbox"
                             >
                         </div>
@@ -50,8 +51,10 @@ const recipient = ref(props.recipient)
 const pgp_inline = ref(props.recipient.pgp_inline)
 const error = ref('')
 const success = ref('')
+const saving = ref(false)
 
 const updateRecipient = async () => {
+    if (saving.value) return
     // Toggle pgp_inline option
     pgp_inline.value = !pgp_inline.value
 
@@ -64,6 +67,7 @@ const updateRecipient = async () => {
         pgp_inline: pgp_inline.value
     }
 
+    saving.value = true
     try {
         const res = await recipientApi.update(payload)
         error.value = ''
@@ -77,6 +81,8 @@ const updateRecipient = async () => {
         }
 
         pgp_inline.value = temp_pgp_inline
+    } finally {
+        saving.value = false
     }
 }
 
