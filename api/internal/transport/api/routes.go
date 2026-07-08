@@ -15,8 +15,6 @@ import (
 
 func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	email := h.Server.Group("/v1/email")
-	email.Use(auth.NewIPFilter(cfg.ApiAllowIPs))
-	email.Use(auth.NewPSK(cfg.PSK))
 	email.Post("", h.HandleEmail)
 	email.Post("/domain/check", h.CheckDomain)
 
@@ -28,18 +26,12 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	h.Server.Post("/v1/login", limit.New(5, 10*time.Minute), h.Login)
 	h.Server.Post("/v1/initiatepasswordreset", limiter.New(), h.InitiatePasswordReset)
 	h.Server.Put("/v1/resetpassword", limiter.New(), h.ResetPassword)
-	h.Server.Put("/v1/rotatepasession", limiter.New(), h.RotatePASession)
 	h.Server.Post("/v1/api/authenticate", limit.New(5, 10*time.Minute), h.Authenticate)
 
 	h.Server.Post("/v1/register/begin", limiter.New(), h.BeginRegistration)
 	h.Server.Post("/v1/register/finish", limiter.New(), h.FinishRegistration)
 	h.Server.Post("/v1/login/begin", limiter.New(), h.BeginLogin)
 	h.Server.Post("/v1/login/finish", limiter.New(), h.FinishLogin)
-
-	session := h.Server.Group("/v1/pasession")
-	session.Use(auth.NewIPFilter(cfg.ApiAllowIPs))
-	session.Use(auth.NewPSK(cfg.PSK))
-	session.Post("/add", h.AddPASession)
 
 	api := h.Server.Group("/v1/api")
 	api.Use(auth.NewAPIAuth(cfg, h.Service))
@@ -71,11 +63,8 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	v1.Put("/user/totp/disable", limit.New(5, 10*time.Minute), h.TotpDisable)
 
 	v1.Get("/sub", h.GetSubscription)
-	v1.Put("/sub/update", limiter.New(), h.UpdateSubscription)
 
 	v1.Get("/settings", h.GetSettings)
-	v1.Get("/defaults", h.GetDefaults)
-	v1.Put("/settings", h.UpdateSettings)
 
 	v1.Get("/recipient/:id", h.GetRecipient)
 	v1.Get("/recipients", h.GetRecipients)
@@ -380,12 +369,9 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)
 
 	docs := h.Server.Group("/docs")
-	docs.Use(auth.NewBasicAuth(cfg))
 	docs.Get("/*", swagger.HandlerDefault)
 
 	// Anonymous endpoint hit counters — no PII, no cookies, no client JS.
-	// Protected by the same basic-auth as docs.
 	metrics := h.Server.Group("/metrics")
-	metrics.Use(auth.NewBasicAuth(cfg))
 	metrics.Get("/endpoints", h.Metrics.HandleMetrics)
 }

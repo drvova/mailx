@@ -2,13 +2,10 @@ package service
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/base32"
-	"encoding/base64"
 	"errors"
 	"log"
 	"strings"
-	"time"
 
 	"slices"
 
@@ -22,7 +19,6 @@ var (
 	ErrGetUserStats        = errors.New("Unable to retrieve user statistics.")
 	ErrSaveUser            = errors.New("Unable to save user.")
 	ErrPostUser            = errors.New("Unable to create user.")
-	ErrSignupWebhook       = errors.New("Unable to call signup webhook.")
 	ErrActivateUser        = errors.New("Unable to activate user.")
 	ErrDeleteUser          = errors.New("Unable to delete user.")
 	ErrCreateOTP           = errors.New("Unable to generate OTP.")
@@ -41,9 +37,7 @@ var (
 	ErrTotpBackupNotFound  = errors.New("2FA backup code not found.")
 	ErrTotpSetBackup       = errors.New("Unable to set 2FA backup.")
 	ErrTotpDisable         = errors.New("Unable to disable 2FA.")
-	ErrInvalidTOTPCode     = errors.New("The 2FA code you entered is invalid.")
-	ErrInvalidSubscription = errors.New("Invalid subscription or signup URL.")
-	ErrTokenHashMismatch   = errors.New("Subscription token hash does not match.")
+	ErrInvalidTOTPCode = errors.New("The 2FA code you entered is invalid.")
 )
 
 type UserStore interface {
@@ -128,26 +122,7 @@ func (s *Service) CreateUserSelfSignup(ctx context.Context, user model.User) (mo
 		return model.User{}, ErrPostUser
 	}
 
-	sub := model.Subscription{
-		UserID:      user.ID,
-		Type:        "self",
-		ActiveUntil: time.Now().AddDate(100, 0, 0),
-		IsActive:    true,
-		Tier:        "self-hosted",
-	}
-
-	// Assign free plan if one exists
-	plans, perr := s.Store.GetActivePlans(ctx)
-	if perr == nil {
-		for _, p := range plans {
-			if p.PriceCents == 0 {
-				sub.PlanID = &p.ID
-				sub.Tier = p.Name
-				break
-			}
-		}
-	}
-	err = s.Store.PostSubscription(ctx, sub)
+	err = s.CreateSelfHostedSubscription(ctx, user.ID)
 	if err != nil {
 		log.Printf("error creating subscription: %s", err.Error())
 		return model.User{}, ErrPostUser
@@ -157,26 +132,6 @@ func (s *Service) CreateUserSelfSignup(ctx context.Context, user model.User) (mo
 	if err != nil {
 		log.Printf("error creating settings: %s", err.Error())
 		return model.User{}, ErrPostUser
-	}
-
-	return user, nil
-}
-
-func (s *Service) GetUnfinishedSignupOrPostUser(ctx context.Context, user model.User, subID string, sessionId string) (model.User, error) {
-	email := user.Email
-	pass := user.PasswordPlain
-	user, err := s.Store.GetUserByEmailUnfinishedSignup(ctx, email)
-	if err != nil {
-		user := model.User{
-			Email:         email,
-			PasswordPlain: pass,
-			IsActive:      false,
-		}
-		err = s.PostUser(ctx, user, subID, sessionId)
-		if err != nil {
-			log.Printf("error creating user: %s", err.Error())
-			return model.User{}, ErrPostUser
-		}
 	}
 
 	return user, nil
@@ -201,73 +156,6 @@ func (s *Service) SaveUser(ctx context.Context, user model.User) error {
 	if err != nil {
 		log.Printf("error saving user: %s", err.Error())
 		return ErrSaveUser
-	}
-
-	return nil
-}
-
-func (s *Service) PostUser(ctx context.Context, user model.User, subID string, sessionId string) error {
-	paSession, err := s.GetPASession(ctx, sessionId)
-	if err != nil {
-		log.Printf("error creating user: %s", err.Error())
-		return ErrPASessionNotFound
-	}
-
-	preauthId := paSession.PreauthId
-	token := paSession.Token
-	tokenHash := sha256.Sum256([]byte(token))
-	tokenHashStr := base64.StdEncoding.EncodeToString(tokenHash[:])
-
-	preauth, err := s.Http.GetPreauth(preauthId)
-	if err != nil {
-		log.Printf("error creating user: %s", err.Error())
-		return ErrInvalidSubscription
-	}
-
-	if preauth.TokenHash != tokenHashStr {
-		log.Printf("error creating user: Token hash does not match")
-		return ErrTokenHashMismatch
-	}
-
-	exists, err := s.Store.CheckDuplicateRecipient(ctx, user.Email)
-	if exists || err != nil {
-		log.Printf("error creating user: ErrDuplicateEmail")
-		return model.ErrDuplicateEmail
-	}
-
-	if user.PasswordPlain != nil {
-		err = user.SetPassword(*user.PasswordPlain)
-		if err != nil {
-			log.Printf("error creating user: %s", err.Error())
-			return err
-		}
-	}
-
-	user, err = s.Store.PostUser(ctx, user)
-	if err != nil {
-		log.Printf("error creating user: %s", err.Error())
-		if isUniqueConstraintError(err) {
-			return model.ErrDuplicateEmail
-		}
-		return ErrPostUser
-	}
-
-	err = s.PostSubscription(ctx, user.ID, preauth)
-	if err != nil {
-		log.Printf("error creating user: %s", err.Error())
-		return ErrPostUser
-	}
-
-	err = s.PostSettings(ctx, user.ID)
-	if err != nil {
-		log.Printf("error creating user: %s", err.Error())
-		return ErrPostUser
-	}
-
-	err = s.Http.SignupWebhook(subID)
-	if err != nil {
-		log.Printf("error creating user: %s", err.Error())
-		return ErrSignupWebhook
 	}
 
 	return nil

@@ -20,18 +20,16 @@
                                     type="email"
                                     autocomplete="email"
                                     class="email"
-                                    :disabled="!!rotateSessionError"
                                     @keypress.enter.prevent
                                 >
                                 <p v-if="emailAuthnError" class="error" role="alert">Required</p>
                             </div>
                             <div class="flex items-center w-full">
-                                <button @click="registerWithPasskey" :disabled="isLoading || !!rotateSessionError" :aria-busy="isLoading" class="cta full">
+                                <button @click="registerWithPasskey" :disabled="isLoading" :aria-busy="isLoading" class="cta full">
                                     Sign Up with Passkey
                                 </button>
                             </div>
                             <p v-if="apiError" class="error mt-6" role="alert">Error: {{ apiError }}</p>
-                            <p v-if="rotateSessionError" class="error mt-5" role="alert">Error: {{ rotateSessionError }}</p>
                         </div>
                     </div>
                     <div
@@ -54,7 +52,6 @@
                                     type="email"
                                     autocomplete="email"
                                     class="email"
-                                    :disabled="!!rotateSessionError"
                                     @blur="validateEmail"
                                     @keypress.enter.prevent
                                 >
@@ -69,7 +66,6 @@
                                     id="password"
                                     autocomplete="new-password"
                                     class="password"
-                                    :disabled="!!rotateSessionError"
                                     @blur="validatePassword"
                                     @keypress.enter.prevent
                                 />
@@ -77,12 +73,11 @@
                             </div>
                             <p class="text-sm mb-5">Must be 12+ characters and contain uppercase, lowercase, number, and special character (e.g. -_+=~!@#$%^&*(),;.?":{}|<>)</p>
                             <div class="flex items-center w-full">
-                                <button @click="register" :disabled="isLoading || !!rotateSessionError" :aria-busy="isLoading" class="cta full">
+                                <button @click="register" :disabled="isLoading" :aria-busy="isLoading" class="cta full">
                                     Sign Up
                                 </button>
                             </div>
                             <p v-if="apiError" class="error mt-5" role="alert">Error: {{ apiError }}</p>
-                            <p v-if="rotateSessionError" class="error mt-5" role="alert">Error: {{ rotateSessionError }}</p>
                         </div>
                     </div>
                 </div>
@@ -114,9 +109,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUpdated } from 'vue'
 import { ApiError } from '../api/api.ts'
-import { useRoute } from 'vue-router'
 import { userApi } from '../api/user.ts'
-import { subscriptionApi } from '../api/subscription.ts'
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser'
 import tabs from '@preline/tabs'
 import Footer from './Footer.vue'
@@ -130,12 +123,8 @@ const emailAuthnError = ref(false)
 const passwordError = ref('')
 const apiSuccess = ref('')
 const apiError = ref('')
-const rotateSessionError = ref('')
 const isLoading = ref(false)
 const passkeySupported = ref(false)
-const subid = ref('')
-const sessionid = ref('')
-const syncing = ref(false)
 
 const validateEmail = () => {
     emailError.value = !email.value
@@ -144,7 +133,7 @@ const validateEmail = () => {
 
 const validateEmailAuthn = () => {
     emailAuthnError.value = !emailAuthn.value
-    return !emailAuthnError.value && syncing.value === false
+    return !emailAuthnError.value
 }
 
 const validatePassword = () => {
@@ -171,17 +160,16 @@ const validatePassword = () => {
 const validate = () => {
     const validEmail = validateEmail()
     const validPass = validatePassword()
-    return validEmail && validPass && syncing.value === false
+    return validEmail && validPass
 }
 
 const register = async () => {
     if (!validate()) return
 
-    isLoading.value = true // Start loading
+    isLoading.value = true
     const data = {
         email: email.value,
         password: password.value,
-        subid: subid.value,
     }
 
     try {
@@ -198,18 +186,17 @@ const register = async () => {
             }
         }
     } finally {
-        isLoading.value = false // End loading
+        isLoading.value = false
     }
 }
 
 const registerWithPasskey = async () => {
     if (!validateEmailAuthn()) return
 
-    isLoading.value = true // Start loading
+    isLoading.value = true
 
     const data = {
         email: emailAuthn.value,
-        subid: subid.value,
     }
 
     try {
@@ -228,46 +215,7 @@ const registerWithPasskey = async () => {
             }
         }
     } finally {
-        isLoading.value = false // End loading
-    }
-}
-
-const rotateSessionId = async () => {
-    if (!sessionid.value) {
-        return
-    }
-
-    syncing.value = true
-    try {
-        await subscriptionApi.rotateSessionId({
-            sessionid: sessionid.value,
-        })
-        rotateSessionError.value = ''
-    } catch (err) {
-        if (err instanceof ApiError) {
-            rotateSessionError.value = err.data?.error || err.message || err.message
-
-            if (err.status === 429) {
-                rotateSessionError.value = 'Too many requests, please try again later.'
-            }
-        }
-    } finally {
-        syncing.value = false
-    }
-}
-
-const parseParams = () => {
-    const route = useRoute()
-    const q = route.query
-    const first = (v: unknown) => typeof v === 'string' ? v : Array.isArray(v) ? v[0] : ''
-    subid.value = first(q.subid) || (route.params.subid as string) || ''
-    sessionid.value = first(q.sessionid) || (route.params.sessionid as string) || ''
-
-    // Managed signup: rotate session if both params are valid UUIDs
-    if (subid.value && sessionid.value &&
-        subid.value.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/) &&
-        sessionid.value.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
-        rotateSessionId()
+        isLoading.value = false
     }
 }
 
@@ -281,7 +229,6 @@ onMounted(() => {
         window.location.href = '/account'
     }
     
-    parseParams()
     passkeySupported.value = browserSupportsWebAuthn()
     tabs.autoInit()
 })

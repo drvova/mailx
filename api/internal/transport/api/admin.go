@@ -947,9 +947,6 @@ func (h *Handler) AdminGetConfig(c *fiber.Ctx) error {
 		"domains":             h.Cfg.Domains,
 		"token_expiration":    h.Cfg.TokenExpiration.String(),
 		"admin_emails":        h.Cfg.AdminEmails,
-		"preauth_url_set":     h.Cfg.PreauthURL != "",
-		"preauth_psk_set":     h.Cfg.PreauthPSK != "",
-		"signup_webhook_set":  h.Cfg.SignupWebhookURL != "",
 		"smtp_configured":     false,
 		"oxapay_configured":   false,
 	})

@@ -839,9 +839,6 @@
                         <div><span class="text-gray-500">Token Expiration:</span> {{ configInfo.token_expiration }}</div>
                         <div><span class="text-gray-500">Admin Emails:</span> {{ (configInfo.admin_emails || []).join(', ') || 'none' }}</div>
                         <div><span class="text-gray-500">CORS Origin:</span> {{ configInfo.api_allow_origin }}</div>
-                        <div><span class="text-gray-500">Preauth URL:</span> {{ configInfo.preauth_url_set ? 'configured' : 'not set' }}</div>
-                        <div><span class="text-gray-500">Preauth PSK:</span> {{ configInfo.preauth_psk_set ? 'configured' : 'not set' }}</div>
-                        <div><span class="text-gray-500">Signup Webhook:</span> {{ configInfo.signup_webhook_set ? 'configured' : 'not set' }}</div>
                         <div><span class="text-gray-500">SMTP:</span> {{ configInfo.smtp_configured ? 'configured' : 'not set' }}</div>
                         <div><span class="text-gray-500">Oxapay:</span> {{ configInfo.oxapay_configured ? 'configured' : 'not set' }}</div>
                     </div>

@@ -3,13 +3,11 @@ package auth
 import (
 	"context"
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/basicauth"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"ivpn.net/email/api/config"
 	"ivpn.net/email/api/internal/model"
@@ -25,7 +23,6 @@ const (
 	AUTH_COOKIE       = "auth"
 	AUTHN_COOKIE      = "authn"
 	AUTHN_TEMP_COOKIE = "authntemp"
-	PA_SESSION_COOKIE = "pasession"
 	USER_ID           = "user_id"
 )
 
@@ -54,38 +51,6 @@ func New(cfg config.APIConfig, cache Cache, service Service) fiber.Handler {
 
 		return c.SendStatus(fiber.StatusUnauthorized)
 	}
-}
-
-func NewIPFilter(allowedIPs []string) fiber.Handler {
-
-	return func(c *fiber.Ctx) error {
-		clientIP := c.IP()
-		if slices.Contains(allowedIPs, clientIP) {
-			return c.Next()
-		}
-
-		return c.SendStatus(fiber.StatusForbidden)
-	}
-}
-
-func NewPSK(psk string) fiber.Handler {
-
-	return func(c *fiber.Ctx) error {
-		if GetAuthToken(c) == psk {
-			return c.Next()
-		}
-
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-}
-
-func NewBasicAuth(cfg config.APIConfig) fiber.Handler {
-
-	return basicauth.New(basicauth.Config{
-		Users: map[string]string{
-			cfg.BasicAuthUser: cfg.BasicAuthPassword,
-		},
-	})
 }
 
 func NewAPICORS(cfg config.APIConfig) fiber.Handler {
@@ -135,17 +100,6 @@ func NewCookieTempAuthn(token string, path string, cfg config.APIConfig) *fiber.
 		Secure:   true,
 		MaxAge:   int(cfg.TokenExpiration.Seconds()),
 		Expires:  time.Now().Add(time.Duration(cfg.TokenExpiration)),
-	}
-}
-
-func NewCookiePASession(id string) *fiber.Cookie {
-	return &fiber.Cookie{
-		Name:     PA_SESSION_COOKIE,
-		Value:    id,
-		HTTPOnly: true,
-		Secure:   true,
-		MaxAge:   900, // 15 minutes
-		Expires:  time.Now().Add(15 * time.Minute),
 	}
 }
 

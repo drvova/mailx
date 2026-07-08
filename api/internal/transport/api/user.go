@@ -37,7 +37,6 @@ type UserService interface {
 	GetUserByCredentials(context.Context, string, string) (model.User, error)
 	GetUserByPassword(context.Context, string, string) (model.User, error)
 	GetUserByEmail(context.Context, string) (model.User, error)
-	GetUnfinishedSignupOrPostUser(context.Context, model.User, string, string) (model.User, error)
 	CreateUserSelfSignup(context.Context, model.User) (model.User, error)
 	DeleteUnfinishedSignup(context.Context, string) error
 	SaveUser(context.Context, model.User) error
@@ -67,9 +66,6 @@ type UserService interface {
 // @Failure 400 {object} ErrorRes
 // @Router /register [post]
 func (h *Handler) Register(c *fiber.Ctx) error {
-	// Get session ID from cookie
-	sessionId := c.Cookies(auth.PA_SESSION_COOKIE)
-
 	// Parse the request
 	req := SignupUserReq{}
 	err := c.BodyParser(&req)
@@ -94,27 +90,12 @@ func (h *Handler) Register(c *fiber.Ctx) error {
 		IsActive:      false,
 	}
 
-	if req.SubID == "" {
-		// Self-signup: create user with default subscription, no preauth required
-		user, err = h.Service.CreateUserSelfSignup(c.Context(), user)
-		if err != nil {
-			return c.Status(400).JSON(fiber.Map{
-				"error": err.Error(),
-			})
-		}
-	} else {
-		// Managed signup: use preauth/PA session flow
-		user, err = h.Service.GetUnfinishedSignupOrPostUser(c.Context(), user, req.SubID, sessionId)
-		if err != nil {
-			err = h.Service.DeleteUnfinishedSignup(c.Context(), user.ID)
-			if err != nil {
-				log.Printf("error deleting unfinished signup: %s", err.Error())
-			}
-
-			return c.Status(400).JSON(fiber.Map{
-				"error": err.Error(),
-			})
-		}
+	// Self-signup: create user with default subscription
+	user, err = h.Service.CreateUserSelfSignup(c.Context(), user)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
 	}
 
 	// Get user

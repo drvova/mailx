@@ -17,16 +17,8 @@ type APIConfig struct {
 	TokenSecret        string
 	TokenExpiration    time.Duration
 	ApiTokenExpiration time.Duration
-	PSK                string
 	Domains            string
 	LogFile            string
-	BasicAuthUser      string
-	BasicAuthPassword  string
-	SignupWebhookURL   string
-	SignupWebhookPSK   string
-	PreauthURL         string
-	PreauthPSK         string
-	PreauthTTL         time.Duration
 	AdminEmails        []string
 }
 
@@ -137,12 +129,6 @@ func New() (Config, error) {
 		adminEmails[i] = strings.TrimSpace(e)
 	}
 
-	preauthTTLStr := os.Getenv("PREAUTH_TTL")
-	preauthTTL, err := time.ParseDuration(preauthTTLStr)
-	if err != nil {
-		return Config{}, err
-	}
-
 	apiPort := os.Getenv("API_PORT")
 	if apiPort == "" {
 		apiPort = os.Getenv("PORT")
@@ -162,16 +148,8 @@ func New() (Config, error) {
 			TokenSecret:        os.Getenv("TOKEN_SECRET"),
 			TokenExpiration:    tokenExp,
 			ApiTokenExpiration: apiTokenExp,
-			PSK:                os.Getenv("PSK"),
 			Domains:            os.Getenv("DOMAINS"),
 			LogFile:            os.Getenv("LOG_FILE"),
-			BasicAuthUser:      os.Getenv("BASIC_AUTH_USER"),
-			BasicAuthPassword:  os.Getenv("BASIC_AUTH_PASSWORD"),
-			SignupWebhookURL:   os.Getenv("SIGNUP_WEBHOOK_URL"),
-			SignupWebhookPSK:   os.Getenv("SIGNUP_WEBHOOK_PSK"),
-			PreauthURL:         os.Getenv("PREAUTH_URL"),
-			PreauthPSK:         os.Getenv("PREAUTH_PSK"),
-			PreauthTTL:         preauthTTL,
 			AdminEmails:        adminEmails,
 		},
 		DB: DBConfig{

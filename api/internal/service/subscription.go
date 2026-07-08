@@ -2,9 +2,6 @@ package service
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"log"
 	"time"
@@ -19,13 +16,10 @@ var (
 	ErrPostSubscription   = errors.New("Unable to create subscription.")
 	ErrUpdateSubscription = errors.New("Unable to update subscription.")
 	ErrDeleteSubscription = errors.New("Unable to delete subscription.")
-	ErrPANotFound         = errors.New("Pre-auth entry not found.")
-	ErrPASessionNotFound  = errors.New("Pre-auth session not found.")
 )
 
 type SubscriptionStore interface {
 	GetSubscription(context.Context, string) (model.Subscription, error)
-	GetSubscriptionByTokenHash(context.Context, string) (model.Subscription, error)
 	PostSubscription(context.Context, model.Subscription) error
 	UpdateSubscription(context.Context, model.Subscription) error
 	DeleteSubscription(context.Context, string) error
@@ -43,99 +37,11 @@ func (s *Service) GetSubscription(ctx context.Context, userID string) (model.Sub
 	return sub, nil
 }
 
-func (s *Service) PostSubscription(ctx context.Context, userID string, preauth model.Preauth) error {
-	// Support for signup reset
-	existingSub, err := s.Store.GetSubscriptionByTokenHash(ctx, preauth.TokenHash)
-	if err == nil {
-		now := time.Now()
-		existingSub.TokenHash = nil
-		existingSub.Terminated = true
-		existingSub.TerminatedAt = &now
-		err = s.Store.UpdateSubscription(ctx, existingSub)
-		if err != nil {
-			log.Printf("error clearing token hash for existing subscription: %s", err.Error())
-			return ErrPostSubscription
-		}
-	}
-
-	sub := model.Subscription{
-		UserID:      userID,
-		ActiveUntil: preauth.ActiveUntil,
-		IsActive:    preauth.IsActive,
-		Tier:        preauth.Tier,
-		TokenHash:   &preauth.TokenHash,
-	}
-	sub.ID = uuid.New().String()
-
-	err = s.Store.PostSubscription(ctx, sub)
-	if err != nil {
-		log.Printf("error posting subscription: %s", err.Error())
-		if isUniqueConstraintError(err) {
-			return model.ErrDuplicateSubscription
-		}
-		return ErrPostSubscription
-	}
-
-	return nil
-}
-
 func (s *Service) AddSubscription(ctx context.Context, subscription model.Subscription, activeUntil string) error {
 	err := s.Cache.Set(ctx, "sub_"+subscription.ID, activeUntil, s.Cfg.Service.OTPExpiration)
 	if err != nil {
 		log.Printf("error adding subscription: %s", err.Error())
 		return ErrAddSubscription
-	}
-
-	return nil
-}
-
-func (s *Service) UpdateSubscription(ctx context.Context, sub model.Subscription, subID string, sessionId string) error {
-	paSession, err := s.GetPASession(ctx, sessionId)
-	if err != nil {
-		log.Printf("error updating subscription: %s", err.Error())
-		return ErrPASessionNotFound
-	}
-
-	preauthId := paSession.PreauthId
-	token := paSession.Token
-	tokenHash := sha256.Sum256([]byte(token))
-	tokenHashStr := base64.StdEncoding.EncodeToString(tokenHash[:])
-
-	preauth, err := s.Http.GetPreauth(preauthId)
-	if err != nil {
-		log.Printf("error updating subscription: %s", err.Error())
-		return ErrPANotFound
-	}
-
-	if preauth.TokenHash != tokenHashStr {
-		log.Printf("error updating subscription: Token hash does not match")
-		return ErrTokenHashMismatch
-	}
-
-	sub.ActiveUntil = preauth.ActiveUntil
-	sub.IsActive = preauth.IsActive
-	sub.Tier = preauth.Tier
-	sub.TokenHash = &preauth.TokenHash
-	sub.Type = ""
-
-	if sub.ID == "" || sub.UserID == "" {
-		log.Printf("error updating subscription: Subscription ID is required")
-		return ErrInvalidSubscription
-	}
-
-	err = s.Store.UpdateSubscription(ctx, sub)
-	if err != nil {
-		log.Printf("error updating subscription: %s", err.Error())
-		return ErrUpdateSubscription
-	}
-
-	_, err = uuid.Parse(subID)
-	if err == nil && subID != "" {
-		err = s.Http.SignupWebhook(subID)
-		if err != nil {
-			log.Printf("error updating subscription: %s", err.Error())
-			return ErrSignupWebhook
-		}
 	}
 
 	return nil
@@ -151,66 +57,33 @@ func (s *Service) DeleteSubscription(ctx context.Context, userID string) error {
 	return nil
 }
 
-func (s *Service) AddPASession(ctx context.Context, paSession model.PASession) error {
-	data, err := json.Marshal(paSession)
-	if err != nil {
-		log.Println("failed to marshal pre-auth session to JSON:", err)
-		return err
+func (s *Service) CreateSelfHostedSubscription(ctx context.Context, userID string) error {
+	sub := model.Subscription{
+		UserID:      userID,
+		Type:        "self",
+		ActiveUntil: time.Now().AddDate(100, 0, 0),
+		IsActive:    true,
+		Tier:        "self-hosted",
+	}
+	sub.ID = uuid.New().String()
+
+	// Assign free plan if one exists
+	plans, perr := s.Store.GetActivePlans(ctx)
+	if perr == nil {
+		for _, p := range plans {
+			if p.PriceCents == 0 {
+				sub.PlanID = &p.ID
+				sub.Tier = p.Name
+				break
+			}
+		}
 	}
 
-	err = s.Cache.Set(ctx, "pasession_"+paSession.ID, string(data), s.Cfg.API.PreauthTTL)
+	err := s.Store.PostSubscription(ctx, sub)
 	if err != nil {
-		log.Println("failed to set pre-auth session in cache:", err)
-		return err
+		log.Printf("error creating subscription: %s", err.Error())
+		return ErrPostSubscription
 	}
 
 	return nil
-}
-
-func (s *Service) GetPASession(ctx context.Context, id string) (model.PASession, error) {
-	data, err := s.Cache.Get(ctx, "pasession_"+id)
-	if err != nil {
-		log.Println("failed to get pre-auth session from cache:", err)
-		return model.PASession{}, err
-	}
-
-	var paSession model.PASession
-	err = json.Unmarshal([]byte(data), &paSession)
-	if err != nil {
-		log.Println("failed to unmarshal pre-auth session JSON:", err)
-		return model.PASession{}, err
-	}
-
-	return paSession, nil
-}
-
-func (s *Service) RotatePASessionId(ctx context.Context, id string) (string, error) {
-	paSession, err := s.GetPASession(ctx, id)
-	if err != nil {
-		log.Println("failed to get pre-auth session for rotation:", err)
-		return "", err
-	}
-
-	newID := uuid.New().String()
-	paSession.ID = newID
-
-	data, err := json.Marshal(paSession)
-	if err != nil {
-		log.Println("failed to marshal rotated pre-auth session to JSON:", err)
-		return "", err
-	}
-
-	err = s.Cache.Set(ctx, "pasession_"+newID, string(data), 15*time.Minute)
-	if err != nil {
-		log.Println("failed to set rotated pre-auth session in cache:", err)
-		return "", err
-	}
-
-	err = s.Cache.Del(ctx, "pasession_"+id)
-	if err != nil {
-		log.Println("failed to delete old pre-auth session from cache:", err)
-		return "", err
-	}
-
-	return newID, nil
 }

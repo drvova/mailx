@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -52,9 +51,6 @@ type CredentialService interface {
 // @Failure 400 {object} ErrorRes
 // @Router /register/begin [post]
 func (h *Handler) BeginRegistration(c *fiber.Ctx) error {
-	// Get session ID from cookie
-	sessionId := c.Cookies(auth.PA_SESSION_COOKIE)
-
 	// Parse the request
 	req := SignupEmailReq{}
 	err := c.BodyParser(&req)
@@ -78,14 +74,9 @@ func (h *Handler) BeginRegistration(c *fiber.Ctx) error {
 		IsActive: false,
 	}
 
-	// Get unfinished signup user or create new user
-	user, err = h.Service.GetUnfinishedSignupOrPostUser(c.Context(), user, req.SubID, sessionId)
+	// Self-signup: create user with default subscription
+	user, err = h.Service.CreateUserSelfSignup(c.Context(), user)
 	if err != nil {
-		err = h.Service.DeleteUnfinishedSignup(c.Context(), user.ID)
-		if err != nil {
-			log.Printf("error deleting unfinished signup: %s", err.Error())
-		}
-
 		return c.Status(400).JSON(fiber.Map{
 			"error": err.Error(),
 		})

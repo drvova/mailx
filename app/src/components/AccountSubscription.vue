@@ -1,12 +1,9 @@
 <template>
     <div class="mb-5">
         <h2>Account</h2>
-        <p v-if="sub.id && !syncing" class="text-sm">
+        <p v-if="sub.id" class="text-sm">
             <span v-if="isActive()" class="badge success">Active</span>
             <span v-if="!isActive()" class="badge">Inactive</span>
-        </p>
-        <p v-if="syncing" class="text-sm">
-            <span v-if="isActive()" class="badge progress">Syncing...</span>
         </p>
         <div class="mb-3">
             <h4>Account email:</h4>
@@ -20,18 +17,6 @@
                 {{ activeUntilDate() }}
             </p>
         </div>
-        <div v-if="isManaged()" class="card-tertiary">
-            <footer>
-                <div class="pt-1.5">
-                    <i class="icon info icon-primary"></i>
-                </div>
-                <div class="pt-1.5">
-                    <p>
-                        FreeTheMail beta ends May 19. To keep access, follow  <a target="_blank" :href="resyncUrl">this link</a> and sync with your subscription account.
-                    </p>
-                </div>
-            </footer>
-        </div>
         <div v-if="isLimited()" class="card-tertiary">
             <footer>
                 <div>
@@ -40,20 +25,7 @@
                 <div>
                     <h4>Limited Access Mode</h4>
                     <p>
-                        Existing aliases forward normally. New aliases are disabled. Add time to your <a target="_blank" :href="activateUrl">subscription provider account</a> to restore access.
-                    </p>
-                </div>
-            </footer>
-        </div>
-        <div v-if="isPendingDelete()" class="card-tertiary">
-            <footer>
-                <div>
-                    <i class="icon info icon-primary"></i>
-                </div>
-                <div>
-                    <h4>This account has been replaced and is scheduled for deletion.</h4>
-                    <p>
-                        A new FreeTheMail signup was completed for your subscription account, so this account will be deleted in 48 hours. Export any data you need before then.
+                        Existing aliases forward normally. New aliases are disabled.
                     </p>
                 </div>
             </footer>
@@ -66,7 +38,7 @@
                 <div>
                     <h4>Out of sync</h4>
                     <p>
-                        Your last account status update was {{ updatedAtDate() }}. <a target="_blank" :href="resyncUrl">Sync with subscription provider</a>
+                        Your last account status update was {{ updatedAtDate() }}.
                     </p>
                 </div>
             </footer>
@@ -77,11 +49,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { formatDistanceToNow } from 'date-fns'
 import { ApiError } from '../api/api.ts'
-import { useRoute } from 'vue-router'
-import tooltip from '@preline/tooltip'
 import { subscriptionApi } from '../api/subscription.ts'
 import events from '../events.ts'
 
@@ -96,12 +66,6 @@ const sub = ref({
 const error = ref('')
 const success = ref('')
 const email = ref(localStorage.getItem('email'))
-const subid = ref('')
-const sessionid = ref('')
-const currentRoute = useRoute()
-const syncing = ref(false)
-const activateUrl = import.meta.env.VITE_RESYNC_URL
-const resyncUrl = import.meta.env.VITE_RESYNC_URL + '?action=sync&service=mail'
 
 const getSubscription = async () => {
     try {
@@ -114,61 +78,12 @@ const getSubscription = async () => {
     }
 }
 
-const updateSubscription = async () => {
-    syncing.value = true
-    try {
-        const res = await subscriptionApi.update({
-            id: sub.value.id,
-            subid: subid.value,
-        })
-        success.value = res.data.message
-        error.value = ''
-        await getSubscription()
-    } catch (err) {
-        if (err instanceof ApiError) {
-            success.value = ''
-            error.value = err.data?.error || err.message || err.message
-        }
-    } finally {
-        syncing.value = false
-    }
-}
-
-const rotateSessionId = async () => {
-    if (!sessionid.value) {
-        return
-    }
-
-    syncing.value = true
-    try {
-        await subscriptionApi.rotateSessionId({
-            sessionid: sessionid.value,
-        })
-        await getSubscription()
-        await updateSubscription()
-    } catch (err) {
-        if (err instanceof ApiError) {
-            error.value = err.data?.error || err.message || err.message
-        }
-    } finally {
-        syncing.value = false
-    }
-}
-
 const isActive = () => {
     return sub.value.status === 'active' || sub.value.status === 'grace_period'
 }
 
 const isLimited = () => {
     return sub.value.status === 'limited_access'
-}
-
-const isPendingDelete = () => {
-    return sub.value.status === 'pending_delete'
-}
-
-const isManaged = () => {
-    return sub.value.type === 'Managed'
 }
 
 const activeUntilDate = () => {
@@ -187,31 +102,12 @@ const isOutage = () => {
     return sub.value.outage
 }
 
-const parseParams = () => {
-    const route = useRoute()
-    const q = route.query
-    const first = (v: unknown) => typeof v === 'string' ? v : Array.isArray(v) ? v[0] : ''
-    subid.value = first(q.subid) || (route.params.subid as string) || ''
-    sessionid.value = first(q.sessionid) || (route.params.sessionid as string) || ''
-
-    if (!sessionid.value || !sessionid.value.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
-        return
-    }
-
-    rotateSessionId()
-}
-
 onMounted(() => {
     getSubscription()
-    tooltip.autoInit()
     events.on('user.update', onUpdateEmail)
 })
 
 onUnmounted(() => {
     events.off('user.update', onUpdateEmail)
 })
-
-watch(currentRoute, () => {
-    parseParams()
-}, { immediate: true })
 </script>

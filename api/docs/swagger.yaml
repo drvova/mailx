@@ -82,19 +82,6 @@ definitions:
       error:
         type: string
     type: object
-  api.PASessionReq:
-    properties:
-      id:
-        type: string
-      preauth_id:
-        type: string
-      token:
-        type: string
-    required:
-    - id
-    - preauth_id
-    - token
-    type: object
   api.RecipientReq:
     properties:
       id:
@@ -116,13 +103,6 @@ definitions:
         type: string
     required:
     - otp
-    type: object
-  api.RotatePASessionReq:
-    properties:
-      sessionid:
-        type: string
-    required:
-    - sessionid
     type: object
   api.SettingsReq:
     properties:
@@ -1561,32 +1541,6 @@ paths:
       summary: Reset password
       tags:
       - user
-  /rotatepasession:
-    put:
-      consumes:
-      - application/json
-      description: Rotate pre-auth session ID
-      parameters:
-      - description: Rotate pre-auth session request
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/api.RotatePASessionReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.SuccessRes'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.ErrorRes'
-      summary: Rotate pre-auth session ID
-      tags:
-      - subscription
   /settings:
     get:
       consumes:
@@ -1654,34 +1608,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get subscription
-      tags:
-      - subscription
-  /sub/session:
-    post:
-      consumes:
-      - application/json
-      description: Add pre-auth session
-      parameters:
-      - description: Pre-auth session request
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/api.PASessionReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.SuccessRes'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.ErrorRes'
-      security:
-      - ApiKeyAuth: []
-      summary: Add pre-auth session
       tags:
       - subscription
   /subscription/update:
