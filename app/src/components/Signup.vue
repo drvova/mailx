@@ -263,17 +263,12 @@ const parseParams = () => {
     subid.value = first(q.subid) || (route.params.subid as string) || ''
     sessionid.value = first(q.sessionid) || (route.params.sessionid as string) || ''
 
-    if (!subid.value || !subid.value.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
-        console.error('Invalid or missing subid')
-        return
+    // Managed signup: rotate session if both params are valid UUIDs
+    if (subid.value && sessionid.value &&
+        subid.value.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/) &&
+        sessionid.value.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
+        rotateSessionId()
     }
-
-    if (!sessionid.value || !sessionid.value.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
-        console.error('Invalid or missing sessionid')
-        return
-    }
-
-    rotateSessionId()
 }
 
 const isLoggedIn = (): boolean => {

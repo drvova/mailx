@@ -38,6 +38,7 @@ type UserService interface {
 	GetUserByPassword(context.Context, string, string) (model.User, error)
 	GetUserByEmail(context.Context, string) (model.User, error)
 	GetUnfinishedSignupOrPostUser(context.Context, model.User, string, string) (model.User, error)
+	CreateUserSelfSignup(context.Context, model.User) (model.User, error)
 	DeleteUnfinishedSignup(context.Context, string) error
 	SaveUser(context.Context, model.User) error
 	DeleteUserRequest(context.Context, string) (string, error)
@@ -93,17 +94,27 @@ func (h *Handler) Register(c *fiber.Ctx) error {
 		IsActive:      false,
 	}
 
-	// Get unfinished signup user or create new user
-	user, err = h.Service.GetUnfinishedSignupOrPostUser(c.Context(), user, req.SubID, sessionId)
-	if err != nil {
-		err = h.Service.DeleteUnfinishedSignup(c.Context(), user.ID)
+	if req.SubID == "" {
+		// Self-signup: create user with default subscription, no preauth required
+		user, err = h.Service.CreateUserSelfSignup(c.Context(), user)
 		if err != nil {
-			log.Printf("error deleting unfinished signup: %s", err.Error())
+			return c.Status(400).JSON(fiber.Map{
+				"error": err.Error(),
+			})
 		}
+	} else {
+		// Managed signup: use preauth/PA session flow
+		user, err = h.Service.GetUnfinishedSignupOrPostUser(c.Context(), user, req.SubID, sessionId)
+		if err != nil {
+			err = h.Service.DeleteUnfinishedSignup(c.Context(), user.ID)
+			if err != nil {
+				log.Printf("error deleting unfinished signup: %s", err.Error())
+			}
 
-		return c.Status(400).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+			return c.Status(400).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
 	}
 
 	// Get user

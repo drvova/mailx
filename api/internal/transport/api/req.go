@@ -17,7 +17,7 @@ type EmailReq struct {
 type SignupUserReq struct {
 	Email    string `json:"email" validate:"required,emailx"`
 	Password string `json:"password" validate:"password"`
-	SubID    string `json:"subid" validate:"required,uuid"`
+	SubID    string `json:"subid" validate:"omitempty,uuid"`
 }
 
 type SignupEmailReq struct {

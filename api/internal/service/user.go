@@ -8,9 +8,11 @@ import (
 	"errors"
 	"log"
 	"strings"
+	"time"
 
 	"slices"
 
+	"github.com/google/uuid"
 	"ivpn.net/email/api/internal/client/mailer"
 	"ivpn.net/email/api/internal/model"
 	"ivpn.net/email/api/internal/utils"
@@ -87,6 +89,61 @@ func (s *Service) GetUserByEmail(ctx context.Context, email string) (model.User,
 	user, err := s.Store.GetUserByEmail(ctx, email)
 	if err != nil {
 		return model.User{}, ErrIncorrectEmail
+	}
+
+	return user, nil
+}
+
+func (s *Service) CreateUserSelfSignup(ctx context.Context, user model.User) (model.User, error) {
+	email := user.Email
+	pass := user.PasswordPlain
+
+	user, err := s.Store.GetUserByEmailUnfinishedSignup(ctx, email)
+	if err == nil {
+		return user, nil
+	}
+
+	exists, err := s.Store.CheckDuplicateRecipient(ctx, email)
+	if exists || err != nil {
+		return model.User{}, model.ErrDuplicateEmail
+	}
+
+	user = model.User{
+		Email:         email,
+		PasswordPlain: pass,
+		IsActive:      false,
+	}
+	if user.PasswordPlain != nil {
+		err = user.SetPassword(*user.PasswordPlain)
+		if err != nil {
+			return model.User{}, err
+		}
+	}
+
+	user, err = s.Store.PostUser(ctx, user)
+	if err != nil {
+		if isUniqueConstraintError(err) {
+			return model.User{}, model.ErrDuplicateEmail
+		}
+		return model.User{}, ErrPostUser
+	}
+
+	sub := model.Subscription{
+		ID:          uuid.NewString(),
+		UserID:      user.ID,
+		Type:        "self",
+		ActiveUntil: time.Now().AddDate(100, 0, 0),
+		IsActive:    true,
+		Tier:        "self-hosted",
+	}
+	err = s.Store.PostSubscription(ctx, sub)
+	if err != nil {
+		return model.User{}, ErrPostUser
+	}
+
+	err = s.PostSettings(ctx, user.ID)
+	if err != nil {
+		return model.User{}, ErrPostUser
 	}
 
 	return user, nil
