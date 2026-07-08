@@ -56,6 +56,10 @@
                                 <i class="icon user icon-primary"></i>
                                 Account
                             </router-link>
+                            <router-link v-if="isAdmin" v-bind:class="{ 'active': route == '/account/admin' }" :aria-current="route == '/account/admin' ? 'page' : undefined" to="/account/admin" @click="closeSheet">
+                                <i class="icon key icon-primary"></i>
+                                Admin
+                            </router-link>
                         </nav>
                     </article>
                 </div>
@@ -65,21 +69,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import overlay from '@preline/overlay'
+import { userApi } from '../api/user.ts'
 
 const route = ref('/')
 const currentRoute = useRoute()
 const sheetOpen = ref(false)
+const isAdmin = ref(false)
 let previousFocus: HTMLElement | null = null
 
-const secondaryPaths = ['/account/wildcard', '/account/diagnostics', '/account/settings', '/account/profile']
+const secondaryPaths = ['/account/wildcard', '/account/diagnostics', '/account/settings', '/account/profile', '/account/admin']
 const isSecondaryActive = computed(() => secondaryPaths.includes(route.value))
 
 watch(currentRoute, (newRoute) => {
     route.value = newRoute.path
 }, { immediate: true })
+
+onMounted(async () => {
+    try {
+        const res = await userApi.get()
+        isAdmin.value = res.data?.is_admin ?? false
+    } catch { /* not logged in */ }
+})
 
 const closeSheet = () => {
     const sheet = document.querySelector('#tabbar-more-sheet') as HTMLElement | null

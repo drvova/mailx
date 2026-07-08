@@ -44,7 +44,7 @@
                     Account
                 </router-link>
                 <router-link v-if="isAdmin" v-bind:class="{ 'active': route == '/account/admin' }" :aria-current="route == '/account/admin' ? 'page' : undefined" to="/account/admin">
-                    <i class="icon settings icon-primary"></i>
+                    <i class="icon key icon-primary"></i>
                     Admin
                 </router-link>
             </div>
