@@ -104,6 +104,10 @@ type AdminStore interface {
 	AdminUpdateDomain(context.Context, string, map[string]interface{}) error
 	AdminMarkInboxRead(context.Context, uint, bool) error
 	AdminGetAllUsersPaginated(context.Context, int, int, string) ([]model.User, int64, error)
+	AdminCreateRecipient(context.Context, model.Recipient) error
+	AdminCreateDomain(context.Context, model.Domain) error
+	AdminExportInbox(context.Context) ([]model.InboxMessage, error)
+	AdminExportMessages(context.Context) ([]model.Message, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -447,4 +451,20 @@ func (s *Service) AdminMarkInboxRead(ctx context.Context, msgID uint, isRead boo
 func (s *Service) AdminGetAllUsersPaginated(ctx context.Context, limit, offset int, search string) ([]model.User, int64, error) {
 	if limit <= 0 || limit > 100 { limit = 50 }
 	return s.Store.AdminGetAllUsersPaginated(ctx, limit, offset, search)
+}
+
+func (s *Service) AdminCreateRecipient(ctx context.Context, r model.Recipient) error {
+	return s.Store.AdminCreateRecipient(ctx, r)
+}
+
+func (s *Service) AdminCreateDomain(ctx context.Context, dm model.Domain) error {
+	return s.Store.AdminCreateDomain(ctx, dm)
+}
+
+func (s *Service) AdminExportInbox(ctx context.Context) ([]model.InboxMessage, error) {
+	return s.Store.AdminExportInbox(ctx)
+}
+
+func (s *Service) AdminExportMessages(ctx context.Context) ([]model.Message, error) {
+	return s.Store.AdminExportMessages(ctx)
 }

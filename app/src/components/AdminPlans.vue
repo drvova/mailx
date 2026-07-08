@@ -44,6 +44,8 @@
                         <button class="cta cta-tertiary text-sm" @click="exportSubscriptions">Export Subscriptions CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportDomains">Export Domains CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportLogs">Export Logs CSV</button>
+                        <button class="cta cta-tertiary text-sm" @click="exportInbox">Export Inbox CSV</button>
+                        <button class="cta cta-tertiary text-sm" @click="exportMessages">Export Messages CSV</button>
                     </div>
                 </div>
                 <SkeletonRows v-else :rows="3" />
@@ -118,6 +120,8 @@
                             <button class="cta cta-tertiary text-sm text-red-500" @click="purgeInbox(userDetail.user.id)">Purge Inbox</button>
                             <button class="cta cta-tertiary text-sm" @click="impersonate(userDetail.user.id)">Login As</button>
                             <button class="cta cta-tertiary text-sm" @click="changeEmail(userDetail.user.id)">Change Email</button>
+                            <button class="cta cta-tertiary text-sm" @click="createRecipientForUser(userDetail.user.id)">Add Recipient</button>
+                            <button class="cta cta-tertiary text-sm" @click="createDomainForUser(userDetail.user.id)">Add Domain</button>
                         </div>
                         <h4 class="mb-2">Aliases ({{ userDetail.aliases.length }})</h4>
                         <div v-if="userDetail.aliases.length" class="overflow-x-auto mb-4">
@@ -132,11 +136,21 @@
                             </tbody></table>
                         </div>
                         <h4 class="mb-2">Domains ({{ userDetail.domains.length }})</h4>
-                        <div v-if="userDetail.domains.length" class="overflow-x-auto">
+                        <div v-if="userDetail.domains.length" class="overflow-x-auto mb-4">
                             <table class="table"><thead><tr><th>Name</th><th>Enabled</th><th>Verified</th></tr></thead><tbody>
                                 <tr v-for="d in userDetail.domains" :key="d.id"><td>{{ d.name }}</td><td><span :class="d.enabled ? 'badge badge-success' : 'badge'">{{ d.enabled ? 'Yes' : 'No' }}</span></td><td>{{ d.mx_verified_at ? 'Yes' : 'No' }}</td></tr>
                             </tbody></table>
                         </div>
+                        <h4 class="mb-2">User Settings</h4>
+                        <div v-if="userSettings" class="grid grid-cols-2 gap-2 text-sm">
+                            <div><span class="text-gray-500">Domain:</span> {{ userSettings.domain || 'default' }}</div>
+                            <div><span class="text-gray-500">Recipient:</span> {{ userSettings.recipient || 'default' }}</div>
+                            <div><span class="text-gray-500">From Name:</span> {{ userSettings.from_name || 'none' }}</div>
+                            <div><span class="text-gray-500">Alias Format:</span> {{ userSettings.alias_format || 'random' }}</div>
+                            <div><span class="text-gray-500">Log Issues:</span> {{ userSettings.log_issues ? 'Yes' : 'No' }}</div>
+                            <div><span class="text-gray-500">Remove Header:</span> {{ userSettings.remove_header ? 'Yes' : 'No' }}</div>
+                        </div>
+                        <div v-else class="text-sm text-gray-500 mb-4">Loading settings...</div>
                     </div>
                 </div>
             </div>
@@ -570,6 +584,14 @@ const editDomain = async (d: AdminDomain) => {
     if (fn === null) return
     try { await adminApi.updateDomain(d.id, { description: desc, recipient: rcp, from_name: fn }); d.description = desc; d.recipient = rcp; d.from_name = fn } catch { /* */ } }
 const markInboxRead = async (m: AdminInboxMessage) => { try { await adminApi.markInboxRead(m.id, !m.read); m.read = !m.read } catch { /* */ } }
+const createRecipientForUser = async (userId: string) => {
+    const email = prompt('Enter recipient email:')
+    if (!email) return
+    try { await adminApi.createRecipient(userId, email); alert('Recipient created'); viewUser(userId) } catch { /* */ } }
+const createDomainForUser = async (userId: string) => {
+    const name = prompt('Enter domain name:')
+    if (!name) return
+    try { await adminApi.createDomain(userId, name); alert('Domain created'); viewUser(userId) } catch { /* */ } }
 let logSearchTimer: any
 const searchLogsDeb = () => { clearTimeout(logSearchTimer); logSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchLogs(logSearch.value, logFilter.value || undefined); logs.value = r.logs } catch { /* */ } }, 300) }
 let domainSearchTimer: any
@@ -579,7 +601,7 @@ const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeo
 const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(fetchAliases, 300) }
 const searchRecipientsDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(fetchRecipients, 300) }
 
-const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || ''; userStats.value = await adminApi.userStats(id) } catch { /* */ } }
+const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || ''; userStats.value = await adminApi.userStats(id); userSettings.value = await adminApi.getSettings(id) } catch { /* */ } }
 const assignPlan = async (userId: string) => { if (!selectedPlan.value) return; try { await adminApi.assignPlan(userId, selectedPlan.value); viewUser(userId) } catch { /* */ } }
 
 const toggleUser = async (u: AdminUser) => { if (u.email === localStorage.getItem('email')) { alert('Cannot suspend your own account'); return } try { await adminApi.updateUser({ id: u.id, is_active: !u.is_active }); u.is_active = !u.is_active } catch { /* */ } }
@@ -608,6 +630,11 @@ const bulkSuspend = async () => {
     if (!selected.length) { alert('Select users first'); return }
     if (!confirm(`Suspend ${selected.length} users?`)) return
     try { await adminApi.bulkUpdateUsers(selected.map(u => u.id), false); selected.forEach(u => u.is_active = false) } catch { /* */ } }
+const bulkActivate = async () => {
+    const selected = users.value.filter(u => (u as any)._selected)
+    if (!selected.length) { alert('Select users first'); return }
+    if (!confirm(`Activate ${selected.length} users?`)) return
+    try { await adminApi.bulkUpdateUsers(selected.map(u => u.id), true); selected.forEach(u => u.is_active = true) } catch { /* */ } }
 const toggleAllUsers = (e: Event) => {
     const checked = (e.target as HTMLInputElement).checked
     users.value.forEach(u => { (u as any)._selected = checked })
@@ -633,7 +660,8 @@ const exportRecipients = () => { window.open(`${import.meta.env.VITE_API_URL}/v1
 const exportSubscriptions = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/subscriptions`, '_blank') }
 const exportDomains = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/domains`, '_blank') }
 const exportLogs = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/logs`, '_blank') }
-const bulkActivate = async () => { const selected = users.value.filter(u => (u as any)._selected); if (!selected.length) { alert('Select users first'); return } if (!confirm(`Activate ${selected.length} users?`)) return; try { await adminApi.bulkUpdateUsers(selected.map(u => u.id), true); selected.forEach(u => u.is_active = true) } catch { /* */ } }
+const exportInbox = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/inbox`, '_blank') }
+const exportMessages = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/messages`, '_blank') }
 const bulkDeleteUsers = async () => { const selected = users.value.filter(u => (u as any)._selected); if (!selected.length) { alert('Select users first'); return } if (!confirm(`DELETE ${selected.length} users and ALL their data? This is irreversible.`)) return; try { await adminApi.bulkDeleteUsers(selected.map(u => u.id)); users.value = users.value.filter(u => !selected.includes(u)) } catch { /* */ } }
 const changeEmail = async (userId: string) => { const email = prompt('Enter new email address:'); if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) { alert('Invalid email'); return } try { await adminApi.changeEmail(userId, email); alert('Email changed'); viewUser(userId) } catch { /* */ } }
 const verifyDomain = async (d: AdminDomain) => { try { await adminApi.verifyDomain(d.id, !d.mx_verified_at); d.mx_verified_at = d.mx_verified_at ? null : new Date().toISOString() as any } catch { /* */ } }
@@ -644,6 +672,7 @@ const domainSearch = ref('')
 const msgTypeFilter = ref('')
 const msgSearch = ref('')
 const userStats = ref<any>(null)
+const userSettings = ref<any>(null)
 let msgSearchTimer: any
 const messages = ref<any[]>([])
 let inboxSearchTimer: any

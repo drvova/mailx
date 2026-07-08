@@ -604,3 +604,23 @@ func (d *Database) AdminGetAllUsersPaginated(ctx context.Context, limit, offset 
 	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&users).Error
 	return users, total, err
 }
+
+func (d *Database) AdminCreateRecipient(ctx context.Context, r model.Recipient) error {
+	return d.Client.Create(&r).Error
+}
+
+func (d *Database) AdminCreateDomain(ctx context.Context, dm model.Domain) error {
+	return d.Client.Create(&dm).Error
+}
+
+func (d *Database) AdminExportInbox(ctx context.Context) ([]model.InboxMessage, error) {
+	var msgs []model.InboxMessage
+	err := d.Client.Select("id, user_id, alias_id, \"from\", from_name, subject, read, size, created_at").Order("created_at desc").Limit(10000).Find(&msgs).Error
+	return msgs, err
+}
+
+func (d *Database) AdminExportMessages(ctx context.Context) ([]model.Message, error) {
+	var msgs []model.Message
+	err := d.Client.Order("created_at desc").Limit(10000).Find(&msgs).Error
+	return msgs, err
+}

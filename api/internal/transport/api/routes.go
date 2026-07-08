@@ -253,6 +253,14 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	// Admin paginated users
 	admin.Get("/users/paginated", h.AdminGetUsersPaginated)
 
+	// Admin create resources for users
+	admin.Post("/recipient", h.AdminCreateRecipient)
+	admin.Post("/domain", h.AdminCreateDomain)
+
+	// Admin CSV exports for inbox and messages
+	admin.Get("/export/inbox", h.AdminExportInbox)
+	admin.Get("/export/messages", h.AdminExportMessages)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

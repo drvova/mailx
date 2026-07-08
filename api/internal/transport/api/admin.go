@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"ivpn.net/email/api/internal/model"
@@ -77,6 +78,10 @@ type AdminService interface {
 	AdminUpdateDomain(context.Context, string, map[string]interface{}) error
 	AdminMarkInboxRead(context.Context, uint, bool) error
 	AdminGetAllUsersPaginated(context.Context, int, int, string) ([]model.User, int64, error)
+	AdminCreateRecipient(context.Context, model.Recipient) error
+	AdminCreateDomain(context.Context, model.Domain) error
+	AdminExportInbox(context.Context) ([]model.InboxMessage, error)
+	AdminExportMessages(context.Context) ([]model.Message, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -960,4 +965,68 @@ func (h *Handler) AdminGetUsersPaginated(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch users"})
 	}
 	return c.JSON(fiber.Map{"users": users, "total": total, "limit": limit, "offset": offset})
+}
+
+type AdminCreateRecipientReq struct {
+	UserID string `json:"user_id" validate:"required,uuid"`
+	Email  string `json:"email" validate:"required,email"`
+}
+
+func (h *Handler) AdminCreateRecipient(c *fiber.Ctx) error {
+	var req AdminCreateRecipientReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	r := model.Recipient{UserID: req.UserID, Email: req.Email}
+	if err := h.Service.AdminCreateRecipient(c.Context(), r); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to create recipient"})
+	}
+	return c.JSON(fiber.Map{"message": "Recipient created"})
+}
+
+type AdminCreateDomainReq struct {
+	UserID string `json:"user_id" validate:"required,uuid"`
+	Name   string `json:"name" validate:"required"`
+}
+
+func (h *Handler) AdminCreateDomain(c *fiber.Ctx) error {
+	var req AdminCreateDomainReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	dm := model.Domain{UserID: req.UserID, Name: req.Name}
+	if err := h.Service.AdminCreateDomain(c.Context(), dm); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to create domain"})
+	}
+	return c.JSON(fiber.Map{"message": "Domain created"})
+}
+
+func (h *Handler) AdminExportInbox(c *fiber.Ctx) error {
+	msgs, err := h.Service.AdminExportInbox(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export inbox messages"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,user_id,alias_id,from,from_name,subject,read,size,created_at\n")
+	for _, m := range msgs {
+		buf.WriteString(fmt.Sprintf("%d,%s,%s,%s,%s,%s,%t,%d,%s\n", m.ID, m.UserID, m.AliasID, m.From, m.FromName, m.Subject, m.Read, m.Size, m.CreatedAt.Format(time.RFC3339)))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=inbox_messages.csv")
+	return c.Send(buf.Bytes())
+}
+
+func (h *Handler) AdminExportMessages(c *fiber.Ctx) error {
+	msgs, err := h.Service.AdminExportMessages(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export messages"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,user_id,alias_id,type,created_at\n")
+	for _, m := range msgs {
+		buf.WriteString(fmt.Sprintf("%d,%s,%s,%s,%s\n", m.ID, m.UserID, m.AliasID, m.Type, m.CreatedAt.Format(time.RFC3339)))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=messages.csv")
+	return c.Send(buf.Bytes())
 }

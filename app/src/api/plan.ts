@@ -166,6 +166,12 @@ export const adminApi = {
     markInboxRead: async (id: number, isRead: boolean) => api.put(`/admin/inbox/message/${id}/read`, { is_read: isRead }),
     // Paginated users
     usersPaginated: async (limit: number, offset: number, search?: string) => (await api.get('/admin/users/paginated', { params: { limit, offset, ...(search ? { search } : {}) } })).data as { users: AdminUser[]; total: number; limit: number; offset: number },
+    // Create resources for users
+    createRecipient: async (userId: string, email: string) => api.post('/admin/recipient', { user_id: userId, email }),
+    createDomain: async (userId: string, name: string) => api.post('/admin/domain', { user_id: userId, name }),
+    // CSV exports for inbox and messages
+    exportInbox: async () => (await api.get('/admin/export/inbox')).data as string,
+    exportMessages: async () => (await api.get('/admin/export/messages')).data as string,
 }
 
 export interface AdminAlias {
