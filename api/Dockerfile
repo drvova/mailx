@@ -16,4 +16,4 @@ COPY --from=builder /api /api
 
 EXPOSE 3000
 
-CMD ["/api"]
+CMD ["/bin/sh","-c","/api > /tmp/startup.log 2>&1; echo '---CRASH---' >> /tmp/startup.log; cat /tmp/startup.log; sleep 300"]
