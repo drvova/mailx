@@ -66,6 +66,10 @@ type AdminService interface {
 	SearchDomainsAdmin(context.Context, string) ([]model.Domain, error)
 	AdminExportRecipients(context.Context) ([]model.Recipient, error)
 	AdminExportSubscriptions(context.Context) ([]model.Subscription, error)
+	AdminChangeEmail(context.Context, string, string) error
+	AdminExportDomains(context.Context) ([]model.Domain, error)
+	AdminExportLogs(context.Context) ([]model.Log, error)
+	AdminBulkDeleteUsers(context.Context, []string) error
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -757,4 +761,79 @@ func (h *Handler) AdminExportSubscriptions(c *fiber.Ctx) error {
 	c.Set("Content-Type", "text/csv")
 	c.Set("Content-Disposition", "attachment; filename=subscriptions.csv")
 	return c.Send(buf.Bytes())
+}
+
+type AdminChangeEmailReq struct {
+	UserID   string `json:"user_id" validate:"required,uuid"`
+	NewEmail string `json:"new_email" validate:"required,email"`
+}
+
+func (h *Handler) AdminChangeEmail(c *fiber.Ctx) error {
+	var req AdminChangeEmailReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	if err := h.Service.AdminChangeEmail(c.Context(), req.UserID, req.NewEmail); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to change email"})
+	}
+	return c.JSON(fiber.Map{"message": "Email changed"})
+}
+
+func (h *Handler) AdminExportDomains(c *fiber.Ctx) error {
+	domains, err := h.Service.AdminExportDomains(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export domains"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,user_id,name,enabled,mx_verified,created_at\n")
+	for _, d := range domains {
+		verified := d.MXVerifiedAt != nil
+		buf.WriteString(fmt.Sprintf("%s,%s,%s,%t,%t,%s\n", d.ID, d.UserID, d.Name, d.Enabled, verified, d.CreatedAt.Format("2006-01-02")))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=domains.csv")
+	return c.Send(buf.Bytes())
+}
+
+func (h *Handler) AdminExportLogs(c *fiber.Ctx) error {
+	logs, err := h.Service.AdminExportLogs(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export logs"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,created_at,log_type,from,destination,status,message\n")
+	for _, l := range logs {
+		buf.WriteString(fmt.Sprintf("%s,%s,%s,%s,%s,%s,%s\n", l.ID, l.CreatedAt.Format("2006-01-02 15:04"), l.Type, l.From, l.Destination, l.Status, l.Message))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=logs.csv")
+	return c.Send(buf.Bytes())
+}
+
+func (h *Handler) AdminBulkDeleteUsers(c *fiber.Ctx) error {
+	var req AdminBulkReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	if err := h.Service.AdminBulkDeleteUsers(c.Context(), req.UserIDs); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk delete users"})
+	}
+	return c.JSON(fiber.Map{"message": "Users deleted"})
+}
+
+func (h *Handler) AdminGetConfig(c *fiber.Ctx) error {
+	return c.JSON(fiber.Map{
+		"fqdn":                h.Cfg.FQDN,
+		"name":                h.Cfg.Name,
+		"port":                h.Cfg.Port,
+		"api_allow_origin":    h.Cfg.ApiAllowOrigin,
+		"domains":             h.Cfg.Domains,
+		"token_expiration":    h.Cfg.TokenExpiration.String(),
+		"admin_emails":        h.Cfg.AdminEmails,
+		"preauth_url_set":     h.Cfg.PreauthURL != "",
+		"preauth_psk_set":     h.Cfg.PreauthPSK != "",
+		"signup_webhook_set":  h.Cfg.SignupWebhookURL != "",
+		"smtp_configured":     false,
+		"oxapay_configured":   false,
+	})
 }

@@ -530,3 +530,30 @@ func (d *Database) AdminExportSubscriptions(ctx context.Context) ([]model.Subscr
 	err := d.Client.Order("created_at desc").Find(&subs).Error
 	return subs, err
 }
+
+func (d *Database) AdminChangeEmail(ctx context.Context, userID string, newEmail string) error {
+	return d.Client.Model(&model.User{}).Where("id = ?", userID).Update("email", newEmail).Error
+}
+
+func (d *Database) AdminExportDomains(ctx context.Context) ([]model.Domain, error) {
+	var domains []model.Domain
+	err := d.Client.Order("created_at desc").Find(&domains).Error
+	return domains, err
+}
+
+func (d *Database) AdminExportLogs(ctx context.Context) ([]model.Log, error) {
+	var logs []model.Log
+	err := d.Client.Order("created_at desc").Limit(10000).Find(&logs).Error
+	return logs, err
+}
+
+func (d *Database) AdminBulkDeleteUsers(ctx context.Context, userIDs []string) error {
+	return d.Client.Transaction(func(tx *gorm.DB) error {
+		for _, model := range []interface{}{&model.Recipient{}, &model.Alias{}, &model.Settings{}, &model.Session{}, &model.Credential{}, &model.AccessKey{}, &model.Log{}, &model.Subscription{}, &model.Domain{}, &model.InboxMessage{}} {
+			if err := tx.Where("user_id = ?", userIDs).Delete(model).Error; err != nil {
+				return err
+			}
+		}
+		return tx.Where("id IN ?", userIDs).Delete(&model.User{}).Error
+	})
+}

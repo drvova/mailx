@@ -93,6 +93,10 @@ type AdminStore interface {
 	GetMessageCount(context.Context) (int64, error)
 	AdminExportRecipients(context.Context) ([]model.Recipient, error)
 	AdminExportSubscriptions(context.Context) ([]model.Subscription, error)
+	AdminChangeEmail(context.Context, string, string) error
+	AdminExportDomains(context.Context) ([]model.Domain, error)
+	AdminExportLogs(context.Context) ([]model.Log, error)
+	AdminBulkDeleteUsers(context.Context, []string) error
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -390,4 +394,20 @@ func (s *Service) AdminExportRecipients(ctx context.Context) ([]model.Recipient,
 
 func (s *Service) AdminExportSubscriptions(ctx context.Context) ([]model.Subscription, error) {
 	return s.Store.AdminExportSubscriptions(ctx)
+}
+
+func (s *Service) AdminChangeEmail(ctx context.Context, userID string, newEmail string) error {
+	return s.Store.AdminChangeEmail(ctx, userID, newEmail)
+}
+
+func (s *Service) AdminExportDomains(ctx context.Context) ([]model.Domain, error) {
+	return s.Store.AdminExportDomains(ctx)
+}
+
+func (s *Service) AdminExportLogs(ctx context.Context) ([]model.Log, error) {
+	return s.Store.AdminExportLogs(ctx)
+}
+
+func (s *Service) AdminBulkDeleteUsers(ctx context.Context, userIDs []string) error {
+	return s.Store.AdminBulkDeleteUsers(ctx, userIDs)
 }

@@ -144,6 +144,15 @@ export const adminApi = {
     // CSV export recipients and subscriptions
     exportRecipients: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/recipients`,
     exportSubscriptions: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/subscriptions`,
+    // Email change
+    changeEmail: async (userId: string, newEmail: string) => api.put('/admin/user/email', { user_id: userId, new_email: newEmail }),
+    // Bulk delete users
+    bulkDeleteUsers: async (userIds: string[]) => api.post('/admin/users/bulk-delete', { user_ids: userIds }),
+    // CSV export domains and logs
+    exportDomains: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/domains`,
+    exportLogs: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/logs`,
+    // Config viewer
+    getConfig: async () => (await api.get('/admin/system/config')).data as Record<string, any>,
 }
 
 export interface AdminAlias {

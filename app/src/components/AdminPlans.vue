@@ -42,6 +42,8 @@
                         <button class="cta cta-tertiary text-sm" @click="exportAliases">Export Aliases CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportRecipients">Export Recipients CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportSubscriptions">Export Subscriptions CSV</button>
+                        <button class="cta cta-tertiary text-sm" @click="exportDomains">Export Domains CSV</button>
+                        <button class="cta cta-tertiary text-sm" @click="exportLogs">Export Logs CSV</button>
                     </div>
                 </div>
                 <SkeletonRows v-else :rows="3" />
@@ -51,7 +53,9 @@
             <div v-if="tab === 'users'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
                     <input v-model="userSearch" placeholder="Search by email..." @input="searchUsersDeb" class="flex-1" />
-                    <button class="cta cta-tertiary text-sm" @click="bulkSuspend">Bulk Suspend Selected</button>
+                    <button class="cta cta-tertiary text-sm" @click="bulkSuspend">Bulk Suspend</button>
+                    <button class="cta cta-tertiary text-sm" @click="bulkActivate">Bulk Activate</button>
+                    <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteUsers">Bulk Delete</button>
                 </div>
                 <div v-if="users.length" class="overflow-x-auto">
                     <table class="table">
@@ -101,6 +105,7 @@
                             <button class="cta cta-tertiary text-sm" @click="resetPassword(userDetail.user.id)">Reset Password</button>
                             <button class="cta cta-tertiary text-sm text-red-500" @click="purgeInbox(userDetail.user.id)">Purge Inbox</button>
                             <button class="cta cta-tertiary text-sm" @click="impersonate(userDetail.user.id)">Login As</button>
+                            <button class="cta cta-tertiary text-sm" @click="changeEmail(userDetail.user.id)">Change Email</button>
                         </div>
                         <h4 class="mb-2">Aliases ({{ userDetail.aliases.length }})</h4>
                         <div v-if="userDetail.aliases.length" class="overflow-x-auto mb-4">
@@ -411,6 +416,22 @@
                     </div>
                     <p v-else class="text-gray-500">No recent signups.</p>
                 </div>
+                <div v-if="configInfo" class="card-secondary mt-4">
+                    <h3 class="mb-3 font-bold">System Configuration</h3>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div><span class="text-gray-500">FQDN:</span> {{ configInfo.fqdn || 'not set' }}</div>
+                        <div><span class="text-gray-500">Port:</span> {{ configInfo.port }}</div>
+                        <div><span class="text-gray-500">Domains:</span> {{ configInfo.domains }}</div>
+                        <div><span class="text-gray-500">Token Expiration:</span> {{ configInfo.token_expiration }}</div>
+                        <div><span class="text-gray-500">Admin Emails:</span> {{ (configInfo.admin_emails || []).join(', ') || 'none' }}</div>
+                        <div><span class="text-gray-500">CORS Origin:</span> {{ configInfo.api_allow_origin }}</div>
+                        <div><span class="text-gray-500">Preauth URL:</span> {{ configInfo.preauth_url_set ? 'configured' : 'not set' }}</div>
+                        <div><span class="text-gray-500">Preauth PSK:</span> {{ configInfo.preauth_psk_set ? 'configured' : 'not set' }}</div>
+                        <div><span class="text-gray-500">Signup Webhook:</span> {{ configInfo.signup_webhook_set ? 'configured' : 'not set' }}</div>
+                        <div><span class="text-gray-500">SMTP:</span> {{ configInfo.smtp_configured ? 'configured' : 'not set' }}</div>
+                        <div><span class="text-gray-500">Oxapay:</span> {{ configInfo.oxapay_configured ? 'configured' : 'not set' }}</div>
+                    </div>
+                </div>
             </div>
 
             <!-- LOGS -->
@@ -468,6 +489,7 @@ const subscriptions = ref<AdminSubscription[]>([])
 const subFilter = ref('')
 const tableSizes = ref<Record<string, number> | null>(null)
 const recentSignups = ref<AdminUser[]>([])
+const configInfo = ref<Record<string, any> | null>(null)
 const loadingPlans = ref(true)
 const deleting = ref('')
 const saving = ref(false)
@@ -502,6 +524,7 @@ const fetchInboxMessages = async () => { try { const r = await adminApi.inboxMes
 const fetchSubscriptions = async () => { try { const r = await adminApi.subscriptions(subFilter.value || undefined); subscriptions.value = r.subscriptions } catch { /* */ } }
 const fetchTableSizes = async () => { try { tableSizes.value = await adminApi.tableSizes() } catch { /* */ } }
 const fetchRecentSignups = async () => { try { const r = await adminApi.recentSignups(7); recentSignups.value = r.users } catch { /* */ } }
+const fetchConfig = async () => { try { configInfo.value = await adminApi.getConfig() } catch { /* */ } }
 const fetchMessages = async () => { try { const r = await adminApi.messages(msgTypeFilter.value || undefined); messages.value = r.messages } catch { /* */ } }
 let logSearchTimer: any
 const searchLogsDeb = () => { clearTimeout(logSearchTimer); logSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchLogs(logSearch.value, logFilter.value || undefined); logs.value = r.logs } catch { /* */ } }, 300) }
@@ -564,6 +587,11 @@ const toggleAllRecipients = (e: Event) => { const checked = (e.target as HTMLInp
 const toggleRecipient = async (r: AdminRecipient) => { try { await adminApi.toggleRecipient(r.id, !r.is_active); r.is_active = !r.is_active } catch { /* */ } }
 const exportRecipients = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/recipients`, '_blank') }
 const exportSubscriptions = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/subscriptions`, '_blank') }
+const exportDomains = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/domains`, '_blank') }
+const exportLogs = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/logs`, '_blank') }
+const bulkActivate = async () => { const selected = users.value.filter(u => (u as any)._selected); if (!selected.length) { alert('Select users first'); return } if (!confirm(`Activate ${selected.length} users?`)) return; try { await adminApi.bulkUpdateUsers(selected.map(u => u.id), true); selected.forEach(u => u.is_active = true) } catch { /* */ } }
+const bulkDeleteUsers = async () => { const selected = users.value.filter(u => (u as any)._selected); if (!selected.length) { alert('Select users first'); return } if (!confirm(`DELETE ${selected.length} users and ALL their data? This is irreversible.`)) return; try { await adminApi.bulkDeleteUsers(selected.map(u => u.id)); users.value = users.value.filter(u => !selected.includes(u)) } catch { /* */ } }
+const changeEmail = async (userId: string) => { const email = prompt('Enter new email address:'); if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) { alert('Invalid email'); return } try { await adminApi.changeEmail(userId, email); alert('Email changed'); viewUser(userId) } catch { /* */ } }
 const verifyDomain = async (d: AdminDomain) => { try { await adminApi.verifyDomain(d.id, !d.mx_verified_at); d.mx_verified_at = d.mx_verified_at ? null : new Date().toISOString() as any } catch { /* */ } }
 const impersonate = async (userId: string) => { if (!confirm('Login as this user? You will get a 24h session token.')) return; try { const r = await adminApi.impersonate(userId); document.cookie = `authn=${r.token}; path=/; secure; max-age=86400`; window.open('/account/aliases', '_blank') } catch { /* */ } }
 const inboxSearch = ref('')
@@ -589,7 +617,7 @@ watch(tab, (t) => {
     if (t === 'inbox' && !inboxMessages.value.length) fetchInboxMessages()
     if (t === 'messages') fetchMessages()
     if (t === 'subs') fetchSubscriptions()
-    if (t === 'system') { fetchTableSizes(); fetchRecentSignups() }
+    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig() }
 })
 
 onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs() })

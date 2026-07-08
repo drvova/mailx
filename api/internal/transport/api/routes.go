@@ -223,6 +223,19 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/export/recipients", h.AdminExportRecipients)
 	admin.Get("/export/subscriptions", h.AdminExportSubscriptions)
 
+	// Admin user email change
+	admin.Put("/user/email", h.AdminChangeEmail)
+
+	// Admin CSV export for domains and logs
+	admin.Get("/export/domains", h.AdminExportDomains)
+	admin.Get("/export/logs", h.AdminExportLogs)
+
+	// Admin bulk delete users
+	admin.Post("/users/bulk-delete", h.AdminBulkDeleteUsers)
+
+	// Admin config viewer (redacted)
+	admin.Get("/system/config", h.AdminGetConfig)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)
