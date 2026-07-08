@@ -13,6 +13,7 @@ var DeleteInboxMessageSuccess = "Message deleted successfully."
 
 type InboxService interface {
 	GetInboxMessages(context.Context, string, string) ([]model.InboxMessage, error)
+	GetInboxUnreadCount(context.Context, string) (int64, error)
 	GetRenderedInboxMessage(context.Context, uint, string) (model.RenderedMessage, error)
 	DeleteInboxMessage(context.Context, uint, string) error
 }
@@ -37,6 +38,29 @@ func (h *Handler) GetInboxMessages(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(messages)
+}
+
+// @Summary Get inbox unread count
+// @Description Get the count of unread inbox messages for the authenticated user
+// @Tags inbox
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} map[string]int64
+// @Failure 400 {object} ErrorRes
+// @Router /inbox/unread [get]
+func (h *Handler) GetInboxUnread(c *fiber.Ctx) error {
+	userID := auth.GetUserID(c)
+	count, err := h.Service.GetInboxUnreadCount(c.Context(), userID)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"unread": count,
+	})
 }
 
 // @Summary Get inbox message
