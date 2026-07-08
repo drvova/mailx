@@ -1,25 +1,29 @@
 <template>
     <div class="flex flex-row justify-between pt-5 pb-3">
         <div class="flex items-center gap-x-3">
-            <select v-model="limit" @change="updateLimit" class="py-2 mb-0">
+            <select v-model="limit" @change="updateLimit" class="py-2 mb-0" aria-label="Rows per page">
                 <option>25</option>
                 <option>50</option>
                 <option>75</option>
             </select>
             <p class="text-nowrap m-0 desktop">per page</p>
         </div>
-        <nav class="flex items-center gap-x-2">
+        <nav class="flex items-center gap-x-2" aria-label="Pagination">
             <div class="flex items-center gap-x-3">
                 <span class="min-h-[38px] min-w-[38px] inline-flex justify-center items-center border border-secondary text-secondary text-sm">{{ page }}</span>
                 <span class="min-h-[38px] min-w-[38px] inline-flex justify-center items-center text-secondary text-sm">of {{ pages }}</span>
             </div>
             <button
                 @click="prev"
+                :disabled="page === 1"
+                aria-label="Previous page"
                 class="h-[38px] w-[38px] inline-flex justify-center items-center hover:bg-secondary">
                 <i class="icon arrow-down rotate-90 text-xl icon-secondary"></i>
             </button>
             <button
                 @click="next"
+                :disabled="page * limit >= total"
+                aria-label="Next page"
                 class="h-[38px] w-[38px] inline-flex justify-center items-center hover:bg-secondary">
                 <i class="icon arrow-down -rotate-90 text-xl icon-secondary"></i>
             </button>

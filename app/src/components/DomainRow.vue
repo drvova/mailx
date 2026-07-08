@@ -24,7 +24,7 @@
         </td>
         <td>
             <div class="hs-dropdown [--offset:0]">
-                <button v-bind:id="'hs-dropdown-domain-edit-' + domain.id">
+                <button v-bind:id="'hs-dropdown-domain-edit-' + domain.id" aria-label="Domain actions">
                     <i class="icon icon-secondary more text-lg"></i>
                 </button>
                 <div
@@ -35,7 +35,7 @@
                         <i class="icon icon-primary check text-xs"></i>
                         Verify DNS
                     </button>
-                    <button class="delete"
+                    <button class="delete" :aria-label="'Delete ' + domain.name"
                         v-bind:data-hs-overlay="'#modal-delete-domain' + domain.id">
                         <i class="icon icon-error trash text-xs"></i>
                         Delete
@@ -66,7 +66,7 @@
                 </div>
                 <div class="text-end">
                     <div class="hs-dropdown [--offset:0]">
-                        <button class="py-0" v-bind:id="'hs-dropdown-domain-edit-' + domain.id">
+                        <button class="py-0" v-bind:id="'hs-dropdown-domain-edit-' + domain.id" aria-label="Domain actions">
                             <i class="icon icon-secondary more text-lg"></i>
                         </button>
                         <div
@@ -77,7 +77,7 @@
                                 <i class="icon icon-primary check text-xs"></i>
                                 Verify DNS
                             </button>
-                            <button class="delete"
+                            <button class="delete" :aria-label="'Delete ' + domain.name"
                                 v-bind:data-hs-overlay="'#modal-delete-domain' + domain.id">
                                 <i class="icon icon-error trash text-xs"></i>
                                 Delete

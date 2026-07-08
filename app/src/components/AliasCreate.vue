@@ -156,6 +156,7 @@ import overlay from '@preline/overlay'
 import select from '@preline/select'
 import { aliasApi } from '../api/alias.ts'
 import events from '../events.ts'
+import { toast } from '../composables/useToast.ts'
 import tooltip from '@preline/tooltip'
 import accordion from '@preline/accordion'
 
@@ -216,6 +217,7 @@ const postAlias = async () => {
         loading.value = true
         const res = await aliasApi.create(alias.value)
         copyAlias(res.data.alias.name)
+        toast('Alias created')
         events.emit('alias.create', {})
         error.value = ''
         loading.value = false

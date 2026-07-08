@@ -15,8 +15,10 @@
                                     v-model="emailAuthn"
                                     v-bind:class="{ 'error': emailAuthnError }"
                                     placeholder="Email Address"
+                                    aria-label="Email address"
                                     id="email_authn"
                                     type="email"
+                                    autocomplete="email"
                                     class="email"
                                     :disabled="!!rotateSessionError"
                                     @keypress.enter.prevent
@@ -24,7 +26,7 @@
                                 <p v-if="emailAuthnError" class="error" role="alert">Required</p>
                             </div>
                             <div class="flex items-center w-full">
-                                <button @click="registerWithPasskey" :disabled="isLoading || !!rotateSessionError" class="cta full">
+                                <button @click="registerWithPasskey" :disabled="isLoading || !!rotateSessionError" :aria-busy="isLoading" class="cta full">
                                     Sign Up with Passkey
                                 </button>
                             </div>
@@ -47,8 +49,10 @@
                                     v-model="email"
                                     v-bind:class="{ 'error': emailError }"
                                     placeholder="Email Address"
+                                    aria-label="Email address"
                                     id="email"
                                     type="email"
+                                    autocomplete="email"
                                     class="email"
                                     :disabled="!!rotateSessionError"
                                     @keypress.enter.prevent
@@ -60,8 +64,10 @@
                                     v-model="password"
                                     v-bind:class="{ 'error': passwordError }"
                                     placeholder="Password"
+                                    aria-label="Password"
                                     id="password"
                                     type="password"
+                                    autocomplete="new-password"
                                     class="password"
                                     :disabled="!!rotateSessionError"
                                     @keypress.enter.prevent
@@ -70,7 +76,7 @@
                             </div>
                             <p class="text-sm mb-5">Must be 12+ characters and contain uppercase, lowercase, number, and special character (e.g. -_+=~!@#$%^&*(),;.?":{}|<>)</p>
                             <div class="flex items-center w-full">
-                                <button @click="register" :disabled="isLoading || !!rotateSessionError" class="cta full">
+                                <button @click="register" :disabled="isLoading || !!rotateSessionError" :aria-busy="isLoading" class="cta full">
                                     Sign Up
                                 </button>
                             </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { userApi } from '../api/user.ts'
+import { appConfirm } from '../composables/useConfirm.ts'
 
 const signupUrl = import.meta.env.VITE_PRICING_URL
 
@@ -10,6 +11,7 @@ const isLoggedIn = computed(() => {
 })
 
 const logout = async () => {
+    if (!(await appConfirm('End your current session?', { title: 'Log out', confirmLabel: 'Log out' }))) return
     try {
         await userApi.logout()
         userApi.clearSession()

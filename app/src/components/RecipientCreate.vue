@@ -58,6 +58,7 @@ import { ApiError } from '../api/api.ts'
 import overlay from '@preline/overlay'
 import { recipientApi } from '../api/recipient.ts'
 import events from '../events.ts'
+import { toast } from '../composables/useToast.ts'
 
 const recipient = ref({
     email: '',
@@ -77,6 +78,7 @@ const postRecipient = async () => {
 
     try {
         await recipientApi.create(recipient.value)
+        toast('Recipient added')
         error.value = ''
         events.emit('recipient.create', {})
         close()

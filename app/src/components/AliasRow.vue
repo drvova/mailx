@@ -83,11 +83,11 @@
                         <i class="icon icon-primary send text-xs"></i>
                         Send
                     </button>
-                    <button v-bind:data-hs-overlay="'#modal-alias-edit' + alias.id">
+                    <button v-bind:data-hs-overlay="'#modal-alias-edit' + alias.id" :aria-label="'Edit ' + alias.name">
                         <i class="icon icon-primary edit text-xs"></i>
                         Edit
                     </button>
-                    <button @click.stop="deleteAlias" class="delete">
+                    <button @click.stop="deleteAlias" class="delete" :aria-label="'Delete ' + alias.name">
                         <i class="icon icon-error trash text-xs"></i>
                         Delete
                     </button>
@@ -147,11 +147,11 @@
                                 <i class="icon icon-primary send text-xs"></i>
                                 Send
                             </button>
-                            <button v-bind:data-hs-overlay="'#modal-alias-edit' + alias.id">
+                            <button v-bind:data-hs-overlay="'#modal-alias-edit' + alias.id" :aria-label="'Edit ' + alias.name">
                                 <i class="icon icon-primary edit text-xs"></i>
                                 Edit
                             </button>
-                            <button @click.stop="deleteAlias" class="delete">
+                            <button @click.stop="deleteAlias" class="delete" :aria-label="'Delete ' + alias.name">
                                 <i class="icon icon-error trash text-xs"></i>
                                 Delete
                             </button>

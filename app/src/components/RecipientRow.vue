@@ -37,7 +37,7 @@
         </td>
         <td>
             <div class="hs-dropdown [--offset:0]">
-                <button v-bind:id="'hs-dropdown-recipient-edit-' + recipient.id">
+                <button v-bind:id="'hs-dropdown-recipient-edit-' + recipient.id" aria-label="Recipient actions">
                     <i class="icon icon-secondary more text-lg"></i>
                 </button>
                 <div
@@ -48,7 +48,7 @@
                         <i class="icon icon-primary check text-xs"></i>
                         Verify
                     </button>
-                    <button v-bind:data-hs-overlay="'#modal-edit-recipient' + recipient.id">
+                    <button v-bind:data-hs-overlay="'#modal-edit-recipient' + recipient.id" :aria-label="'Edit ' + recipient.email">
                         <i class="icon icon-primary edit text-xs"></i>
                         Edit
                     </button>
@@ -60,7 +60,7 @@
                         <i class="icon icon-error trash text-xs"></i>
                         Remove PGP Key
                     </button>
-                    <button class="delete"
+                    <button class="delete" :aria-label="'Delete ' + recipient.email"
                         v-bind:data-hs-overlay="'#modal-delete-recipient' + recipient.id">
                         <i class="icon icon-error trash text-xs"></i>
                         Delete
@@ -102,7 +102,7 @@
                 </div>
                 <div class="text-end">
                     <div class="hs-dropdown [--offset:0]">
-                        <button class="py-0" v-bind:id="'hs-dropdown-recipient-edit-' + recipient.id">
+                        <button class="py-0" v-bind:id="'hs-dropdown-recipient-edit-' + recipient.id" aria-label="Recipient actions">
                             <i class="icon icon-secondary more text-lg"></i>
                         </button>
                         <div
@@ -113,7 +113,7 @@
                                 <i class="icon icon-primary check text-xs"></i>
                                 Verify
                             </button>
-                            <button v-bind:data-hs-overlay="'#modal-edit-recipient' + recipient.id">
+                            <button v-bind:data-hs-overlay="'#modal-edit-recipient' + recipient.id" :aria-label="'Edit ' + recipient.email">
                                 <i class="icon icon-primary edit text-xs"></i>
                                 Edit
                             </button>
@@ -125,7 +125,7 @@
                                 <i class="icon icon-error trash text-xs"></i>
                                 Remove PGP Key
                             </button>
-                            <button class="delete"
+                            <button class="delete" :aria-label="'Delete ' + recipient.email"
                             v-bind:data-hs-overlay="'#modal-delete-recipient' + recipient.id">
                                 <i class="icon icon-error trash text-xs"></i>
                                 Delete

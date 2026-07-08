@@ -8,7 +8,11 @@
                 <MobileHeader />
             </div>
             <SubscriptionStatus v-if="route.path !== '/account/profile'" :dashboard="true" />
-            <router-view></router-view>
+            <router-view v-slot="{ Component }">
+                <Transition name="route-fade">
+                    <component :is="Component" />
+                </Transition>
+            </router-view>
             <div class="mobile">
                 <Tabbar />
             </div>
@@ -25,3 +29,13 @@ import SubscriptionStatus from './AccountSubscriptionStatus.vue';
 
 const route = useRoute()
 </script>
+
+<style scoped>
+.route-fade-enter-active {
+    transition: opacity 120ms var(--ease-smooth);
+}
+
+.route-fade-enter-from {
+    opacity: 0;
+}
+</style>

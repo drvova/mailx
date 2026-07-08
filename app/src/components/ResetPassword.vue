@@ -14,7 +14,9 @@
                             v-bind:class="{ 'error': passwordError }"
                             id="password-new"
                             type="password"
+                            autocomplete="new-password"
                             placeholder="New Password"
+                            aria-label="New password"
                             class="password"
                         >
                     </div>
@@ -24,7 +26,9 @@
                             v-bind:class="{ 'error': passwordError }"
                             id="password-new-conmfirm"
                             type="password"
+                            autocomplete="new-password"
                             placeholder="Confirm Password"
+                            aria-label="Confirm password"
                             class="password"
                         >
                     </div>
@@ -32,7 +36,7 @@
                         Must be 12+ characters and contain uppercase, lowercase, number, and special character (e.g. -_+=~!@#$%^&*(),;.?":{}|<>)
                     </p>
                     <div class="flex items-center justify-between">
-                        <button :disabled="isLoading" class="cta full">
+                        <button :disabled="isLoading" :aria-busy="isLoading" class="cta full">
                             Update password
                         </button>
                     </div>

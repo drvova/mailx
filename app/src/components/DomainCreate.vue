@@ -281,6 +281,7 @@ import { ApiError } from '../api/api.ts'
 import overlay from '@preline/overlay'
 import { domainApi } from '../api/domain.ts'
 import events from '../events.ts'
+import { toast } from '../composables/useToast.ts'
 import tooltip from '@preline/tooltip'
 
 const modalId = 'modal-create-domain-' + getCurrentInstance()!.uid
@@ -333,6 +334,7 @@ const postDomain = async () => {
     try {
         const res = await domainApi.create(payload)
         createdDomain.value = res.data
+        toast('Domain added')
         error.value = ''
         ownershipPending.value = false
         // events.emit('domain.create', {})

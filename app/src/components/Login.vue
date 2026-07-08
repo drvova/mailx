@@ -17,14 +17,15 @@
                                     id="email_authn"
                                     type="email"
                                     placeholder="Email Address"
+                                    aria-label="Email address"
                                     class="email"
-                                    autocomplete="false"
+                                    autocomplete="off"
                                     @keypress.enter.prevent
                                 >
                                 <p v-if="emailAuthnError" class="error" role="alert">Required</p>
                             </div>
                             <div class="flex items-center w-full">
-                                <button :disabled="isLoading" @click="loginWithPasskey" class="cta full">
+                                <button :disabled="isLoading" :aria-busy="isLoading" @click="loginWithPasskey" class="cta full">
                                     Log in with Passkey
                                 </button>
                             </div>
@@ -46,6 +47,7 @@
                                     type="email"
                                     autocomplete="email"
                                     placeholder="Email address"
+                                    aria-label="Email address"
                                     class="email"
                                     @keypress.enter.prevent
                                 >
@@ -59,6 +61,7 @@
                                     type="password"
                                     autocomplete="current-password"
                                     placeholder="Password"
+                                    aria-label="Password"
                                     class="password"
                                     @keypress.enter.prevent
                                 >
@@ -82,7 +85,7 @@
                                 <p v-if="otpError" class="error" role="alert">Required</p>
                             </div>
                             <div class="flex items-center w-full" v-bind:class="{ 'mb-6': !passkeySupported }">
-                                <button :disabled="isLoading" @click="login" class="cta full">
+                                <button :disabled="isLoading" :aria-busy="isLoading" @click="login" class="cta full">
                                     Log in
                                 </button>
                             </div>

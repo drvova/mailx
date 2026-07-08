@@ -16,6 +16,7 @@
                             type="email"
                             autocomplete="email"
                             placeholder="Email Address"
+                            aria-label="Email address"
                             class="email"
                         >
                         <p v-if="emailError" class="error" role="alert">Required</p>
@@ -24,7 +25,7 @@
                         Please enter your registered email address. You will be sent instructions on how to reset your password.
                     </p>
                     <div class="flex items-center justify-between">
-                        <button :disabled="isLoading" class="cta full">
+                        <button :disabled="isLoading" :aria-busy="isLoading" class="cta full">
                             Send reset instructions
                         </button>
                     </div>
