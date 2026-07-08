@@ -12,7 +12,7 @@
                 <label for="domain">
                     Select default domain:
                 </label>
-                <select id="domain">
+                <select id="domain" @change="dirty = true">
                     <option
                         v-for="(domain, index) in domains"
                         v-bind:domain
@@ -31,7 +31,7 @@
                 <label for="recipient">
                     Select default recipient:
                 </label>
-                <select id="recipient" :disabled="!recipients.length">
+                <select id="recipient" :disabled="!recipients.length" @change="dirty = true">
                     <option
                         v-for="recipient in recipients"
                         v-bind:value=recipient
@@ -50,7 +50,7 @@
                 <label for="format">
                     Select default alias format:
                 </label>
-                <select id="format" :disabled="!aliasFormats.length">
+                <select id="format" :disabled="!aliasFormats.length" @change="dirty = true">
                     <option
                         v-for="format in aliasFormats"
                         v-bind:value=format.toLowerCase()
@@ -71,6 +71,7 @@
                 </label>
                 <input
                     v-model="req.from_name"
+                    @input="dirty = true"
                     id="from-name"
                     type="text"
                 >
@@ -121,19 +122,23 @@
                 If you use FreeTheMail browser extension, in the extension go to "Settings" &gt; "Refresh Defaults" after saving to apply the new settings.
             </p>
             <hr>
-            <div class="mb-6">
-                <button @click="saveSettings" :disabled="saving" :aria-busy="saving" class="cta">
-                    Save Settings
-                </button>
+            <div class="sticky bottom-0 bg-primary pb-6 pt-3 -mx-5 md:-mx-7 px-5 md:px-7 border-t border-secondary">
+                <div class="flex items-center gap-3">
+                    <button @click="saveSettings" :disabled="saving" :aria-busy="saving" class="cta">
+                        Save Settings
+                    </button>
+                    <p v-if="dirty" class="text-sm text-accent m-0" role="status" aria-live="polite">Unsaved changes</p>
+                </div>
+                <p v-if="error" class="error mt-3" role="alert">Error: {{ error }}</p>
+                <p v-if="success" class="success mt-3">{{ success }}</p>
             </div>
-            <p v-if="error" class="error" role="alert">Error: {{ error }}</p>
-            <p v-if="success" class="success">{{ success }}</p>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
 import { ApiError } from '../api/api.ts'
 import { settingsApi } from '../api/settings.ts'
 import { recipientApi } from '../api/recipient.ts'
@@ -155,6 +160,7 @@ const recipients = ref([])
 const success = ref('')
 const error = ref('')
 const saving = ref(false)
+const dirty = ref(false)
 const aliasFormats = ref(['Words', 'Random', 'UUID'])
 const includeHeader = ref(true)
 const loaded = ref(false)
@@ -188,6 +194,7 @@ const saveSettings = async () => {
         const res = await settingsApi.update(req.value)
         success.value = res.data.message
         error.value = ''
+        dirty.value = false
     } catch (err) {
         if (err instanceof ApiError) {
             success.value = ''
@@ -226,6 +233,11 @@ const deleteAllLogs = async () => {
         }
     }
 }
+
+onBeforeRouteLeave(async () => {
+    if (!dirty.value) return true
+    return await appConfirm('You have unsaved changes that will be lost.', { title: 'Leave settings?', confirmLabel: 'Leave' })
+})
 
 onMounted(() => {
     getSettings()
