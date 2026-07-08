@@ -16,6 +16,8 @@
                 <li><button :class="tab === 'sessions' ? 'font-bold border-b-2' : ''" @click="tab = 'sessions'" role="tab">Sessions</button></li>
                 <li><button :class="tab === 'passkeys' ? 'font-bold border-b-2' : ''" @click="tab = 'passkeys'" role="tab">Passkeys</button></li>
                 <li><button :class="tab === 'inbox' ? 'font-bold border-b-2' : ''" @click="tab = 'inbox'" role="tab">Inbox</button></li>
+                <li><button :class="tab === 'subs' ? 'font-bold border-b-2' : ''" @click="tab = 'subs'" role="tab">Subscriptions</button></li>
+                <li><button :class="tab === 'system' ? 'font-bold border-b-2' : ''" @click="tab = 'system'" role="tab">System</button></li>
                 <li><button :class="tab === 'logs' ? 'font-bold border-b-2' : ''" @click="tab = 'logs'" role="tab">Logs</button></li>
             </ul>
 
@@ -122,12 +124,14 @@
             <div v-if="tab === 'aliases'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
                     <input v-model="aliasSearch" placeholder="Search aliases..." @input="searchAliasesDeb" class="flex-1" />
+                    <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteAliases">Bulk Delete Selected</button>
                 </div>
                 <div v-if="aliases.length" class="overflow-x-auto">
                     <table class="table">
-                        <thead><tr><th>Alias</th><th>Enabled</th><th>Catch-All</th><th>Created</th><th></th></tr></thead>
+                        <thead><tr><th><input type="checkbox" @click="toggleAllAliases($event)" /></th><th>Alias</th><th>Enabled</th><th>Catch-All</th><th>Created</th><th></th></tr></thead>
                         <tbody>
                             <tr v-for="a in aliases" :key="a.id">
+                                <td><input type="checkbox" v-model="(a as any)._selected" /></td>
                                 <td>{{ a.name }}</td>
                                 <td><span :class="a.enabled ? 'badge badge-success' : 'badge'">{{ a.enabled ? 'Yes' : 'No' }}</span></td>
                                 <td>{{ a.catch_all ? 'Yes' : 'No' }}</td>
@@ -145,11 +149,15 @@
 
             <!-- DOMAINS -->
             <div v-if="tab === 'domains'" role="tabpanel">
+                <div class="flex gap-2 mb-4">
+                    <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteDomains">Bulk Delete Selected</button>
+                </div>
                 <div v-if="domains.length" class="overflow-x-auto">
                     <table class="table">
-                        <thead><tr><th>Domain</th><th>Enabled</th><th>Verified</th><th>Created</th><th></th></tr></thead>
+                        <thead><tr><th><input type="checkbox" @click="toggleAllDomains($event)" /></th><th>Domain</th><th>Enabled</th><th>Verified</th><th>Created</th><th></th></tr></thead>
                         <tbody>
                             <tr v-for="d in domains" :key="d.id">
+                                <td><input type="checkbox" v-model="(d as any)._selected" /></td>
                                 <td>{{ d.name }}</td>
                                 <td><span :class="d.enabled ? 'badge badge-success' : 'badge'">{{ d.enabled ? 'Yes' : 'No' }}</span></td>
                                 <td><span :class="d.mx_verified_at ? 'badge badge-success' : 'badge'">{{ d.mx_verified_at ? 'Yes' : 'No' }}</span></td>
@@ -169,12 +177,14 @@
             <div v-if="tab === 'recipients'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
                     <input v-model="recipientSearch" placeholder="Search by email..." @input="searchRecipientsDeb" class="flex-1" />
+                    <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteRecipients">Bulk Delete Selected</button>
                 </div>
                 <div v-if="recipients.length" class="overflow-x-auto">
                     <table class="table">
-                        <thead><tr><th>Email</th><th>Active</th><th>PGP</th><th>Created</th><th></th></tr></thead>
+                        <thead><tr><th><input type="checkbox" @click="toggleAllRecipients($event)" /></th><th>Email</th><th>Active</th><th>PGP</th><th>Created</th><th></th></tr></thead>
                         <tbody>
                             <tr v-for="r in recipients" :key="r.id">
+                                <td><input type="checkbox" v-model="(r as any)._selected" /></td>
                                 <td>{{ r.email }}</td>
                                 <td><span :class="r.is_active ? 'badge badge-success' : 'badge'">{{ r.is_active ? 'Yes' : 'No' }}</span></td>
                                 <td>{{ r.pgp_enabled ? 'Yes' : 'No' }}</td>
@@ -305,6 +315,63 @@
                 <SkeletonRows v-else :rows="5" />
             </div>
 
+            <!-- SUBSCRIPTIONS -->
+            <div v-if="tab === 'subs'" role="tabpanel">
+                <div class="flex gap-2 mb-4">
+                    <select v-model="subFilter" @change="fetchSubscriptions" class="max-w-xs">
+                        <option value="">All Tiers</option>
+                        <option value="self-hosted">Self-hosted</option>
+                        <option value="self">Self</option>
+                        <option value="pro">Pro</option>
+                        <option value="free">Free</option>
+                    </select>
+                </div>
+                <div v-if="subscriptions.length" class="overflow-x-auto">
+                    <table class="table">
+                        <thead><tr><th>User ID</th><th>Tier</th><th>Type</th><th>Active</th><th>Active Until</th><th>Created</th><th></th></tr></thead>
+                        <tbody>
+                            <tr v-for="s in subscriptions" :key="s.id">
+                                <td class="text-xs text-gray-500">{{ s.user_id.slice(0,8) }}...</td>
+                                <td><span class="badge">{{ s.tier || 'none' }}</span></td>
+                                <td>{{ s.type }}</td>
+                                <td><span :class="s.is_active ? 'badge badge-success' : 'badge badge-error'">{{ s.is_active ? 'Yes' : 'No' }}</span></td>
+                                <td>{{ s.active_until ? formatDate(s.active_until) : 'N/A' }}</td>
+                                <td>{{ formatDate(s.created_at) }}</td>
+                                <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteSub(s)">Delete</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <SkeletonRows v-else :rows="5" />
+            </div>
+
+            <!-- SYSTEM -->
+            <div v-if="tab === 'system'" role="tabpanel">
+                <div v-if="tableSizes" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div v-for="(count, table) in tableSizes" :key="table" class="card-secondary text-center">
+                        <p class="text-2xl font-bold">{{ count }}</p>
+                        <p class="text-sm text-gray-500">{{ table }}</p>
+                    </div>
+                </div>
+                <div class="card-secondary">
+                    <h3 class="mb-3 font-bold">Recent Signups (7 days)</h3>
+                    <div v-if="recentSignups.length" class="overflow-x-auto">
+                        <table class="table">
+                            <thead><tr><th>Email</th><th>Active</th><th>Admin</th><th>Joined</th></tr></thead>
+                            <tbody>
+                                <tr v-for="u in recentSignups" :key="u.id">
+                                    <td>{{ u.email }}</td>
+                                    <td><span :class="u.is_active ? 'badge badge-success' : 'badge badge-error'">{{ u.is_active ? 'Active' : 'Suspended' }}</span></td>
+                                    <td>{{ u.is_admin ? 'Admin' : 'User' }}</td>
+                                    <td>{{ formatDate(u.created_at) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p v-else class="text-gray-500">No recent signups.</p>
+                </div>
+            </div>
+
             <!-- LOGS -->
             <div v-if="tab === 'logs'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
@@ -340,7 +407,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { planApi, adminApi, type Plan, type AdminUser, type AdminLog, type AdminAlias, type AdminDomain, type AdminRecipient, type AdminAccessKey, type AdminSession, type AdminCredential, type AdminInboxMessage, type SystemStats } from '../api/plan'
+import { planApi, adminApi, type Plan, type AdminUser, type AdminLog, type AdminAlias, type AdminDomain, type AdminRecipient, type AdminAccessKey, type AdminSession, type AdminCredential, type AdminInboxMessage, type AdminSubscription, type SystemStats } from '../api/plan'
 import SkeletonRows from '../components/SkeletonRows.vue'
 
 const tab = ref('stats')
@@ -355,6 +422,10 @@ const accessKeys = ref<AdminAccessKey[]>([])
 const sessions = ref<AdminSession[]>([])
 const credentials = ref<AdminCredential[]>([])
 const inboxMessages = ref<AdminInboxMessage[]>([])
+const subscriptions = ref<AdminSubscription[]>([])
+const subFilter = ref('')
+const tableSizes = ref<Record<string, number> | null>(null)
+const recentSignups = ref<AdminUser[]>([])
 const loadingPlans = ref(true)
 const deleting = ref('')
 const saving = ref(false)
@@ -386,6 +457,9 @@ const fetchAccessKeys = async () => { try { const r = await adminApi.accessKeys(
 const fetchSessions = async () => { try { const r = await adminApi.sessions(); sessions.value = r.sessions } catch { /* */ } }
 const fetchCredentials = async () => { try { const r = await adminApi.credentials(); credentials.value = r.credentials } catch { /* */ } }
 const fetchInboxMessages = async () => { try { const r = await adminApi.inboxMessages(); inboxMessages.value = r.messages } catch { /* */ } }
+const fetchSubscriptions = async () => { try { const r = await adminApi.subscriptions(subFilter.value || undefined); subscriptions.value = r.subscriptions } catch { /* */ } }
+const fetchTableSizes = async () => { try { tableSizes.value = await adminApi.tableSizes() } catch { /* */ } }
+const fetchRecentSignups = async () => { try { const r = await adminApi.recentSignups(7); recentSignups.value = r.users } catch { /* */ } }
 
 const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(async () => { if (!userSearch.value) { fetchUsers(); return }; try { const r = await adminApi.searchUsers(userSearch.value); users.value = r.users } catch { /* */ } }, 300) }
 const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(fetchAliases, 300) }
@@ -433,6 +507,13 @@ const resetPassword = async (userId: string) => {
 const purgeInbox = async (userId: string) => { if (!confirm('Delete ALL inbox messages for this user?')) return; try { await adminApi.purgeInbox(userId); alert('Inbox purged') } catch { /* */ } }
 const exportUsers = () => { window.open(`${import.meta.env.VITE_API_URL}/admin/export/users`, '_blank') }
 const exportAliases = () => { window.open(`${import.meta.env.VITE_API_URL}/admin/export/aliases`, '_blank') }
+const deleteSub = async (s: AdminSubscription) => { if (!confirm('Delete this subscription?')) return; try { await adminApi.deleteSubscription(s.id); subscriptions.value = subscriptions.value.filter(x => x.id !== s.id) } catch { /* */ } }
+const bulkDeleteAliases = async () => { const selected = aliases.value.filter(a => (a as any)._selected); if (!selected.length) { alert('Select aliases first'); return } if (!confirm(`Delete ${selected.length} aliases?`)) return; try { await adminApi.bulkDeleteAliases(selected.map(a => a.id)); aliases.value = aliases.value.filter(a => !selected.includes(a)) } catch { /* */ } }
+const bulkDeleteDomains = async () => { const selected = domains.value.filter(d => (d as any)._selected); if (!selected.length) { alert('Select domains first'); return } if (!confirm(`Delete ${selected.length} domains?`)) return; try { await adminApi.bulkDeleteDomains(selected.map(d => d.id)); domains.value = domains.value.filter(d => !selected.includes(d)) } catch { /* */ } }
+const bulkDeleteRecipients = async () => { const selected = recipients.value.filter(r => (r as any)._selected); if (!selected.length) { alert('Select recipients first'); return } if (!confirm(`Delete ${selected.length} recipients?`)) return; try { await adminApi.bulkDeleteRecipients(selected.map(r => r.id)); recipients.value = recipients.value.filter(r => !selected.includes(r)) } catch { /* */ } }
+const toggleAllAliases = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; aliases.value.forEach(a => { (a as any)._selected = checked }) }
+const toggleAllDomains = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; domains.value.forEach(d => { (d as any)._selected = checked }) }
+const toggleAllRecipients = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; recipients.value.forEach(r => { (r as any)._selected = checked }) }
 
 const savePlan = async () => { saving.value = true; formError.value = ''; try { if (editing.value && form.value.id) { await planApi.update(form.value.id, form.value) } else { await planApi.create(form.value) }; resetForm(); await fetchPlans() } catch (err: any) { formError.value = err?.message || 'Failed' } finally { saving.value = false } }
 const editPlan = (plan: Plan) => { editing.value = true; showForm.value = true; form.value = { ...plan } }
@@ -447,6 +528,8 @@ watch(tab, (t) => {
     if (t === 'sessions' && !sessions.value.length) fetchSessions()
     if (t === 'passkeys' && !credentials.value.length) fetchCredentials()
     if (t === 'inbox' && !inboxMessages.value.length) fetchInboxMessages()
+    if (t === 'subs') fetchSubscriptions()
+    if (t === 'system') { fetchTableSizes(); fetchRecentSignups() }
 })
 
 onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs() })

@@ -71,6 +71,17 @@ type AdminStore interface {
 	GetActiveSubscriptionCount(context.Context) (int64, error)
 	AdminExportUsers(context.Context) ([]model.User, error)
 	AdminExportAliases(context.Context) ([]model.Alias, error)
+	GetAllSubscriptionsAdmin(context.Context, int, int, string) ([]model.Subscription, int64, error)
+	AdminDeleteSubscription(context.Context, string) error
+	AdminImpersonate(context.Context, string) (model.User, error)
+	AdminBulkDeleteAliases(context.Context, []string) error
+	AdminBulkDeleteDomains(context.Context, []string) error
+	AdminBulkDeleteRecipients(context.Context, []string) error
+	GetTableSizes(context.Context) (map[string]int64, error)
+	GetRecentSignups(context.Context, int) ([]model.User, error)
+	SearchAccessKeys(context.Context, string, int, int) ([]model.AccessKey, int64, error)
+	SearchSessions(context.Context, string, int, int) ([]model.Session, int64, error)
+	SearchInboxMessages(context.Context, string, int, int) ([]model.InboxMessage, int64, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -269,4 +280,38 @@ func (s *Service) AdminExportUsers(ctx context.Context) ([]model.User, error) {
 
 func (s *Service) AdminExportAliases(ctx context.Context) ([]model.Alias, error) {
 	return s.Store.AdminExportAliases(ctx)
+}
+
+func (s *Service) GetAllSubscriptionsAdmin(ctx context.Context, limit, offset int, tier string) ([]model.Subscription, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.GetAllSubscriptionsAdmin(ctx, limit, offset, tier)
+}
+
+func (s *Service) AdminDeleteSubscription(ctx context.Context, subID string) error {
+	return s.Store.AdminDeleteSubscription(ctx, subID)
+}
+
+func (s *Service) AdminImpersonate(ctx context.Context, userID string) (model.User, error) {
+	return s.Store.AdminImpersonate(ctx, userID)
+}
+
+func (s *Service) AdminBulkDeleteAliases(ctx context.Context, ids []string) error {
+	return s.Store.AdminBulkDeleteAliases(ctx, ids)
+}
+
+func (s *Service) AdminBulkDeleteDomains(ctx context.Context, ids []string) error {
+	return s.Store.AdminBulkDeleteDomains(ctx, ids)
+}
+
+func (s *Service) AdminBulkDeleteRecipients(ctx context.Context, ids []string) error {
+	return s.Store.AdminBulkDeleteRecipients(ctx, ids)
+}
+
+func (s *Service) GetTableSizes(ctx context.Context) (map[string]int64, error) {
+	return s.Store.GetTableSizes(ctx)
+}
+
+func (s *Service) GetRecentSignups(ctx context.Context, days int) ([]model.User, error) {
+	if days <= 0 { days = 7 }
+	return s.Store.GetRecentSignups(ctx, days)
 }

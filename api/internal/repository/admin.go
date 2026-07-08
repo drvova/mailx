@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"ivpn.net/email/api/internal/model"
 	"gorm.io/gorm"
@@ -334,4 +335,93 @@ func (d *Database) AdminExportAliases(ctx context.Context) ([]model.Alias, error
 	var aliases []model.Alias
 	err := d.Client.Order("created_at desc").Find(&aliases).Error
 	return aliases, err
+}
+
+func (d *Database) GetAllSubscriptionsAdmin(ctx context.Context, limit, offset int, tier string) ([]model.Subscription, int64, error) {
+	var subs []model.Subscription
+	q := d.Client.Model(&model.Subscription{})
+	if tier != "" {
+		q = q.Where("tier = ?", tier)
+	}
+	var total int64
+	q.Count(&total)
+	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&subs).Error
+	return subs, total, err
+}
+
+func (d *Database) AdminDeleteSubscription(ctx context.Context, subID string) error {
+	return d.Client.Where("id = ?", subID).Delete(&model.Subscription{}).Error
+}
+
+func (d *Database) AdminImpersonate(ctx context.Context, userID string) (model.User, error) {
+	var user model.User
+	err := d.Client.First(&user, "id = ?", userID).Error
+	return user, err
+}
+
+func (d *Database) AdminBulkDeleteAliases(ctx context.Context, aliasIDs []string) error {
+	return d.Client.Where("id IN ?", aliasIDs).Delete(&model.Alias{}).Error
+}
+
+func (d *Database) AdminBulkDeleteDomains(ctx context.Context, domainIDs []string) error {
+	return d.Client.Where("id IN ?", domainIDs).Delete(&model.Domain{}).Error
+}
+
+func (d *Database) AdminBulkDeleteRecipients(ctx context.Context, recipientIDs []string) error {
+	return d.Client.Where("id IN ?", recipientIDs).Delete(&model.Recipient{}).Error
+}
+
+func (d *Database) GetTableSizes(ctx context.Context) (map[string]int64, error) {
+	sizes := map[string]int64{}
+	tables := []string{"users", "subscriptions", "aliases", "domains", "recipients", "messages", "inbox_messages", "settings", "sessions", "credentials", "access_keys", "logs", "plans"}
+	for _, t := range tables {
+		var count int64
+		d.Client.Table(t).Count(&count)
+		sizes[t] = count
+	}
+	return sizes, nil
+}
+
+func (d *Database) GetRecentSignups(ctx context.Context, days int) ([]model.User, error) {
+	var users []model.User
+	cutoff := time.Now().AddDate(0, 0, -days)
+	err := d.Client.Where("created_at >= ?", cutoff).Order("created_at desc").Find(&users).Error
+	return users, err
+}
+
+func (d *Database) SearchAccessKeys(ctx context.Context, userID string, limit, offset int) ([]model.AccessKey, int64, error) {
+	var keys []model.AccessKey
+	q := d.Client.Model(&model.AccessKey{})
+	if userID != "" {
+		q = q.Where("user_id = ?", userID)
+	}
+	var total int64
+	q.Count(&total)
+	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&keys).Error
+	return keys, total, err
+}
+
+func (d *Database) SearchSessions(ctx context.Context, userID string, limit, offset int) ([]model.Session, int64, error) {
+	var sessions []model.Session
+	q := d.Client.Model(&model.Session{})
+	if userID != "" {
+		q = q.Where("user_id = ?", userID)
+	}
+	var total int64
+	q.Count(&total)
+	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&sessions).Error
+	return sessions, total, err
+}
+
+func (d *Database) SearchInboxMessages(ctx context.Context, search string, limit, offset int) ([]model.InboxMessage, int64, error) {
+	var msgs []model.InboxMessage
+	q := d.Client.Model(&model.InboxMessage{})
+	if search != "" {
+		q = q.Where("from LIKE ? OR subject LIKE ? OR from_name LIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%")
+	}
+	var total int64
+	q.Count(&total)
+	err := q.Select("id", "created_at", "user_id", "alias_id", "from", "from_name", "subject", "read", "size").
+		Order("created_at desc").Limit(limit).Offset(offset).Find(&msgs).Error
+	return msgs, total, err
 }

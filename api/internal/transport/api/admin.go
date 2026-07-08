@@ -46,6 +46,14 @@ type AdminService interface {
 	AdminUpdateSettings(context.Context, string, map[string]interface{}) error
 	AdminExportUsers(context.Context) ([]model.User, error)
 	AdminExportAliases(context.Context) ([]model.Alias, error)
+	GetAllSubscriptionsAdmin(context.Context, int, int, string) ([]model.Subscription, int64, error)
+	AdminDeleteSubscription(context.Context, string) error
+	AdminImpersonate(context.Context, string) (model.User, error)
+	AdminBulkDeleteAliases(context.Context, []string) error
+	AdminBulkDeleteDomains(context.Context, []string) error
+	AdminBulkDeleteRecipients(context.Context, []string) error
+	GetTableSizes(context.Context) (map[string]int64, error)
+	GetRecentSignups(context.Context, int) ([]model.User, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -507,4 +515,80 @@ func (h *Handler) AdminExportAliases(c *fiber.Ctx) error {
 	c.Set("Content-Type", "text/csv")
 	c.Set("Content-Disposition", "attachment; filename=aliases.csv")
 	return c.Send(buf.Bytes())
+}
+
+func (h *Handler) AdminGetSubscriptions(c *fiber.Ctx) error {
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	tier := c.Query("tier", "")
+	subs, total, err := h.Service.GetAllSubscriptionsAdmin(c.Context(), limit, offset, tier)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch subscriptions"})
+	}
+	return c.JSON(fiber.Map{"subscriptions": subs, "total": total})
+}
+
+func (h *Handler) AdminDeleteSubscription(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Subscription ID required"})
+	}
+	if err := h.Service.AdminDeleteSubscription(c.Context(), id); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to delete subscription"})
+	}
+	return c.JSON(fiber.Map{"message": "Subscription deleted"})
+}
+
+type AdminBulkDeleteReq struct {
+	IDs []string `json:"ids"`
+}
+
+func (h *Handler) AdminBulkDeleteAliases(c *fiber.Ctx) error {
+	var req AdminBulkDeleteReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	if err := h.Service.AdminBulkDeleteAliases(c.Context(), req.IDs); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk delete"})
+	}
+	return c.JSON(fiber.Map{"message": "Aliases deleted"})
+}
+
+func (h *Handler) AdminBulkDeleteDomains(c *fiber.Ctx) error {
+	var req AdminBulkDeleteReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	if err := h.Service.AdminBulkDeleteDomains(c.Context(), req.IDs); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk delete"})
+	}
+	return c.JSON(fiber.Map{"message": "Domains deleted"})
+}
+
+func (h *Handler) AdminBulkDeleteRecipients(c *fiber.Ctx) error {
+	var req AdminBulkDeleteReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	if err := h.Service.AdminBulkDeleteRecipients(c.Context(), req.IDs); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk delete"})
+	}
+	return c.JSON(fiber.Map{"message": "Recipients deleted"})
+}
+
+func (h *Handler) AdminGetTableSizes(c *fiber.Ctx) error {
+	sizes, err := h.Service.GetTableSizes(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch table sizes"})
+	}
+	return c.JSON(sizes)
+}
+
+func (h *Handler) AdminGetRecentSignups(c *fiber.Ctx) error {
+	days := c.QueryInt("days", 7)
+	users, err := h.Service.GetRecentSignups(c.Context(), days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch recent signups"})
+	}
+	return c.JSON(fiber.Map{"users": users, "count": len(users)})
 }

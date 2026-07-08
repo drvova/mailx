@@ -113,6 +113,16 @@ export const adminApi = {
     // CSV export
     exportUsers: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/users`,
     exportAliases: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/aliases`,
+    // Subscription management
+    subscriptions: async (tier?: string) => (await api.get('/admin/subscriptions', { params: tier ? { tier } : undefined })).data as { subscriptions: AdminSubscription[]; total: number },
+    deleteSubscription: async (id: string) => api.delete(`/admin/subscription/${id}`),
+    // Bulk delete
+    bulkDeleteAliases: async (ids: string[]) => api.post('/admin/aliases/bulk-delete', { ids }),
+    bulkDeleteDomains: async (ids: string[]) => api.post('/admin/domains/bulk-delete', { ids }),
+    bulkDeleteRecipients: async (ids: string[]) => api.post('/admin/recipients/bulk-delete', { ids }),
+    // System health
+    tableSizes: async () => (await api.get('/admin/system/tables')).data as Record<string, number>,
+    recentSignups: async (days?: number) => (await api.get('/admin/system/recent-signups', { params: days ? { days } : undefined })).data as { users: AdminUser[]; count: number },
 }
 
 export interface AdminAlias {
@@ -187,4 +197,15 @@ export interface AdminSettings {
     alias_format: string
     log_issues: boolean
     remove_header: boolean
+}
+
+export interface AdminSubscription {
+    id: string
+    user_id: string
+    type: string
+    is_active: boolean
+    tier: string
+    active_until: string
+    plan_id: string | null
+    created_at: string
 }
