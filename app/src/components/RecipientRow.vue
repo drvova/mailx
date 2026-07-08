@@ -26,7 +26,8 @@
                 <input
                     @change="updateRecipient"
                     v-bind:checked="recipient.pgp_enabled"
-                    v-bind:disabled="!recipient.pgp_key"
+                    v-bind:disabled="!recipient.pgp_key || saving"
+                    :aria-busy="saving"
                     type="checkbox"
                     class="mr-4"
                 >
@@ -91,7 +92,8 @@
                         <input
                             @change="updateRecipient"
                             v-bind:checked="recipient.pgp_enabled"
-                            v-bind:disabled="!recipient.pgp_key"
+                            v-bind:disabled="!recipient.pgp_key || saving"
+                            :aria-busy="saving"
                             type="checkbox"
                             class="mr-4"
                         >
@@ -170,7 +172,10 @@ const props = defineProps(['recipient', 'recipients'])
 const recipient = ref(props.recipient)
 const recipients = ref(props.recipients)
 
+const saving = ref(false)
+
 const updateRecipient = async () => {
+    if (saving.value) return
     // Toggle pgp_enabled option
     const temp_pgp_enabled = recipient.value.pgp_enabled
     recipient.value.pgp_enabled = !recipient.value.pgp_enabled
@@ -181,6 +186,7 @@ const updateRecipient = async () => {
         pgp_enabled: recipient.value.pgp_enabled
     }
 
+    saving.value = true
     try {
         await recipientApi.update(payload)
         toast(recipient.value.pgp_enabled ? 'PGP encryption enabled' : 'PGP encryption disabled')
@@ -196,6 +202,8 @@ const updateRecipient = async () => {
 
             toast(errMsg, 'error')
         }
+    } finally {
+        saving.value = false
     }
 }
 

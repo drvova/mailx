@@ -5,7 +5,8 @@
                 <input
                     @change="updateAlias"
                     v-bind:checked="alias.enabled && !isDomainUnverified"
-                    v-bind:disabled="!alias.recipients.length || isDomainUnverified"
+                    v-bind:disabled="!alias.recipients.length || isDomainUnverified || saving"
+                    :aria-busy="saving"
                     type="checkbox"
                 >
                 <span v-if="isDomainUnverified" class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
@@ -119,7 +120,8 @@
                         <input
                             @change="updateAlias"
                             v-bind:checked="alias.enabled && !isDomainUnverified"
-                            v-bind:disabled="!alias.recipients.length || isDomainUnverified"
+                            v-bind:disabled="!alias.recipients.length || isDomainUnverified || saving"
+                            :aria-busy="saving"
                             type="checkbox"
                         >
                         <span v-if="isDomainUnverified" class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
@@ -216,8 +218,12 @@ const truncatedDescription = computed(() => {
 })
 const rowKey = ref(0)
 
+const saving = ref(false)
+
 const updateAlias = async () => {
+    if (saving.value) return
     alias.value.enabled = !alias.value.enabled
+    saving.value = true
     try {
         await aliasApi.update(alias.value.id, alias.value)
         renderRow()
@@ -225,6 +231,8 @@ const updateAlias = async () => {
     } catch {
         alias.value.enabled = !alias.value.enabled // revert the optimistic toggle
         toast('Failed to update alias', 'error')
+    } finally {
+        saving.value = false
     }
 }
 

@@ -17,7 +17,8 @@
                 <input
                     @change="updateDomain"
                     v-bind:checked="domain.enabled && dnsRecordsVerified()"
-                    v-bind:disabled="!dnsRecordsVerified()"
+                    v-bind:disabled="!dnsRecordsVerified() || saving"
+                    :aria-busy="saving"
                     type="checkbox"
                 >
             </div>
@@ -60,6 +61,8 @@
                         <input
                             @change="updateDomain"
                             v-bind:checked="domain.enabled"
+                            v-bind:disabled="saving"
+                            :aria-busy="saving"
                             type="checkbox"
                         >
                     </div>
@@ -112,14 +115,20 @@ import { formatDistanceToNow } from 'date-fns'
 const props = defineProps(['domain'])
 const domain = ref(props.domain)
 
+const saving = ref(false)
+
 const updateDomain = async () => {
+    if (saving.value) return
     domain.value.enabled = !domain.value.enabled
+    saving.value = true
     try {
         await domainApi.update(domain.value.id, domain.value)
         toast(domain.value.enabled ? 'Domain enabled' : 'Domain disabled')
     } catch {
         domain.value.enabled = !domain.value.enabled // revert the optimistic toggle
         toast('Failed to update domain', 'error')
+    } finally {
+        saving.value = false
     }
 }
 
