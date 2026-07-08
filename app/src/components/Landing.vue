@@ -18,27 +18,16 @@ const logout = async () => {
     } catch { }
 }
 
-// --- Hero -------------------------------------------------------------------
 const heroFeatures = [
     'Forward emails through isolated aliases with FreeTheMail.',
     'Send and reply without exposing your primary email address.',
     'Generate self-destructing temp inboxes for one-off signups.',
     'PGP encryption, custom domains, wildcards, and catch-all.',
 ]
-
-// --- Constraints ------------------------------------------------------------
-const constraints = [
-    "FreeTheMail is not an email provider, it can't replace your primary email",
-    'Messages are visible to FreeTheMail servers during relay (use PGP)',
-    'No IMAP/POP3 access. Email forwarding only.',
-    'Not designed for protection against targeted surveillance',
-]
-
 </script>
 
 <template>
     <div class="landing-page">
-        <!-- Section 1: Header -->
         <header class="landing-header">
             <router-link to="/" class="landing-logo-link">
                 <span class="landing-logo"></span>
@@ -63,7 +52,6 @@ const constraints = [
             </div>
         </header>
 
-        <!-- Section 2: Hero Content -->
         <section class="hero-section">
             <div class="hero-content">
                 <div class="hero-text">
@@ -85,23 +73,20 @@ const constraints = [
                         ./VIEW_SOURCE
                     </a>
                 </div>
-                <!-- Background patterns - hidden on mobile, shown on tablet/desktop -->
                 <div class="hero-background light-only" aria-hidden="true"></div>
                 <div class="hero-background dark-only" aria-hidden="true"></div>
             </div>
             <div class="hero-screenshot">
                 <div class="screenshot-container">
                     <div class="screenshot-border">
-                        <!-- Light mode screenshot -->
-                        <img 
-                            src="../assets/landing-screenshot-light2.png" 
+                        <img
+                            src="../assets/landing-screenshot-light2.png"
                             srcset="../assets/landing-screenshot-light2.png 1x, ../assets/landing-screenshot-light2@2x.png 2x"
                             alt="FreeTheMail Application Screenshot"
                             class="screenshot-image light-only"
                         />
-                        <!-- Dark mode screenshot -->
-                        <img 
-                            src="../assets/landing-screenshot-dark2.png" 
+                        <img
+                            src="../assets/landing-screenshot-dark2.png"
                             srcset="../assets/landing-screenshot-dark2.png 1x, ../assets/landing-screenshot-dark2@2x.png 2x"
                             alt="FreeTheMail Application Screenshot"
                             class="screenshot-image dark-only"
@@ -111,213 +96,39 @@ const constraints = [
             </div>
         </section>
 
-        <!-- Section 3: How It Works -->
-        <section class="how-it-works-section">
-            <div class="section-container">
-                <!-- Title and Subtitle -->
-                <div class="section-header">
-                    <h2 class="how-it-works-title">Why aliases?</h2>
-                    <p class="how-it-works-subtitle">FreeTheMail generates unique aliases for each service and sender.</p>
-                </div>
-
-                <!-- Feature Cards -->
-                <div class="feature-cards">
-                    <div class="feature-card">
-                        <div class="feature-card-header">
-                            <img src="../assets/icons/feature-icon-lock-light.svg" class="feature-icon light-only" />
-                            <img src="../assets/icons/feature-icon-lock-dark.svg" class="feature-icon dark-only" />
-                            <h3 class="feature-card-title">Block spam and phishing</h3>
-                        </div>
-                        <p class="feature-card-text">Disable or delete any alias instantly. Even if one gets compromised, your real email remains unexposed.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-card-header">
-                            <img src="../assets/icons/feature-icon-data-leak-light.svg" class="feature-icon light-only" />
-                            <img src="../assets/icons/feature-icon-data-leak-dark.svg" class="feature-icon dark-only" />
-                            <h3 class="feature-card-title">Detect data leaks</h3>
-                        </div>
-                        <p class="feature-card-text">One alias per service means you'll know exactly who shared your email without your consent.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-card-header">
-                            <img src="../assets/icons/feature-icon-users-light.svg" class="feature-icon light-only" />
-                            <img src="../assets/icons/feature-icon-users-dark.svg" class="feature-icon dark-only" />
-                            <h3 class="feature-card-title">Prevent identity mapping</h3>
-                        </div>
-                        <p class="feature-card-text">Each service gets a unique alias. Advertisers and data brokers can't connect your accounts across platforms.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 5: Verifiable Privacy -->
-        <section class="verifiable-privacy-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <div class="section-command">/etc/freethemail/trust.cfg</div>
-                    <h2 class="section-title">
-                        Verifiable privacy
-                    </h2>
-                </div>
-
-                <div class="verifiable-privacy-grid">
-                    <div class="verifiable-privacy-card trust-card-accountable">
-                        <div class="verifiable-privacy-card-content">
-                            <div class="verifiable-privacy-card-title-row">
-                                <img src="../assets/icons/trust-accountable-light.svg" class="verifiable-privacy-icon light-only" />
-                                <img src="../assets/icons/trust-accountable-dark.svg" class="verifiable-privacy-icon dark-only" />
-                                <h3 class="verifiable-privacy-card-title">ACCOUNTABLE_OPERATORS</h3>
-                            </div>
-                            <p class="verifiable-privacy-card-text">Built in the open by a team with a long history of operating privacy services.</p>
-                        </div>
-                        <a href="https://github.com/freethemail" target="_blank" class="verifiable-privacy-card-link">./MEET_TEAM</a>
-                    </div>
-
-                    <div class="verifiable-privacy-card trust-card-open-source">
-                        <div class="verifiable-privacy-card-content">
-                            <div class="verifiable-privacy-card-title-row">
-                                <img src="../assets/icons/trust-open-source-light.svg" class="verifiable-privacy-icon light-only" />
-                                <img src="../assets/icons/trust-open-source-dark.svg" class="verifiable-privacy-icon dark-only" />
-                                <h3 class="verifiable-privacy-card-title">OPEN_SOURCE</h3>
-                            </div>
-                            <p class="verifiable-privacy-card-text">The entire FreeTheMail project is open-source. Our implementation is public and available for review.</p>
-                        </div>
-                        <a href="https://github.com/freethemail/freethemail" target="_blank" class="verifiable-privacy-card-link">./VIEW_SOURCE</a>
-                    </div>
-
-                    <div class="verifiable-privacy-card trust-card-security">
-                        <div class="verifiable-privacy-card-content">
-                            <div class="verifiable-privacy-card-title-row">
-                                <img src="../assets/icons/trust-audit-light.svg" class="verifiable-privacy-icon light-only" />
-                                <img src="../assets/icons/trust-audit-dark.svg" class="verifiable-privacy-icon dark-only" />
-                                <h3 class="verifiable-privacy-card-title">SECURITY_AUDIT</h3>
-                            </div>
-                            <p class="verifiable-privacy-card-text">FreeTheMail has undergone a third-party security audit to validate our claims and architecture.</p>
-                        </div>
-                        <a href="https://github.com/freethemail/freethemail#security-audit" class="verifiable-privacy-card-link">./READ_AUDIT</a>
-                    </div>
-
-                    <div class="verifiable-privacy-card trust-card-no-tracking">
-                        <div class="verifiable-privacy-card-content">
-                            <div class="verifiable-privacy-card-title-row">
-                                <img src="../assets/icons/trust-no-tracking-light.svg" class="verifiable-privacy-icon light-only" />
-                                <img src="../assets/icons/trust-no-tracking-dark.svg" class="verifiable-privacy-icon dark-only" />
-                                <h3 class="verifiable-privacy-card-title">NO_TRACKING</h3>
-                            </div>
-                            <p class="verifiable-privacy-card-text">Your IP address is never logged. Forwarded emails are automatically deleted after delivery.</p>
-                        </div>
-                        <router-link to="/privacy" class="verifiable-privacy-card-link">./PRIVACY_POLICY</router-link>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 7: Constraints -->
-        <section class="constraints-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <div class="constraints-command">/etc/freethemail/limitations.txt</div>
-                    <h2 class="constraints-title">Constraints</h2>
-                </div>
-
-                <div class="constraints-list">
-                    <div v-for="text in constraints" :key="text" class="constraints-item">
-                        <span class="constraints-bullet">&gt;</span>
-                        <p class="constraints-text">{{ text }}</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 8: Get Access -->
-        <section class="get-access-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <div class="section-command">freethemail auth --init</div>
-                    <h2 class="section-title">Get access</h2>
-                </div>
-
-                <p class="get-access-text">One account for aliases, wildcards, temp inboxes and forwarding — open source and independently audited.</p>
-
-                <div class="get-access-actions">
-                    <a :href="signupUrl" class="cta-btn cta-primary" target="_blank">./SIGNUP</a>
-                    <a href="https://github.com/freethemail/freethemail" target="_blank" class="cta-btn cta-secondary">./VIEW_SOURCE</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 9: Footer Strip -->
         <section class="landing-footer-strip-section">
             <div class="landing-footer-strip">
                 <span class="landing-footer-strip-text">2026 FreeTheMail</span>
                 <span class="landing-footer-strip-divider" aria-hidden="true"></span>
-                <a
-                    href="/privacy"
-                    class="landing-footer-strip-text landing-footer-strip-link"
-                >
+                <a href="https://github.com/freethemail/freethemail" target="_blank" class="landing-footer-strip-text landing-footer-strip-link">
+                    ./SOURCE
+                </a>
+                <a href="https://github.com/freethemail/freethemail#security-audit" target="_blank" class="landing-footer-strip-text landing-footer-strip-link">
+                    ./AUDIT
+                </a>
+                <a href="/privacy" class="landing-footer-strip-text landing-footer-strip-link">
                     ./PRIVACY
                 </a>
-                <a
-                    href="/tos"
-                    class="landing-footer-strip-text landing-footer-strip-link"
-                >
+                <a href="/tos" class="landing-footer-strip-text landing-footer-strip-link">
                     ./TERMS
                 </a>
-                <a
-                    href="/faq"
-                    class="landing-footer-strip-text landing-footer-strip-link"
-                >
+                <a href="/faq" class="landing-footer-strip-text landing-footer-strip-link">
                     ./FAQ
                 </a>
-                <a
-                    href="https://github.com/freethemail/freethemail/blob/main/LICENSE.md"
-                    target="_blank"
-                    class="landing-footer-strip-text landing-footer-strip-link"
-                >
+                <a href="https://github.com/freethemail/freethemail/blob/main/LICENSE.md" target="_blank" class="landing-footer-strip-text landing-footer-strip-link">
                     ./LICENSE
                 </a>
             </div>
         </section>
-        
     </div>
 </template>
 
 <style scoped>
-/* =============================================================================
-   Shared section layout helpers
-   Used across: How It Works, Verifiable Privacy, Constraints, Get Access.
-   ========================================================================== */
-
-.section-container {
-    @apply w-full flex flex-col gap-8;
-    @apply max-w-[1060px] mx-auto;
-    @apply px-4 md:px-8;
-}
-
-.section-header {
-    @apply flex flex-col gap-4;
-}
-
-/* Blue command / path badge */
-.section-command {
-    @apply text-xs leading-3 px-3 py-3 w-fit;
-    @apply bg-[oklch(0.659_0.192_40.23/0.12)] dark:bg-[oklch(0.198_0.012_254.108)];
-    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
-}
-
-/* Blue section title (32 px mobile -> 36 px desktop) */
-.section-title {
-    @apply m-0 uppercase font-bold;
-    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
-    @apply text-[32px] leading-[32px] md:text-[36px] md:leading-[40px];
-}
-
 .landing-page {
     @apply w-full;
     @apply bg-white dark:bg-[oklch(0.145_0_0)];
     @apply min-h-screen;
+    @apply flex flex-col;
 
     * {
         font-family: 'Roboto Mono', monospace;
@@ -329,7 +140,6 @@ const constraints = [
     @apply border-b border-solid;
     @apply border-light-gray-6 dark:border-dark-neutral-3;
     @apply py-3;
-    /* Responsive padding: 110px desktop, 32px tablet, 16px mobile */
     @apply px-4 md:px-8 lg:px-[110px];
     @apply w-full;
 }
@@ -341,7 +151,6 @@ const constraints = [
 .landing-logo {
     @apply block bg-no-repeat bg-contain bg-center;
     @apply bg-[url("../assets/freethemail-light.png")] dark:bg-[url("../assets/freethemail-dark.png")];
-    /* Desktop/Tablet: 118px x 25px, Mobile: 98px x 20px */
     @apply w-[98px] h-5 md:w-[118px] md:h-[25px];
 }
 
@@ -375,44 +184,38 @@ const constraints = [
     @apply opacity-90;
 }
 
-/* Hero Section */
+/* Hero */
 .hero-section {
-    @apply w-full flex flex-col;
+    @apply w-full flex flex-col flex-1;
     @apply relative overflow-hidden;
+    @apply pb-8;
 }
 
-/* Background patterns - hidden on mobile, shown on tablet/desktop */
 .hero-background {
     @apply absolute pointer-events-none;
     @apply hidden md:block;
-    /* Tether to top, right, bottom - resize with container while maintaining 1:1 ratio */
     top: -30px;
     right: 0;
     bottom: -30px;
-    /* Use aspect ratio to maintain 1:1 while filling height */
     aspect-ratio: 1 / 1;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center right;
 }
 
-/* Light mode backgrounds */
 .hero-background.light-only {
     background-image: url('../assets/hero-bg-light-tablet.svg');
+}
+
+.hero-background.dark-only {
+    background-image: url('../assets/hero-bg-dark-tablet.svg');
 }
 
 @media (min-width: 1024px) {
     .hero-background.light-only {
         background-image: url('../assets/hero-bg-light-desktop.svg');
     }
-}
 
-/* Dark mode backgrounds */
-.hero-background.dark-only {
-    background-image: url('../assets/hero-bg-dark-tablet.svg');
-}
-
-@media (min-width: 1024px) {
     .hero-background.dark-only {
         background-image: url('../assets/hero-bg-dark-desktop.svg');
     }
@@ -420,7 +223,7 @@ const constraints = [
 
 .hero-content {
     @apply flex flex-col;
-    @apply py-8 md:py-8 lg:py-8;
+    @apply py-8;
     @apply max-w-[1060px] mx-auto;
     @apply px-4 md:px-8;
     @apply relative;
@@ -434,7 +237,6 @@ const constraints = [
 
 .hero-title {
     @apply text-[oklch(0.226_0_0)] dark:text-[oklch(0.998_0.002_325.59)];
-    /* Responsive font sizes: 60px desktop, 52px tablet, 42px mobile */
     @apply text-[42px] leading-[46px] md:text-[52px] md:leading-[54px] lg:text-[64px] lg:leading-[66px];
     @apply m-0;
     font-weight: 600;
@@ -472,7 +274,6 @@ const constraints = [
 
 .hero-cta {
     @apply flex gap-2 items-center mt-8 z-10;
-    /* Full width buttons on mobile, auto width on desktop */
     @apply flex-col md:flex-row w-full md:w-auto;
     @apply relative;
 }
@@ -482,7 +283,6 @@ const constraints = [
     @apply px-4 py-[13px];
     @apply font-semibold text-sm leading-4;
     @apply whitespace-nowrap;
-    /* Full width on mobile */
     @apply w-full md:w-auto;
     border-radius: var(--radius);
     transition: box-shadow 200ms var(--ease-smooth), background 200ms var(--ease-smooth),
@@ -507,10 +307,6 @@ const constraints = [
     box-shadow: var(--raised-shadow), var(--accent-glow);
 }
 
-.cta-primary:hover {
-    @apply opacity-90;
-}
-
 .cta-secondary {
     @apply px-[15px] py-[12px];
     @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
@@ -523,11 +319,7 @@ const constraints = [
     box-shadow: var(--inset-shadow);
 }
 
-.cta-secondary:hover {
-    @apply opacity-80;
-}
-
-/* Screenshot Section */
+/* Screenshot */
 .hero-screenshot {
     @apply relative z-10;
     @apply max-w-[1060px] mx-auto;
@@ -556,7 +348,7 @@ const constraints = [
     @apply h-auto;
 }
 
-/* Show/hide images based on theme */
+/* Theme visibility */
 img.light-only {
     @apply dark:hidden !important;
 }
@@ -565,7 +357,6 @@ img.dark-only {
     @apply hidden dark:block !important;
 }
 
-/* Override theme visibility for backgrounds on mobile - force hide */
 .hero-background.light-only {
     @apply dark:hidden md:block;
 }
@@ -574,239 +365,7 @@ img.dark-only {
     @apply hidden dark:md:block;
 }
 
-/* Section 3: How It Works */
-.how-it-works-section {
-    @apply w-full;
-    @apply bg-white dark:bg-[oklch(0.145_0_0)];
-    @apply py-[72px];
-}
-
-/* .section-container / .section-header cover this section */
-
-.how-it-works-title {
-    @apply font-bold uppercase;
-    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
-    @apply text-[36px] leading-[40px];
-    @apply m-0;
-}
-
-.landing-page .how-it-works-subtitle {
-    @apply text-light-neutral-11 dark:text-dark-neutral-11;
-    @apply text-base m-0 max-w-[587px];
-    font-family: var(--font-sans);
-    line-height: 1.65;
-}
-
-/* Flow Diagrams */
-
-
-.instruction-item {
-    @apply flex gap-2 items-start;
-}
-
-.instruction-number {
-    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
-    @apply text-sm leading-4;
-    @apply w-5 h-5;
-    @apply flex items-center justify-center;
-    @apply shrink-0;
-}
-
-.instruction-text {
-    @apply text-black dark:text-[oklch(0.998_0.002_325.59)];
-    @apply text-sm leading-5;
-    @apply flex-1;
-}
-
-/* Feature Cards */
-.feature-cards {
-    @apply border border-solid;
-    @apply border-[oklch(0.902_0.009_258.337)] dark:border-[oklch(0.274_0.001_17.247)];
-    @apply flex flex-col lg:flex-row;
-}
-
-.feature-card {
-    @apply flex-1;
-    @apply p-6;
-    @apply flex flex-col gap-4;
-    @apply border-[oklch(0.902_0.009_258.337)] dark:border-[oklch(0.274_0.001_17.247)];
-    @apply border-b lg:border-b-0 lg:border-r;
-    @apply last:border-b-0 lg:last:border-r-0;
-}
-
-.feature-card-header {
-    @apply flex gap-3 items-center;
-}
-
-.feature-icon {
-    @apply w-6 h-6;
-    @apply shrink-0;
-}
-
-.feature-card-title {
-    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
-    @apply text-base leading-4;
-    @apply font-medium uppercase;
-    @apply m-0;
-}
-
-.landing-page .feature-card-text {
-    @apply text-light-neutral-11 dark:text-dark-neutral-11;
-    @apply text-sm m-0;
-    font-family: var(--font-sans);
-    line-height: 1.65;
-}
-
-/* Section 4: Feature Set */
-
-/* .section-container / .section-header / .section-command / .section-title cover this section */
-
-
-/* Section 5: Verifiable Privacy */
-.verifiable-privacy-section {
-    @apply w-full;
-    @apply bg-white dark:bg-[oklch(0.121_0.004_245.473)];
-    @apply py-6 md:py-[52px] lg:py-[72px];
-}
-
-/* .section-container / .section-header / .section-command / .section-title cover this section */
-
-.verifiable-privacy-break {
-    @apply md:hidden;
-}
-
-.verifiable-privacy-grid {
-    @apply w-full;
-    @apply flex flex-col md:flex-row md:flex-wrap;
-    @apply pb-px md:pb-0 md:pr-px;
-}
-
-.verifiable-privacy-card {
-    @apply w-full md:w-1/2;
-    @apply border border-solid;
-    @apply border-[oklch(0.902_0.009_258.337)] dark:border-[oklch(0.274_0.001_17.247)];
-    @apply -mb-px md:mb-0 md:-mr-px;
-    @apply px-4 py-5 md:p-6;
-    @apply flex flex-col gap-4;
-    @apply md:mb-[-1px] lg:mb-[-1px];
-}
-
-.verifiable-privacy-card-content {
-    @apply flex flex-col gap-3;
-}
-
-.verifiable-privacy-card-title-row {
-    @apply flex items-center gap-3;
-}
-
-.verifiable-privacy-icon {
-    @apply w-6 h-6;
-    @apply shrink-0;
-}
-
-.verifiable-privacy-card-title {
-    @apply m-0;
-    @apply text-base leading-4 font-medium uppercase;
-    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.692_0.189_44.533)];
-}
-
-.landing-page .verifiable-privacy-card-text {
-    @apply text-sm m-0;
-    @apply text-light-neutral-11 dark:text-dark-neutral-11;
-    font-family: var(--font-sans);
-    line-height: 1.65;
-}
-
-.verifiable-privacy-card-link {
-    @apply m-0;
-    @apply inline-block;
-    @apply pt-2;
-    @apply text-sm leading-4 font-medium;
-    @apply text-[oklch(0.659_0.192_40.23)] dark:text-[oklch(0.659_0.192_40.23)];
-    @apply no-underline;
-}
-
-.verifiable-privacy-card-link:hover {
-    @apply opacity-80;
-}
-
-.trust-card-accountable {
-    @apply order-1;
-}
-
-.trust-card-open-source {
-    @apply order-2 md:order-3 lg:order-2;
-}
-
-.trust-card-security {
-    @apply order-3 md:order-2 lg:order-3;
-}
-
-.trust-card-no-tracking {
-    @apply order-4;
-}
-
-
-/* Section 7: Constraints */
-.constraints-section {
-    @apply w-full;
-    @apply bg-[oklch(0.998_0.002_325.59)] dark:bg-[oklch(0.145_0_0)];
-    @apply py-6 md:py-[52px] lg:py-[72px];
-}
-
-/* .section-container / .section-header cover this section */
-
-.constraints-command {
-    @apply bg-[oklch(0.526_0.198_27.445/0.05)] dark:bg-[oklch(0.591_0.187_24.961/0.05)];
-    @apply lg:bg-[oklch(0.526_0.198_27.445/0.1)] lg:dark:bg-[oklch(0.591_0.187_24.961/0.05)];
-    @apply text-[oklch(0.526_0.198_27.445)] dark:text-[oklch(0.591_0.187_24.961)];
-    @apply text-xs leading-3;
-    @apply px-3 py-3;
-    @apply w-fit;
-}
-
-.constraints-title {
-    @apply m-0;
-    @apply uppercase font-bold;
-    @apply text-[oklch(0.526_0.198_27.445)] dark:text-[oklch(0.591_0.187_24.961)];
-    @apply text-[32px] leading-[32px] md:text-[36px] md:leading-[40px];
-}
-
-.constraints-list {
-    @apply flex flex-col gap-3;
-}
-
-.constraints-item {
-    @apply flex items-center gap-2;
-}
-
-.constraints-bullet {
-    @apply text-[oklch(0.526_0.198_27.445)] dark:text-[oklch(0.591_0.187_24.961)];
-    @apply text-base;
-    @apply w-6 h-6;
-    @apply shrink-0;
-    @apply flex items-center justify-center;
-}
-
-.constraints-text {
-    @apply m-0;
-    @apply flex-1;
-    @apply text-[oklch(0.417_0.153_26.335)] dark:text-[oklch(0.701_0.145_21.468)];
-    @apply text-sm leading-5 md:text-base md:leading-4;
-}
-
-/* Section 8: Get Access */
-.get-access-section {
-    @apply w-full;
-    @apply bg-[oklch(0.967_0.002_247.839)] dark:bg-[oklch(1_0_0/0.02)];
-    @apply py-6 md:py-[52px] lg:py-[72px];
-    @apply md:border md:border-solid;
-    @apply md:border-[oklch(0.902_0.009_258.337)] md:dark:border-[oklch(0.274_0.001_17.247)];
-}
-
-/* .section-container / .section-header / .section-command / .section-title cover this section */
-
-/* Section 9: Footer Strip */
+/* Footer strip */
 .landing-footer-strip-section {
     @apply w-full;
     @apply bg-[oklch(1_0_0)] dark:bg-[oklch(0.121_0.004_245.473)];
@@ -839,24 +398,5 @@ img.dark-only {
     @apply w-0 h-2;
     @apply border-l border-solid;
     @apply border-[oklch(0.806_0.022_252.529)] dark:border-[oklch(0.353_0.035_248.846)];
-}
-.landing-page .section-title,
-.landing-page .how-it-works-title,
-.landing-page .constraints-title {
-    @apply text-[oklch(0.226_0_0)] dark:text-[oklch(0.998_0.002_325.59)];
-    font-family: var(--font-serif);
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    text-transform: none;
-}
-.landing-page .get-access-text {
-    @apply text-light-neutral-11 dark:text-dark-neutral-11;
-    @apply text-base m-0 max-w-[52ch];
-    font-family: var(--font-sans);
-    line-height: 1.65;
-}
-
-.get-access-actions {
-    @apply flex flex-col md:flex-row gap-3;
 }
 </style>
