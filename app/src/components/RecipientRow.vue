@@ -37,7 +37,7 @@
         </td>
         <td>
             <div class="hs-dropdown [--offset:0]">
-                <button v-bind:id="'hs-dropdown-recipient-edit-' + recipient.id" aria-label="Recipient actions">
+                <button v-bind:id="'hs-dropdown-recipient-edit-' + recipient.id" aria-label="Recipient actions" aria-haspopup="menu">
                     <i class="icon icon-secondary more text-lg"></i>
                 </button>
                 <div
@@ -102,7 +102,7 @@
                 </div>
                 <div class="text-end">
                     <div class="hs-dropdown [--offset:0]">
-                        <button class="py-0" v-bind:id="'hs-dropdown-recipient-edit-' + recipient.id" aria-label="Recipient actions">
+                        <button class="py-0" v-bind:id="'hs-dropdown-recipient-edit-' + recipient.id" aria-label="Recipient actions" aria-haspopup="menu">
                             <i class="icon icon-secondary more text-lg"></i>
                         </button>
                         <div

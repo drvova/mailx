@@ -62,7 +62,7 @@
                     </article>
                     <footer>
                         <nav v-if="!isEnabled">
-                            <button @click="totpEnableConfirm" class="cta">
+                            <button @click="totpEnableConfirm" :disabled="saving" :aria-busy="saving" class="cta">
                                 Enable 2-Factor Authentication
                             </button>
                             <button @click="close" class="cancel">
@@ -96,6 +96,7 @@ const resConfirm = ref({ backup: '' })
 const error = ref('')
 const codeError = ref(false)
 const isEnabled = ref(false)
+const saving = ref(false)
 
 const close = () => {
     req.value = {} as any
@@ -155,6 +156,7 @@ const totpEnableConfirm = async () => {
     req.value.otp = req.value.otp + ''
 
     try {
+        saving.value = true
         const res = await userApi.totpEnableConfirm(req.value)
         resConfirm.value = res.data
         isEnabled.value = true
@@ -169,6 +171,8 @@ const totpEnableConfirm = async () => {
                 error.value = 'Too many requests, please try again later.'
             }
         }
+    } finally {
+        saving.value = false
     }
 }
 

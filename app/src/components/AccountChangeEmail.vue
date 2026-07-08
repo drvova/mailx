@@ -11,11 +11,14 @@
                     v-bind:class="{ 'error': emailError }"
                     id="new-email"
                     type="email"
+                    autocomplete="email"
                 >
             </div>
             <div class="mb-3 max-w-xs">
                 <button
                     @click="changeEmail"
+                    :disabled="saving"
+                    :aria-busy="saving"
                     class="cta">
                     Change Email
                 </button>
@@ -37,6 +40,7 @@ const email = ref('')
 const emailError = ref('')
 const error = ref('')
 const success = ref('')
+const saving = ref(false)
 
 const validateEmail = () => {
     success.value = ''
@@ -61,6 +65,7 @@ const changeEmail = async () => {
     }
 
     try {
+        saving.value = true
         const res = await userApi.changeEmail(req)
         localStorage.setItem('email', req.email)
         events.emit('user.update', { email: req.email })
@@ -76,6 +81,8 @@ const changeEmail = async () => {
                 error.value = 'Too many requests, please try again later.'
             }
         }
+    } finally {
+        saving.value = false
     }
 }
 </script>

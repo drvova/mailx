@@ -35,7 +35,7 @@
                     </article>
                     <footer>
                         <nav>
-                            <button @click="disableTotp" class="cta">
+                            <button @click="disableTotp" :disabled="saving" :aria-busy="saving" class="cta">
                                 Disable 2-Factor Authentication
                             </button>
                             <button @click="close" class="cancel">
@@ -60,6 +60,7 @@ import events from '../events.ts'
 const req = ref({ otp: '' })
 const error = ref('')
 const codeError = ref(false)
+const saving = ref(false)
 
 const close = () => {
     req.value = { otp: '' }
@@ -84,6 +85,7 @@ const disableTotp = async () => {
     req.value.otp = req.value.otp + ''
 
     try {
+        saving.value = true
         await userApi.totpDisable(req.value)
         codeError.value = false
         error.value = ''
@@ -97,6 +99,8 @@ const disableTotp = async () => {
                 error.value = 'Too many requests, please try again later.'
             }
         }
+    } finally {
+        saving.value = false
     }
 }
 

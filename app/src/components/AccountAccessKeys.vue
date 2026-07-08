@@ -32,7 +32,7 @@
                             {{ cred.expires_at ? new Date(cred.expires_at).toDateString() : 'Never' }}
                         </td>
                         <td>
-                            <button @click.stop="deleteAccessKey(cred.id)" class="delete w-full flex items-center gap-x-2 py-2 place-content-end">
+                            <button @click.stop="deleteAccessKey(cred.id)" :disabled="deleting" :aria-busy="deleting" class="delete w-full flex items-center gap-x-2 py-2 place-content-end">
                                 <i class="icon icon-error trash text-xs"></i>
                                 Delete
                             </button>
@@ -49,7 +49,7 @@
                                 </div>
                             </div>
                             <div class="text-end">
-                                    <button @click.stop="deleteAccessKey(cred.id)" class="delete w-full flex items-center gap-x-2 py-2 place-content-end">
+                                    <button @click.stop="deleteAccessKey(cred.id)" :disabled="deleting" :aria-busy="deleting" class="delete w-full flex items-center gap-x-2 py-2 place-content-end">
                                         <i class="icon icon-error trash text-xs"></i>
                                     </button>
                             </div>
@@ -78,6 +78,7 @@ const credential = {
 
 const list = ref([] as typeof credential[])
 const error = ref('')
+const deleting = ref(false)
 
 const getList = async () => {
     try {
@@ -95,6 +96,7 @@ const deleteAccessKey = async (id: string) => {
     if (!(await appConfirm('The browser extension using this key will be signed out.', { title: 'Delete this access key?', confirmLabel: 'Delete key' }))) return
 
     try {
+        deleting.value = true
         await userApi.accessKeyDelete(id)
         list.value = list.value.filter((cred: any) => cred.id !== id)
         error.value = ''
@@ -102,6 +104,8 @@ const deleteAccessKey = async (id: string) => {
         if (err instanceof ApiError) {
             error.value = err.message
         }
+    } finally {
+        deleting.value = false
     }
 }
 
