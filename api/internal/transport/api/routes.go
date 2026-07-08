@@ -311,6 +311,12 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/domain-health", h.AdminGetDomainHealth)
 	admin.Get("/global-search", h.AdminGlobalUserSearch)
 
+	// User last active, inactive users, catch-all toggle, full user data export
+	admin.Get("/user/:id/last-active", h.AdminGetUserLastActive)
+	admin.Get("/inactive-users", h.AdminGetInactiveUsers)
+	admin.Put("/alias/:id/catch-all", h.AdminToggleAliasCatchAll)
+	admin.Get("/user/:id/export-data", h.AdminExportUserData)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

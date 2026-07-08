@@ -113,6 +113,10 @@ type AdminService interface {
 	AdminGetPlanDistribution(context.Context) (map[string]int64, error)
 	AdminGetDomainHealth(context.Context) (int64, int64, error)
 	AdminGlobalUserSearch(context.Context, string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, error)
+	AdminGetUserLastActive(context.Context, string) (*time.Time, error)
+	AdminGetInactiveUsers(context.Context, int) ([]model.User, int64, error)
+	AdminToggleAliasCatchAll(context.Context, string, bool) error
+	AdminExportUserData(context.Context, string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, []model.AccessKey, *model.Settings, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1512,6 +1516,61 @@ func (h *Handler) AdminGlobalUserSearch(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"user": user, "subscription": sub,
 		"aliases": aliases, "domains": domains, "recipients": recipients,
+	})
+}
+
+func (h *Handler) AdminGetUserLastActive(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "User ID required"})
+	}
+	t, err := h.Service.AdminGetUserLastActive(c.Context(), id)
+	if err != nil || t == nil {
+		return c.JSON(fiber.Map{"last_active": nil})
+	}
+	return c.JSON(fiber.Map{"last_active": t.Format(time.RFC3339)})
+}
+
+func (h *Handler) AdminGetInactiveUsers(c *fiber.Ctx) error {
+	days := c.QueryInt("days", 30)
+	users, total, err := h.Service.AdminGetInactiveUsers(c.Context(), days)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch inactive users"})
+	}
+	return c.JSON(fiber.Map{"users": users, "total": total})
+}
+
+type AdminCatchAllReq struct {
+	CatchAll bool `json:"catch_all"`
+}
+
+func (h *Handler) AdminToggleAliasCatchAll(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Alias ID required"})
+	}
+	var req AdminCatchAllReq
+	c.BodyParser(&req)
+	if err := h.Service.AdminToggleAliasCatchAll(c.Context(), id, req.CatchAll); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to toggle catch-all"})
+	}
+	return c.JSON(fiber.Map{"message": "Catch-all updated"})
+}
+
+func (h *Handler) AdminExportUserData(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "User ID required"})
+	}
+	user, sub, aliases, domains, recipients, keys, settings, err := h.Service.AdminExportUserData(c.Context(), id)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "User not found"})
+	}
+	return c.JSON(fiber.Map{
+		"user": user, "subscription": sub,
+		"aliases": aliases, "domains": domains,
+		"recipients": recipients, "access_keys": keys,
+		"settings": settings,
 	})
 }
 

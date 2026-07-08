@@ -842,6 +842,61 @@ func (d *Database) AdminGlobalUserSearch(ctx context.Context, query string) (*mo
 	return &user, &sub, aliases, domains, recipients, nil
 }
 
+func (d *Database) AdminGetUserLastActive(ctx context.Context, userID string) (*time.Time, error) {
+	var t time.Time
+	// Check most recent session
+	err := d.Client.Model(&model.Session{}).Select("created_at").Where("user_id = ?", userID).Order("created_at desc").Limit(1).Pluck("created_at", &t).Error
+	if err == nil && !t.IsZero() {
+		return &t, nil
+	}
+	// Fallback: most recent message
+	err = d.Client.Model(&model.Message{}).Select("created_at").Where("user_id = ?", userID).Order("created_at desc").Limit(1).Pluck("created_at", &t).Error
+	if err == nil && !t.IsZero() {
+		return &t, nil
+	}
+	return nil, nil
+}
+
+func (d *Database) AdminGetInactiveUsers(ctx context.Context, days int) ([]model.User, int64, error) {
+	cutoff := time.Now().AddDate(0, 0, -days)
+	// Users whose most recent message or session is older than cutoff
+	var ids []string
+	d.Client.Model(&model.User{}).Select("users.id").
+		Joins("left join (select user_id, max(created_at) as last_act from (select user_id, created_at from messages union all select user_id, created_at from sessions) t group by user_id) last_activity on last_activity.user_id = users.id").
+		Where("last_activity.last_act < ? OR last_activity.last_act IS NULL", cutoff).
+		Limit(200).
+		Pluck("users.id", &ids)
+	var users []model.User
+	var total int64
+	if len(ids) > 0 {
+		d.Client.Where("id IN ?", ids).Order("created_at desc").Find(&users)
+		total = int64(len(ids))
+	}
+	return users, total, nil
+}
+
+func (d *Database) AdminToggleAliasCatchAll(ctx context.Context, aliasID string, catchAll bool) error {
+	return d.Client.Model(&model.Alias{}).Where("id = ?", aliasID).Update("catch_all", catchAll).Error
+}
+
+func (d *Database) AdminExportUserData(ctx context.Context, userID string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, []model.AccessKey, *model.Settings, error) {
+	var user model.User
+	if err := d.Client.First(&user, "id = ?", userID).Error; err != nil { return nil, nil, nil, nil, nil, nil, nil, err }
+	var sub model.Subscription
+	d.Client.Where("user_id = ?", userID).First(&sub)
+	var aliases []model.Alias
+	d.Client.Where("user_id = ?", userID).Find(&aliases)
+	var domains []model.Domain
+	d.Client.Where("user_id = ?", userID).Find(&domains)
+	var recipients []model.Recipient
+	d.Client.Where("user_id = ?", userID).Find(&recipients)
+	var keys []model.AccessKey
+	d.Client.Where("user_id = ?", userID).Find(&keys)
+	var settings model.Settings
+	d.Client.Where("user_id = ?", userID).First(&settings)
+	return &user, &sub, aliases, domains, recipients, keys, &settings, nil
+}
+
 func (d *Database) AdminGetLogsDateRange(ctx context.Context, logType, from, to string, limit, offset int) ([]model.Log, int64, error) {
 	q := d.Client.Model(&model.Log{})
 	if logType != "" {

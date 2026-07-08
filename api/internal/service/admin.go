@@ -138,6 +138,10 @@ type AdminStore interface {
 	AdminGetPlanDistribution(context.Context) (map[string]int64, error)
 	AdminGetDomainHealth(context.Context) (int64, int64, error)
 	AdminGlobalUserSearch(context.Context, string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, error)
+	AdminGetUserLastActive(context.Context, string) (*time.Time, error)
+	AdminGetInactiveUsers(context.Context, int) ([]model.User, int64, error)
+	AdminToggleAliasCatchAll(context.Context, string, bool) error
+	AdminExportUserData(context.Context, string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, []model.AccessKey, *model.Settings, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -648,4 +652,21 @@ func (s *Service) AdminGetDomainHealth(ctx context.Context) (int64, int64, error
 
 func (s *Service) AdminGlobalUserSearch(ctx context.Context, query string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, error) {
 	return s.Store.AdminGlobalUserSearch(ctx, query)
+}
+
+func (s *Service) AdminGetUserLastActive(ctx context.Context, userID string) (*time.Time, error) {
+	return s.Store.AdminGetUserLastActive(ctx, userID)
+}
+
+func (s *Service) AdminGetInactiveUsers(ctx context.Context, days int) ([]model.User, int64, error) {
+	if days <= 0 { days = 30 }
+	return s.Store.AdminGetInactiveUsers(ctx, days)
+}
+
+func (s *Service) AdminToggleAliasCatchAll(ctx context.Context, aliasID string, catchAll bool) error {
+	return s.Store.AdminToggleAliasCatchAll(ctx, aliasID, catchAll)
+}
+
+func (s *Service) AdminExportUserData(ctx context.Context, userID string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, []model.AccessKey, *model.Settings, error) {
+	return s.Store.AdminExportUserData(ctx, userID)
 }

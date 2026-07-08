@@ -230,6 +230,11 @@ export const adminApi = {
     domainHealth: async () => (await api.get('/admin/domain-health')).data as { verified: number; unverified: number },
     // Global user quick-search
     globalSearch: async (q: string) => (await api.get('/admin/global-search', { params: { q } })).data as { user: AdminUser; subscription: any; aliases: AdminAlias[]; domains: AdminDomain[]; recipients: AdminRecipient[] },
+    // Last active, inactive users, catch-all, user data export
+    userLastActive: async (id: string) => (await api.get(`/admin/user/${id}/last-active`)).data as { last_active: string | null },
+    inactiveUsers: async (days = 30) => (await api.get('/admin/inactive-users', { params: { days } })).data as { users: AdminUser[]; total: number },
+    toggleAliasCatchAll: async (id: string, catchAll: boolean) => api.put(`/admin/alias/${id}/catch-all`, { catch_all: catchAll }),
+    exportUserData: async (id: string) => (await api.get(`/admin/user/${id}/export-data`)).data as any,
 }
 
 export interface AdminAlias {

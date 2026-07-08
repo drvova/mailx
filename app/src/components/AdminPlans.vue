@@ -165,6 +165,7 @@
                             <div><p class="text-sm text-gray-500">Active Until</p><p>{{ userDetail.subscription.active_until ? formatDate(userDetail.subscription.active_until) : 'N/A' }}</p></div>
                             <div><p class="text-sm text-gray-500">2FA</p><span :class="userDetail.user.totp_enabled ? 'badge badge-success' : 'badge'">{{ userDetail.user.totp_enabled ? 'Enabled' : 'Disabled' }}</span></div>
                             <div><p class="text-sm text-gray-500">Created</p><p>{{ formatDate(userDetail.user.created_at) }}</p></div>
+                            <div><p class="text-sm text-gray-500">Last Active</p><p>{{ lastActive || 'Loading...' }}</p></div>
                             <div><p class="text-sm text-gray-500">Notes</p><p class="text-xs">{{ userDetail.user.notes || 'none' }}</p><button class="cta cta-tertiary text-sm mt-1" @click="editUserNotes(userDetail.user)">Edit Notes</button></div>
                         </div>
                         <div v-if="userStats" class="grid grid-cols-5 gap-2 mb-4 text-center">
@@ -193,6 +194,7 @@
                             <button class="cta cta-tertiary text-sm" @click="createDomainForUser(userDetail.user.id)">Add Domain</button>
                             <button class="cta cta-tertiary text-sm" @click="createAliasForUser(userDetail.user.id)">Add Alias</button>
                             <button class="cta cta-tertiary text-sm" @click="createKeyForUser(userDetail.user.id)">Add API Key</button>
+                            <button class="cta cta-tertiary text-sm" @click="exportUserDataFull(userDetail.user)">Export User Data</button>
                         </div>
                         <h4 class="mb-2">Aliases ({{ userDetail.aliases.length }})</h4>
                         <div v-if="userDetail.aliases.length" class="overflow-x-auto mb-4">
@@ -247,6 +249,7 @@
                                     <button class="cta cta-tertiary text-sm" @click="editAlias(a)">Edit</button>
                                     <button class="cta cta-tertiary text-sm" @click="transferAlias(a)">Transfer</button>
                                     <button class="cta cta-tertiary text-sm" @click="setAliasExpiry(a)">Expiry</button>
+                                    <button class="cta cta-tertiary text-sm" @click="toggleCatchAll(a)">{{ a.catch_all ? 'Unset CatchAll' : 'Set CatchAll' }}</button>
                                     <button class="cta cta-tertiary text-sm text-red-500" @click="deleteAlias(a)">Delete</button>
                                 </div></td>
                             </tr>
@@ -618,6 +621,20 @@
                         <div><span class="text-gray-500">Oxapay:</span> {{ configInfo.oxapay_configured ? 'configured' : 'not set' }}</div>
                     </div>
                 </div>
+                <div v-if="inactiveUsers.length" class="mt-4">
+                    <h3 class="font-bold mb-2">Inactive Users ({{ inactiveDays }}d)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="table text-sm">
+                            <thead><tr><th>Email</th><th>Joined</th></tr></thead>
+                            <tbody>
+                                <tr v-for="u in inactiveUsers" :key="u.id">
+                                    <td>{{ u.email }}</td>
+                                    <td>{{ formatDate(u.created_at) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- LOGS -->
@@ -898,7 +915,7 @@ const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeo
 const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { aliasesOffset.value = 0; fetchAliases() }, 300) }
 const searchRecipientsDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { recipientsOffset.value = 0; fetchRecipients() }, 300) }
 
-const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || ''; userStats.value = await adminApi.userStats(id); userSettings.value = await adminApi.getSettings(id) } catch { /* */ } }
+const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || ''; userStats.value = await adminApi.userStats(id); userSettings.value = await adminApi.getSettings(id); const la = await adminApi.userLastActive(id); lastActive.value = la.last_active ? formatDate(la.last_active) : 'Never' } catch { /* */ } }
 const assignPlan = async (userId: string) => { if (!selectedPlan.value) return; try { await adminApi.assignPlan(userId, selectedPlan.value); viewUser(userId) } catch { /* */ } }
 
 const toggleUser = async (u: AdminUser) => { if (u.email === localStorage.getItem('email')) { alert('Cannot suspend your own account'); return } try { await adminApi.updateUser({ id: u.id, is_active: !u.is_active }); u.is_active = !u.is_active } catch { /* */ } }
@@ -1015,7 +1032,7 @@ watch(tab, (t) => {
     if (t === 'inbox' && !inboxMessages.value.length) fetchInboxMessages()
     if (t === 'messages') fetchMessages()
     if (t === 'subs') fetchSubscriptions()
-    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig() }
+    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers() }
     if (t === 'logs') fetchLogsFiltered()
     if (t === 'audit' && !auditEntries.value.length) fetchAuditLog()
 })
@@ -1036,11 +1053,17 @@ const planDist = ref<Record<string, number> | null>(null)
 const domHealth = ref<{ verified: number; unverified: number } | null>(null)
 const globalQuery = ref('')
 const globalResult = ref<any>(null)
+const lastActive = ref('')
+const inactiveUsers = ref<AdminUser[]>([])
+const inactiveDays = ref(30)
 const fetchSubStats = async () => { try { subStats.value = await adminApi.subscriptionStats() } catch { /* */ } }
 const fetchDailyActivity = async () => { try { const r = await adminApi.dailyActivity(); dailyActivity.value = r.activity } catch { /* */ } }
 const fetchPlanDist = async () => { try { planDist.value = await adminApi.planDistribution() } catch { /* */ } }
 const fetchDomainHealth = async () => { try { domHealth.value = await adminApi.domainHealth() } catch { /* */ } }
+const fetchInactiveUsers = async () => { try { const r = await adminApi.inactiveUsers(inactiveDays.value); inactiveUsers.value = r.users } catch { /* */ } }
 const globalSearch = async () => { if (!globalQuery.value) return; try { globalResult.value = await adminApi.globalSearch(globalQuery.value) } catch { alert('User not found') } }
+const toggleCatchAll = async (a: AdminAlias) => { try { await adminApi.toggleAliasCatchAll(a.id, !a.catch_all); a.catch_all = !a.catch_all } catch { /* */ } }
+const exportUserDataFull = async (u: AdminUser) => { try { const d = await adminApi.exportUserData(u.id); alert(JSON.stringify(d, null, 2)) } catch { alert('Unable to export') } }
 
 onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth() })
 </script>
