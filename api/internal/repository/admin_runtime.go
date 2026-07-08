@@ -10,6 +10,27 @@ import (
 
 var startTime = time.Now()
 
+func (d *Database) AdminGetCatchAllStats(ctx context.Context) (map[string]interface{}, error) {
+	var total, catchAll int64
+	d.Client.Model(&model.Alias{}).Count(&total)
+	d.Client.Model(&model.Alias{}).Where("catch_all = true").Count(&catchAll)
+	var byDomain []struct {
+		Domain string
+		Count  int64
+	}
+	d.Client.Model(&model.Alias{}).Select("substring_index(name, '@', -1) as domain, count(*) as count").Where("catch_all = true").Group("substring_index(name, '@', -1)").Order("count desc").Limit(10).Scan(&byDomain)
+	var pct float64
+	if total > 0 {
+		pct = float64(catchAll) / float64(total) * 100
+	}
+	return map[string]interface{}{
+		"total_aliases":    total,
+		"catchall_aliases": catchAll,
+		"percentage":       pct,
+		"by_domain":        byDomain,
+	}, nil
+}
+
 func (d *Database) AdminGetRuntimeStats(ctx context.Context) (map[string]interface{}, error) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)

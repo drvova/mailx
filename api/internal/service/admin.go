@@ -157,6 +157,7 @@ type AdminStore interface {
 	AdminGetAliasForwardStats(context.Context, int) ([]model.AliasForwardStats, error)
 	AdminLogSubscriptionChange(context.Context, model.SubscriptionChange) error
 	AdminGetSubscriptionChanges(context.Context, int, int) ([]model.SubscriptionChange, int64, error)
+	AdminGetCatchAllStats(context.Context) (map[string]interface{}, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -766,4 +767,8 @@ func (s *Service) AdminGetSubscriptionChanges(ctx context.Context, limit, offset
 func (s *Service) AdminGetAliasForwardStats(ctx context.Context, days int) ([]model.AliasForwardStats, error) {
 	if days <= 0 || days > 90 { days = 30 }
 	return s.Store.AdminGetAliasForwardStats(ctx, days)
+}
+
+func (s *Service) AdminGetCatchAllStats(ctx context.Context) (map[string]interface{}, error) {
+	return s.Store.AdminGetCatchAllStats(ctx)
 }

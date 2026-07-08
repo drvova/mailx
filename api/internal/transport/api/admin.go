@@ -132,6 +132,7 @@ type AdminService interface {
 	AdminBulkDeleteSessions(context.Context, []string) error
 	AdminLogSubscriptionChange(context.Context, model.SubscriptionChange) error
 	AdminGetSubscriptionChanges(context.Context, int, int) ([]model.SubscriptionChange, int64, error)
+	AdminGetCatchAllStats(context.Context) (map[string]interface{}, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1753,6 +1754,37 @@ func (h *Handler) AdminGetSubscriptionChanges(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch changes"})
 	}
 	return c.JSON(fiber.Map{"changes": changes, "total": total})
+}
+
+func (h *Handler) AdminGetCatchAllStats(c *fiber.Ctx) error {
+	stats, err := h.Service.AdminGetCatchAllStats(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch catch-all stats"})
+	}
+	return c.JSON(stats)
+}
+
+func (h *Handler) AdminExportSubCSV(c *fiber.Ctx) error {
+	subs, err := h.Service.AdminExportSubscriptions(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,user_id,type,tier,is_active,active_until,plan_id,created_at\n")
+	for _, s := range subs {
+		pid := ""
+		if s.PlanID != nil {
+			pid = *s.PlanID
+		}
+		au := ""
+		if !s.ActiveUntil.IsZero() {
+			au = s.ActiveUntil.Format(time.RFC3339)
+		}
+		buf.WriteString(fmt.Sprintf("%s,%s,%s,%s,%t,%s,%s,%s\n", s.ID, s.UserID, s.Type, s.Tier, s.IsActive, au, pid, s.CreatedAt.Format(time.RFC3339)))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=subscriptions.csv")
+	return c.Send(buf.Bytes())
 }
 
 func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {

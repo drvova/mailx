@@ -258,6 +258,10 @@ export const adminApi = {
     recentAliases: async (limit = 50) => (await api.get('/admin/recent-aliases', { params: { limit } })).data as { aliases: AdminAlias[] },
     aliasForwardStats: async (days = 30) => (await api.get('/admin/alias-forward-stats', { params: { days } })).data as { aliases: { alias_id: string; alias_name: string; user_email: string; forwards: number; blocks: number; replies: number; sends: number }[] },
     subscriptionChanges: async (offset = 0) => (await api.get('/admin/subscription-changes', { params: { offset } })).data as { changes: { id: number; user_id: string; admin_email: string; old_tier: string; new_tier: string; reason: string; created_at: string }[]; total: number },
+    bounceStats: async (days = 30) => (await api.get('/admin/bounce-stats', { params: { days } })).data as { aliases: { alias_id: string; alias_name: string; user_email: string; bounces: number }[] },
+    onboardingStatus: async () => (await api.get('/admin/onboarding-status')).data as { users: { user_id: string; email: string; alias_count: number; recipient_count: number; status: string; created_at: string }[] },
+    catchAllStats: async () => (await api.get('/admin/catchall-stats')).data as { total_aliases: number; catchall_aliases: number; percentage: number; by_domain: { domain: string; count: number }[] },
+    sessionConcurrency: async () => (await api.get('/admin/session-concurrency')).data as { users: { user_id: string; email: string; active_sessions: number }[] },
 }
 
 export interface AdminAlias {

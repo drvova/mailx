@@ -222,6 +222,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	// Admin CSV export for recipients and subscriptions
 	admin.Get("/export/recipients", h.AdminExportRecipients)
 	admin.Get("/export/subscriptions", h.AdminExportSubscriptions)
+	admin.Get("/export/subscriptions-csv", h.AdminExportSubCSV)
 
 	// Admin user email change
 	admin.Put("/user/email", h.AdminChangeEmail)
@@ -339,6 +340,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Get("/message-type-stats", h.AdminGetMessageTypeStats)
 	admin.Get("/recent-aliases", h.AdminGetRecentAliases)
 	admin.Get("/alias-forward-stats", h.AdminGetAliasForwardStats)
+	admin.Get("/catchall-stats", h.AdminGetCatchAllStats)
 
 	admin.Get("/subscription-changes", h.AdminGetSubscriptionChanges)
 

@@ -49,6 +49,13 @@
 
             <!-- STATS -->
             <div v-if="tab === 'stats'" role="tabpanel">
+                <div class="flex items-center justify-between mb-4">
+                    <h3>Dashboard</h3>
+                    <div class="flex gap-2 items-center">
+                        <label class="flex items-center gap-1 text-sm"><input type="checkbox" v-model="autoRefresh" /> Auto-refresh</label>
+                        <button class="cta cta-tertiary text-sm" @click="refreshAllStats">Refresh All</button>
+                    </div>
+                </div>
                 <div v-if="stats" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.total_users }}</p><p class="text-sm text-gray-500">Total Users</p></div>
                     <div class="card-secondary text-center"><p class="text-3xl font-bold">{{ stats.active_users }}</p><p class="text-sm text-gray-500">Active Users</p></div>
@@ -72,6 +79,7 @@
                         <button class="cta cta-tertiary text-sm" @click="exportInbox">Export Inbox CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportMessages">Export Messages CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportUsersEnriched">Export Users + Subs CSV</button>
+                        <button class="cta cta-tertiary text-sm" @click="exportSubsCSV">Export Subs CSV</button>
                     </div>
                     <div v-if="subStats" class="grid grid-cols-3 gap-4 mb-4">
                         <div class="card-secondary text-center"><p class="text-2xl font-bold text-green-500">{{ subStats.active }}</p><p class="text-sm text-gray-500">Active Subs</p></div>
@@ -152,6 +160,21 @@
                                         <td>{{ a.blocks }}</td>
                                         <td>{{ a.replies }}</td>
                                         <td>{{ a.sends }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div v-if="bounceStats.length" class="mt-4">
+                        <h3 class="font-bold mb-2">Top Bounces (30d)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="table text-sm">
+                                <thead><tr><th>Alias</th><th>User</th><th>Bounces</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="b in bounceStats.slice(0,15)" :key="b.alias_id">
+                                        <td class="max-w-[200px] truncate">{{ b.alias_name }}</td>
+                                        <td class="max-w-[150px] truncate text-xs">{{ b.user_email }}</td>
+                                        <td class="font-bold text-red-500">{{ b.bounces }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -678,6 +701,23 @@
                     </div>
                     <p v-else class="text-gray-500">No recent signups.</p>
                 </div>
+                <div v-if="catchAllInfo" class="mt-4">
+                    <h3 class="font-bold mb-2">Catch-All Aliases</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                        <div class="card-secondary text-center"><p class="text-2xl font-bold">{{ catchAllInfo.catchall_aliases }}</p><p class="text-sm text-gray-500">Catch-All</p></div>
+                        <div class="card-secondary text-center"><p class="text-2xl font-bold">{{ catchAllInfo.total_aliases - catchAllInfo.catchall_aliases }}</p><p class="text-sm text-gray-500">Regular</p></div>
+                        <div class="card-secondary text-center"><p class="text-2xl font-bold">{{ catchAllInfo.percentage.toFixed(1) }}%</p><p class="text-sm text-gray-500">Percentage</p></div>
+                    </div>
+                    <div v-if="catchAllInfo.by_domain?.length">
+                        <h4 class="text-sm font-bold mb-1">By Domain</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div v-for="d in catchAllInfo.by_domain" :key="d.domain" class="card-secondary text-center">
+                                <p class="font-bold">{{ d.count }}</p>
+                                <p class="text-xs text-gray-500">{{ d.domain }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div v-if="configInfo" class="card-secondary mt-4">
                     <h3 class="mb-3 font-bold">System Configuration</h3>
                     <div class="grid grid-cols-2 gap-2 text-sm">
@@ -703,6 +743,36 @@
                                 <tr v-for="u in inactiveUsers" :key="u.id">
                                     <td>{{ u.email }}</td>
                                     <td>{{ formatDate(u.created_at) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div v-if="sessConcurrency.length" class="mt-4">
+                    <h3 class="font-bold mb-2">Active Sessions</h3>
+                    <div class="overflow-x-auto">
+                        <table class="table text-sm">
+                            <thead><tr><th>User</th><th>Sessions</th></tr></thead>
+                            <tbody>
+                                <tr v-for="s in sessConcurrency" :key="s.user_id">
+                                    <td class="max-w-[200px] truncate">{{ s.email }}</td>
+                                    <td class="font-bold">{{ s.active_sessions }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div v-if="onboardingUsers.length" class="mt-4">
+                    <h3 class="font-bold mb-2">Onboarding Status</h3>
+                    <div class="overflow-x-auto">
+                        <table class="table text-sm">
+                            <thead><tr><th>Email</th><th>Aliases</th><th>Recipients</th><th>Status</th></tr></thead>
+                            <tbody>
+                                <tr v-for="u in onboardingUsers" :key="u.user_id">
+                                    <td class="max-w-[200px] truncate">{{ u.email }}</td>
+                                    <td>{{ u.alias_count }}</td>
+                                    <td>{{ u.recipient_count }}</td>
+                                    <td><span :class="u.status === 'complete' ? 'badge badge-success' : u.status === 'empty' ? 'badge badge-error' : 'badge badge-warning'">{{ u.status }}</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -825,7 +895,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { planApi, adminApi, type Plan, type AdminUser, type AdminLog, type AdminAlias, type AdminDomain, type AdminRecipient, type AdminAccessKey, type AdminSession, type AdminCredential, type AdminInboxMessage, type AdminSubscription, type AdminAudit, type SystemStats } from '../api/plan'
 import SkeletonRows from '../components/SkeletonRows.vue'
 
@@ -1133,7 +1203,7 @@ watch(tab, (t) => {
     if (t === 'inbox' && !inboxMessages.value.length) fetchInboxMessages()
     if (t === 'messages') fetchMessages()
     if (t === 'subs') fetchSubscriptions()
-    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats(); fetchRuntime(); fetchRecipientDomains() }
+    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats(); fetchRuntime(); fetchRecipientDomains(); fetchSessConcurrency(); fetchBounceStats(); fetchOnboardingStatus(); fetchCatchAll() }
     if (t === 'logs') fetchLogsFiltered()
     if (t === 'audit' && !auditEntries.value.length) fetchAuditLog()
 })
@@ -1185,6 +1255,20 @@ const fetchRecipientDomains = async () => { try { recipDomains.value = await adm
 const fetchTopForwarders = async () => { try { const r = await adminApi.topForwarders(); topForwarders.value = r.users } catch { /* */ } }
 const fetchMsgTypeStats = async () => { try { msgTypeBreakdown.value = await adminApi.messageTypeStats() } catch { /* */ } }
 const fetchAliasForwardStats = async () => { try { const r = await adminApi.aliasForwardStats(); aliasForwardStats.value = r.aliases } catch { /* */ } }
+const bounceStats = ref<any[]>([])
+const onboardingUsers = ref<any[]>([])
+const catchAllInfo = ref<any>(null)
+const fetchBounceStats = async () => { try { const r = await adminApi.bounceStats(); bounceStats.value = r.aliases } catch { /* */ } }
+const fetchOnboardingStatus = async () => { try { const r = await adminApi.onboardingStatus(); onboardingUsers.value = r.users } catch { /* */ } }
+const fetchCatchAll = async () => { try { catchAllInfo.value = await adminApi.catchAllStats() } catch {} }
+const exportSubsCSV = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/subscriptions-csv`, '_blank') }
+const sessConcurrency = ref<any[]>([])
+const fetchSessConcurrency = async () => { try { const r = await adminApi.sessionConcurrency(); sessConcurrency.value = r.users } catch { /* */ } }
+const autoRefresh = ref(false)
+let refreshTimer: any
+const refreshAllStats = () => { fetchStats(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats(); fetchBounceStats() }
+watch(autoRefresh, (v) => { if (v) { refreshTimer = setInterval(refreshAllStats, 30000) } else { clearInterval(refreshTimer) } })
+onUnmounted(() => { clearInterval(refreshTimer) })
 const viewPlan = (p: Plan) => { planDetail.value = p }
 const compareUsers = async () => {
     const id1 = prompt('Enter first user ID:')
@@ -1225,5 +1309,5 @@ const globalSearch = async () => { if (!globalQuery.value) return; try { globalR
 const toggleCatchAll = async (a: AdminAlias) => { try { await adminApi.toggleAliasCatchAll(a.id, !a.catch_all); a.catch_all = !a.catch_all } catch { /* */ } }
 const exportUserDataFull = async (u: AdminUser) => { try { const d = await adminApi.exportUserData(u.id); alert(JSON.stringify(d, null, 2)) } catch { alert('Unable to export') } }
 
-onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats() })
+onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs(); fetchSubStats(); fetchDailyActivity(); fetchPlanDist(); fetchDomainHealth(); fetchTopForwarders(); fetchMsgTypeStats(); fetchAliasForwardStats(); fetchBounceStats() })
 </script>
