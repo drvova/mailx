@@ -121,6 +121,10 @@ type AdminStore interface {
 	AdminGetInboxRaw(context.Context, uint) ([]byte, error)
 	AdminSetAliasExpiry(context.Context, string, *time.Time) error
 	AdminSetAccessKeyExpiry(context.Context, string, *time.Time) error
+	AdminLogAudit(context.Context, model.AdminAudit) error
+	AdminGetAuditLog(context.Context, int, int) ([]model.AdminAudit, int64, error)
+	AdminGetSessionData(context.Context, string) ([]byte, error)
+	AdminGetLogsDateRange(context.Context, string, string, string, int, int) ([]model.Log, int64, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -557,4 +561,25 @@ func (s *Service) AdminSetAliasExpiry(ctx context.Context, aliasID string, expir
 
 func (s *Service) AdminSetAccessKeyExpiry(ctx context.Context, keyID string, expiresAt *time.Time) error {
 	return s.Store.AdminSetAccessKeyExpiry(ctx, keyID, expiresAt)
+}
+
+func (s *Service) LogAdminAction(ctx context.Context, email, action, target, details string) {
+	entry := model.AdminAudit{AdminEmail: email, Action: action, Target: target, Details: details}
+	if err := s.Store.AdminLogAudit(ctx, entry); err != nil {
+		log.Printf("audit log error: %s", err.Error())
+	}
+}
+
+func (s *Service) AdminGetAuditLog(ctx context.Context, limit, offset int) ([]model.AdminAudit, int64, error) {
+	if limit <= 0 || limit > 100 { limit = 50 }
+	return s.Store.AdminGetAuditLog(ctx, limit, offset)
+}
+
+func (s *Service) AdminGetSessionData(ctx context.Context, sessionID string) ([]byte, error) {
+	return s.Store.AdminGetSessionData(ctx, sessionID)
+}
+
+func (s *Service) AdminGetLogsDateRange(ctx context.Context, logType, from, to string, limit, offset int) ([]model.Log, int64, error) {
+	if limit <= 0 || limit > 200 { limit = 100 }
+	return s.Store.AdminGetLogsDateRange(ctx, logType, from, to, limit, offset)
 }

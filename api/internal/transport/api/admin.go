@@ -96,6 +96,10 @@ type AdminService interface {
 	AdminGetInboxRaw(context.Context, uint) ([]byte, error)
 	AdminSetAliasExpiry(context.Context, string, *time.Time) error
 	AdminSetAccessKeyExpiry(context.Context, string, *time.Time) error
+	LogAdminAction(context.Context, string, string, string, string)
+	AdminGetAuditLog(context.Context, int, int) ([]model.AdminAudit, int64, error)
+	AdminGetSessionData(context.Context, string) ([]byte, error)
+	AdminGetLogsDateRange(context.Context, string, string, string, int, int) ([]model.Log, int64, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -163,6 +167,7 @@ func (h *Handler) AdminDeleteUser(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to delete user"})
 	}
 
+	h.audit(c, "delete_user", id, "")
 	return c.JSON(fiber.Map{"message": "User deleted"})
 }
 
@@ -426,6 +431,7 @@ func (h *Handler) AdminBulkUpdateUsers(c *fiber.Ctx) error {
 	if err := h.Service.AdminBulkUpdateUsers(c.Context(), req.UserIDs, req.IsActive); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk update"})
 	}
+	h.audit(c, "bulk_update_users", fmt.Sprintf("%d users", len(req.UserIDs)), fmt.Sprintf("is_active=%v", req.IsActive))
 	return c.JSON(fiber.Map{"message": "Users updated"})
 }
 
@@ -844,6 +850,7 @@ func (h *Handler) AdminBulkDeleteUsers(c *fiber.Ctx) error {
 	if err := h.Service.AdminBulkDeleteUsers(c.Context(), req.UserIDs); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk delete users"})
 	}
+	h.audit(c, "bulk_delete_users", fmt.Sprintf("%d users", len(req.UserIDs)), "")
 	return c.JSON(fiber.Map{"message": "Users deleted"})
 }
 
@@ -1161,6 +1168,7 @@ func (h *Handler) AdminTransferAlias(c *fiber.Ctx) error {
 	if err := h.Service.AdminTransferAlias(c.Context(), id, req.NewUserID); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to transfer alias"})
 	}
+	h.audit(c, "transfer_alias", id, req.NewUserID)
 	return c.JSON(fiber.Map{"message": "Alias transferred"})
 }
 
@@ -1173,6 +1181,7 @@ func (h *Handler) AdminTransferDomain(c *fiber.Ctx) error {
 	if err := h.Service.AdminTransferDomain(c.Context(), id, req.NewUserID); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to transfer domain"})
 	}
+	h.audit(c, "transfer_domain", id, req.NewUserID)
 	return c.JSON(fiber.Map{"message": "Domain transferred"})
 }
 
@@ -1188,6 +1197,7 @@ func (h *Handler) AdminPurgeLogs(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to purge logs"})
 	}
+	h.audit(c, "purge_logs", fmt.Sprintf("%d days", req.Days), fmt.Sprintf("type=%s count=%d", req.LogType, count))
 	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d logs purged", count)})
 }
 
@@ -1196,6 +1206,7 @@ func (h *Handler) AdminPurgeAllInbox(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to purge inbox"})
 	}
+	h.audit(c, "purge_all_inbox", "", fmt.Sprintf("count=%d", count))
 	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d inbox messages purged", count)})
 }
 
@@ -1216,6 +1227,7 @@ func (h *Handler) AdminCreateUser(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to create user"})
 	}
+	h.audit(c, "create_user", req.Email, "")
 	return c.JSON(fiber.Map{"message": "User created", "user": user})
 }
 
@@ -1277,4 +1289,46 @@ func (h *Handler) AdminSetAccessKeyExpiry(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to set access key expiry"})
 	}
 	return c.JSON(fiber.Map{"message": "Access key expiry updated"})
+}
+
+func (h *Handler) AdminGetAuditLog(c *fiber.Ctx) error {
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	entries, total, err := h.Service.AdminGetAuditLog(c.Context(), limit, offset)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch audit log"})
+	}
+	return c.JSON(fiber.Map{"entries": entries, "total": total})
+}
+
+func (h *Handler) AdminGetSessionData(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Session ID required"})
+	}
+	data, err := h.Service.AdminGetSessionData(c.Context(), id)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Session not found"})
+	}
+	c.Set("Content-Type", "application/json; charset=utf-8")
+	return c.Send(data)
+}
+
+func (h *Handler) AdminGetLogsDateRange(c *fiber.Ctx) error {
+	logType := c.Query("type", "")
+	from := c.Query("from", "")
+	to := c.Query("to", "")
+	limit := c.QueryInt("limit", 100)
+	offset := c.QueryInt("offset", 0)
+	logs, total, err := h.Service.AdminGetLogsDateRange(c.Context(), logType, from, to, limit, offset)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch logs"})
+	}
+	return c.JSON(fiber.Map{"logs": logs, "total": total})
+}
+
+func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {
+	email, _ := c.Locals("admin_email").(string)
+	if email == "" { email = "unknown" }
+	h.Service.LogAdminAction(c.Context(), email, action, target, details)
 }

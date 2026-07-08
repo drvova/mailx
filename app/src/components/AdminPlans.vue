@@ -20,6 +20,7 @@
                 <li><button :class="tab === 'subs' ? 'font-bold border-b-2' : ''" @click="tab = 'subs'" role="tab">Subscriptions</button></li>
                 <li><button :class="tab === 'system' ? 'font-bold border-b-2' : ''" @click="tab = 'system'" role="tab">System</button></li>
                 <li><button :class="tab === 'logs' ? 'font-bold border-b-2' : ''" @click="tab = 'logs'" role="tab">Logs</button></li>
+                <li><button :class="tab === 'audit' ? 'font-bold border-b-2' : ''" @click="tab = 'audit'" role="tab">Audit</button></li>
             </ul>
 
             <!-- STATS -->
@@ -341,7 +342,10 @@
                                 <td class="text-xs text-gray-500 font-mono">{{ s.token.slice(0,16) }}...</td>
                                 <td>{{ formatDate(s.expires_at) }}</td>
                                 <td>{{ formatDate(s.created_at) }}</td>
-                                <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteSession(s)">Terminate</button></td>
+                                <td><div class="flex gap-1">
+                                    <button class="cta cta-tertiary text-sm" @click="viewSessionData(s)">Data</button>
+                                    <button class="cta cta-tertiary text-sm text-red-500" @click="deleteSession(s)">Terminate</button>
+                                </div></td>
                             </tr>
                         </tbody>
                     </table>
@@ -540,7 +544,7 @@
             <!-- LOGS -->
             <div v-if="tab === 'logs'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
-                    <select v-model="logFilter" @change="fetchLogsFiltered" class="max-w-xs">
+                    <select v-model="logFilter" @change="logsOffset = 0; fetchLogsFiltered()" class="max-w-xs">
                         <option value="">All Types</option>
                         <option value="bounce">Bounce</option>
                         <option value="disabled_alias">Disabled Alias</option>
@@ -549,6 +553,8 @@
                         <option value="inactive_subscription">Inactive Subscription</option>
                     </select>
                     <input v-model="logSearch" placeholder="Search from/destination/message..." @input="searchLogsDeb" class="flex-1" />
+                    <input v-model="logFrom" type="date" @change="logsOffset = 0; fetchLogsFiltered()" class="max-w-[150px]" title="From date" />
+                    <input v-model="logTo" type="date" @change="logsOffset = 0; fetchLogsFiltered()" class="max-w-[150px]" title="To date" />
                     <button class="cta cta-tertiary text-sm text-red-500" @click="purgeLogs">Purge Old Logs</button>
                 </div>
                 <div v-if="logs.length" class="overflow-x-auto">
@@ -597,13 +603,37 @@
                     </div>
                 </div>
             </div>
+
+            <!-- AUDIT -->
+            <div v-if="tab === 'audit'" role="tabpanel">
+                <div v-if="auditEntries.length" class="overflow-x-auto">
+                    <table class="table">
+                        <thead><tr><th>Admin</th><th>Action</th><th>Target</th><th>Details</th><th>Date</th></tr></thead>
+                        <tbody>
+                            <tr v-for="a in auditEntries" :key="a.id">
+                                <td>{{ a.admin_email }}</td>
+                                <td><span class="badge">{{ a.action }}</span></td>
+                                <td class="max-w-xs truncate">{{ a.target }}</td>
+                                <td class="max-w-xs truncate">{{ a.details }}</td>
+                                <td>{{ formatDate(a.created_at) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div v-if="auditTotal > 50" class="flex items-center justify-between mt-4">
+                        <button class="cta cta-tertiary text-sm" :disabled="auditOffset === 0" @click="auditOffset = Math.max(0, auditOffset - 50); fetchAuditLog()">Prev</button>
+                        <span class="text-sm text-gray-500">{{ auditOffset + 1 }}-{{ Math.min(auditOffset + 50, auditTotal) }} of {{ auditTotal }}</span>
+                        <button class="cta cta-tertiary text-sm" :disabled="auditOffset + 50 >= auditTotal" @click="auditOffset += 50; fetchAuditLog()">Next</button>
+                    </div>
+                </div>
+                <SkeletonRows v-else :rows="5" />
+            </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { planApi, adminApi, type Plan, type AdminUser, type AdminLog, type AdminAlias, type AdminDomain, type AdminRecipient, type AdminAccessKey, type AdminSession, type AdminCredential, type AdminInboxMessage, type AdminSubscription, type SystemStats } from '../api/plan'
+import { planApi, adminApi, type Plan, type AdminUser, type AdminLog, type AdminAlias, type AdminDomain, type AdminRecipient, type AdminAccessKey, type AdminSession, type AdminCredential, type AdminInboxMessage, type AdminSubscription, type AdminAudit, type SystemStats } from '../api/plan'
 import SkeletonRows from '../components/SkeletonRows.vue'
 
 const tab = ref('stats')
@@ -653,7 +683,7 @@ const fetchDomains = async () => { try { domains.value = await adminApi.domains(
 const fetchRecipients = async () => { try { const r = await adminApi.recipients(recipientSearch.value || undefined, recipientsOffset.value); recipients.value = r.recipients; recipientsTotal.value = r.total } catch { /* */ } }
 const fetchPlans = async () => { loadingPlans.value = true; try { plans.value = await planApi.listAll() } catch { /* */ } finally { loadingPlans.value = false } }
 const fetchLogs = async () => { try { logs.value = await adminApi.logs() } catch { /* */ } }
-const fetchLogsFiltered = async () => { try { const r = await adminApi.logsFiltered(logFilter.value || undefined, logsOffset.value); logs.value = r.logs; logsTotal.value = r.total } catch { /* */ } }
+const fetchLogsFiltered = async () => { try { if (logFrom.value || logTo.value) { const r = await adminApi.logsDateRange(logFrom.value, logTo.value, logFilter.value || undefined, logsOffset.value); logs.value = r.logs; logsTotal.value = r.total } else { const r = await adminApi.logsFiltered(logFilter.value || undefined, logsOffset.value); logs.value = r.logs; logsTotal.value = r.total } } catch { /* */ } }
 const fetchAccessKeys = async () => { try { const r = await adminApi.accessKeys(keysOffset.value); accessKeys.value = r.keys; keysTotal.value = r.total } catch { /* */ } }
 const fetchSessions = async () => { try { const r = await adminApi.sessions(sessionsOffset.value); sessions.value = r.sessions; sessionsTotal.value = r.total } catch { /* */ } }
 const fetchCredentials = async () => { try { const r = await adminApi.credentials(passkeysOffset.value); credentials.value = r.credentials; passkeysTotal.value = r.total } catch { /* */ } }
@@ -699,6 +729,8 @@ const editRecipient = async (r: AdminRecipient) => {
     const email = prompt('Enter new email:', r.email)
     if (!email || email === r.email) return
     try { await adminApi.updateRecipient(r.id, email); r.email = email } catch { /* */ } }
+const fetchAuditLog = async () => { try { const r = await adminApi.auditLog(auditOffset.value); auditEntries.value = r.entries; auditTotal.value = r.total } catch { /* */ } }
+const viewSessionData = async (s: AdminSession) => { try { const d = await adminApi.sessionData(s.id); alert(JSON.stringify(d, null, 2)) } catch { alert('Unable to load session data') } }
 const viewLog = (log: AdminLog) => { logDetail.value = log }
 const deleteLog = async (log: AdminLog) => { if (!confirm('Delete this log entry?')) return; try { await adminApi.deleteLog(log.id); logs.value = logs.value.filter(x => x.id !== log.id) } catch { /* */ } }
 const setKeyExpiry = async (k: AdminAccessKey) => {
@@ -854,6 +886,11 @@ const messagesTotal = ref(0)
 const logsTotal = ref(0)
 const logDetail = ref<AdminLog | null>(null)
 const messages = ref<any[]>([])
+const auditEntries = ref<AdminAudit[]>([])
+const auditTotal = ref(0)
+const auditOffset = ref(0)
+const logFrom = ref('')
+const logTo = ref('')
 let inboxSearchTimer: any
 const searchInboxDeb = () => { clearTimeout(inboxSearchTimer); inboxSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchInbox(inboxSearch.value); inboxMessages.value = r.messages } catch { /* */ } }, 300) }
 
@@ -873,6 +910,8 @@ watch(tab, (t) => {
     if (t === 'messages') fetchMessages()
     if (t === 'subs') fetchSubscriptions()
     if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig() }
+    if (t === 'logs') fetchLogsFiltered()
+    if (t === 'audit' && !auditEntries.value.length) fetchAuditLog()
 })
 
 onMounted(() => { fetchStats(); fetchUsers(); fetchPlans(); fetchLogs() })

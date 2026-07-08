@@ -694,3 +694,46 @@ func (d *Database) AdminSetAliasExpiry(ctx context.Context, aliasID string, expi
 func (d *Database) AdminSetAccessKeyExpiry(ctx context.Context, keyID string, expiresAt *time.Time) error {
 	return d.Client.Model(&model.AccessKey{}).Where("id = ?", keyID).Update("expires_at", expiresAt).Error
 }
+
+func (d *Database) AdminLogAudit(ctx context.Context, entry model.AdminAudit) error {
+	return d.Client.Create(&entry).Error
+}
+
+func (d *Database) AdminGetAuditLog(ctx context.Context, limit, offset int) ([]model.AdminAudit, int64, error) {
+	var entries []model.AdminAudit
+	var total int64
+	d.Client.Model(&model.AdminAudit{}).Count(&total)
+	err := d.Client.Order("created_at desc").Limit(limit).Offset(offset).Find(&entries).Error
+	return entries, total, err
+}
+
+func (d *Database) AdminGetSessionData(ctx context.Context, sessionID string) ([]byte, error) {
+	var s model.Session
+	err := d.Client.Select("data").First(&s, "id = ?", sessionID).Error
+	return s.Data, err
+}
+
+func (d *Database) AdminGetLogsDateRange(ctx context.Context, logType, from, to string, limit, offset int) ([]model.Log, int64, error) {
+	q := d.Client.Model(&model.Log{})
+	if logType != "" {
+		q = q.Where("type = ?", logType)
+	}
+	if from != "" {
+		ft, err := time.Parse("2006-01-02", from)
+		if err == nil {
+			q = q.Where("created_at >= ?", ft)
+		}
+	}
+	if to != "" {
+		tt, err := time.Parse("2006-01-02", to)
+		if err == nil {
+			q = q.Where("created_at < ?", tt.AddDate(0, 0, 1))
+		}
+	}
+	var total int64
+	q.Count(&total)
+	var logs []model.Log
+	if limit <= 0 || limit > 200 { limit = 100 }
+	err := q.Order("created_at desc").Limit(limit).Offset(offset).Find(&logs).Error
+	return logs, total, err
+}

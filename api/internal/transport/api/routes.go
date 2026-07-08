@@ -281,6 +281,15 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Put("/alias/:id/expiry", h.AdminSetAliasExpiry)
 	admin.Put("/accesskey/:id/expiry", h.AdminSetAccessKeyExpiry)
 
+	// Admin audit log
+	admin.Get("/audit", h.AdminGetAuditLog)
+
+	// Session data viewer
+	admin.Get("/session/:id/data", h.AdminGetSessionData)
+
+	// Date range logs
+	admin.Get("/logs/date-range", h.AdminGetLogsDateRange)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

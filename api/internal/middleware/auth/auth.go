@@ -194,6 +194,7 @@ func NewAdminGuard(service AdminChecker) fiber.Handler {
 		if err != nil || !user.IsAdmin {
 			return c.SendStatus(fiber.StatusForbidden)
 		}
+		c.Locals("admin_email", user.Email)
 		return c.Next()
 	}
 }

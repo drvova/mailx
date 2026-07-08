@@ -137,6 +137,7 @@ export const adminApi = {
     userStats: async (id: string) => (await api.get(`/admin/user/${id}/stats`)).data as { forwards: number; blocks: number; replies: number; sends: number; aliases: number },
     // Log search (text + type)
     searchLogs: async (search: string, type?: string, offset = 0) => (await api.get('/admin/logs/search', { params: { offset, search, ...(type ? { type } : {}) } })).data as { logs: AdminLog[]; total: number },
+    logsDateRange: async (from: string, to: string, type?: string, offset = 0) => (await api.get('/admin/logs/date-range', { params: { offset, from, to, ...(type ? { type } : {}) } })).data as { logs: AdminLog[]; total: number },
     // Recipient toggle
     toggleRecipient: async (id: string, isActive: boolean) => api.put(`/admin/recipient/${id}/toggle`, { is_active: isActive }),
     // Domain search
@@ -197,6 +198,10 @@ export const adminApi = {
     // Alias expiry
     setAliasExpiry: async (id: string, expiresAt: string) => api.put(`/admin/alias/${id}/expiry`, { expires_at: expiresAt }),
     setAccessKeyExpiry: async (id: string, expiresAt: string) => api.put(`/admin/accesskey/${id}/expiry`, { expires_at: expiresAt }),
+    // Audit log
+    auditLog: async (offset = 0) => (await api.get('/admin/audit', { params: { offset } })).data as { entries: AdminAudit[]; total: number },
+    // Session data
+    sessionData: async (id: string) => (await api.get(`/admin/session/${id}/data`)).data as any,
 }
 
 export interface AdminAlias {
@@ -285,5 +290,14 @@ export interface AdminSubscription {
     tier: string
     active_until: string
     plan_id: string | null
+    created_at: string
+}
+
+export interface AdminAudit {
+    id: number
+    admin_email: string
+    action: string
+    target: string
+    details: string
     created_at: string
 }
