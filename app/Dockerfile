@@ -29,7 +29,7 @@ COPY app/nginx.conf.template /etc/nginx/conf.d/default.conf.template
 COPY app/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-ENV API_UPSTREAM=http://api:3000/
+ENV API_UPSTREAM=http://api.zeabur.internal:3000/
 
 EXPOSE 80
 

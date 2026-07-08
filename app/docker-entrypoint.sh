@@ -1,3 +1,7 @@
 #!/bin/sh
-envsubst '${API_UPSTREAM}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
+RESOLVER=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf)
+RESOLVER=${RESOLVER:-127.0.0.11}
+export RESOLVER
+export API_UPSTREAM
+envsubst '${API_UPSTREAM} ${RESOLVER}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
 exec nginx -g 'daemon off;'
