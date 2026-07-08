@@ -325,6 +325,10 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Post("/aliases/bulk-create", h.AdminBulkCreateAliases)
 	admin.Post("/recipients/bulk-toggle", h.AdminBulkToggleRecipients)
 
+	// System runtime and user quota
+	admin.Get("/system/runtime", h.AdminGetRuntimeStats)
+	admin.Get("/user/:id/quota", h.AdminGetUserQuota)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

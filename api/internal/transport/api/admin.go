@@ -121,6 +121,8 @@ type AdminService interface {
 	AdminGetDomainWithAliasCounts(context.Context) ([]model.DomainStats, error)
 	AdminBulkCreateAliases(context.Context, []model.Alias) error
 	AdminBulkToggleRecipients(context.Context, []string, bool) error
+	AdminGetRuntimeStats(context.Context) (map[string]interface{}, error)
+	AdminGetUserQuota(context.Context, string) (*model.UserQuota, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1641,6 +1643,26 @@ func (h *Handler) AdminBulkToggleRecipients(c *fiber.Ctx) error {
 	}
 	h.audit(c, "bulk_toggle_recipients", fmt.Sprintf("%d recipients", len(req.IDs)), fmt.Sprintf("is_active=%v", req.IsActive))
 	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d recipients updated", len(req.IDs))})
+}
+
+func (h *Handler) AdminGetRuntimeStats(c *fiber.Ctx) error {
+	stats, err := h.Service.AdminGetRuntimeStats(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch runtime stats"})
+	}
+	return c.JSON(stats)
+}
+
+func (h *Handler) AdminGetUserQuota(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "User ID required"})
+	}
+	quota, err := h.Service.AdminGetUserQuota(c.Context(), id)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Unable to fetch user quota"})
+	}
+	return c.JSON(quota)
 }
 
 func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {

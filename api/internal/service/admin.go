@@ -146,6 +146,8 @@ type AdminStore interface {
 	AdminGetDomainWithAliasCounts(context.Context) ([]model.DomainStats, error)
 	AdminBulkCreateAliases(context.Context, []model.Alias) error
 	AdminBulkToggleRecipients(context.Context, []string, bool) error
+	AdminGetRuntimeStats(context.Context) (map[string]interface{}, error)
+	AdminGetUserQuota(context.Context, string) (*model.UserQuota, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -689,4 +691,12 @@ func (s *Service) AdminBulkCreateAliases(ctx context.Context, aliases []model.Al
 
 func (s *Service) AdminBulkToggleRecipients(ctx context.Context, recipientIDs []string, isActive bool) error {
 	return s.Store.AdminBulkToggleRecipients(ctx, recipientIDs, isActive)
+}
+
+func (s *Service) AdminGetRuntimeStats(ctx context.Context) (map[string]interface{}, error) {
+	return s.Store.AdminGetRuntimeStats(ctx)
+}
+
+func (s *Service) AdminGetUserQuota(ctx context.Context, userID string) (*model.UserQuota, error) {
+	return s.Store.AdminGetUserQuota(ctx, userID)
 }

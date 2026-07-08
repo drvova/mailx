@@ -166,6 +166,15 @@
                             <div><p class="text-sm text-gray-500">2FA</p><span :class="userDetail.user.totp_enabled ? 'badge badge-success' : 'badge'">{{ userDetail.user.totp_enabled ? 'Enabled' : 'Disabled' }}</span></div>
                             <div><p class="text-sm text-gray-500">Created</p><p>{{ formatDate(userDetail.user.created_at) }}</p></div>
                             <div><p class="text-sm text-gray-500">Last Active</p><p>{{ lastActive || 'Loading...' }}</p></div>
+                            <div v-if="userQuota" class="mt-2 col-span-2">
+                                <p class="text-sm text-gray-500 mb-1">Usage vs Limits ({{ userQuota.tier }})</p>
+                                <div class="grid grid-cols-4 gap-1 text-xs">
+                                    <div class="card-secondary text-center"><p :class="userQuota.alias_count >= userQuota.max_aliases ? 'text-red-500' : ''">{{ userQuota.alias_count }}/{{ userQuota.max_aliases }}</p><p class="text-gray-500">Aliases</p></div>
+                                    <div class="card-secondary text-center"><p :class="userQuota.recipient_count >= userQuota.max_recipients ? 'text-red-500' : ''">{{ userQuota.recipient_count }}/{{ userQuota.max_recipients }}</p><p class="text-gray-500">Recipients</p></div>
+                                    <div class="card-secondary text-center"><p :class="userQuota.credential_count >= userQuota.max_credentials ? 'text-red-500' : ''">{{ userQuota.credential_count }}/{{ userQuota.max_credentials }}</p><p class="text-gray-500">Passkeys</p></div>
+                                    <div class="card-secondary text-center"><p :class="userQuota.session_count >= userQuota.max_sessions ? 'text-red-500' : ''">{{ userQuota.session_count }}/{{ userQuota.max_sessions }}</p><p class="text-gray-500">Sessions</p></div>
+                                </div>
+                            </div>
                             <div><p class="text-sm text-gray-500">Notes</p><p class="text-xs">{{ userDetail.user.notes || 'none' }}</p><button class="cta cta-tertiary text-sm mt-1" @click="editUserNotes(userDetail.user)">Edit Notes</button></div>
                         </div>
                         <div v-if="userStats" class="grid grid-cols-5 gap-2 mb-4 text-center">
@@ -588,6 +597,13 @@
 
             <!-- SYSTEM -->
             <div v-if="tab === 'system'" role="tabpanel">
+                <div v-if="runtimeInfo" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                    <div class="card-secondary text-center"><p class="text-2xl font-bold">{{ runtimeInfo.goroutines }}</p><p class="text-sm text-gray-500">Goroutines</p></div>
+                    <div class="card-secondary text-center"><p class="text-2xl font-bold">{{ Math.round(runtimeInfo.heap_alloc_mb) }}MB</p><p class="text-sm text-gray-500">Heap Alloc</p></div>
+                    <div class="card-secondary text-center"><p class="text-2xl font-bold">{{ Math.round(runtimeInfo.total_alloc_mb) }}MB</p><p class="text-sm text-gray-500">Total Alloc</p></div>
+                    <div class="card-secondary text-center"><p class="text-2xl font-bold">{{ runtimeInfo.num_gc }}</p><p class="text-sm text-gray-500">GC Cycles</p></div>
+                    <div class="card-secondary text-center"><p class="text-2xl font-bold">{{ formatUptime(runtimeInfo.uptime_seconds) }}</p><p class="text-sm text-gray-500">Uptime</p></div>
+                </div>
                 <div v-if="tableSizes" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div v-for="(count, table) in tableSizes" :key="table" class="card-secondary text-center">
                         <p class="text-2xl font-bold">{{ count }}</p>
@@ -921,7 +937,7 @@ const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeo
 const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { aliasesOffset.value = 0; fetchAliases() }, 300) }
 const searchRecipientsDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { recipientsOffset.value = 0; fetchRecipients() }, 300) }
 
-const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || ''; userStats.value = await adminApi.userStats(id); userSettings.value = await adminApi.getSettings(id); const la = await adminApi.userLastActive(id); lastActive.value = la.last_active ? formatDate(la.last_active) : 'Never' } catch { /* */ } }
+const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || ''; userStats.value = await adminApi.userStats(id); userSettings.value = await adminApi.getSettings(id); const la = await adminApi.userLastActive(id); lastActive.value = la.last_active ? formatDate(la.last_active) : 'Never'; userQuota.value = await adminApi.userQuota(id) } catch { /* */ } }
 const assignPlan = async (userId: string) => { if (!selectedPlan.value) return; try { await adminApi.assignPlan(userId, selectedPlan.value); viewUser(userId) } catch { /* */ } }
 
 const toggleUser = async (u: AdminUser) => { if (u.email === localStorage.getItem('email')) { alert('Cannot suspend your own account'); return } try { await adminApi.updateUser({ id: u.id, is_active: !u.is_active }); u.is_active = !u.is_active } catch { /* */ } }
@@ -1038,7 +1054,7 @@ watch(tab, (t) => {
     if (t === 'inbox' && !inboxMessages.value.length) fetchInboxMessages()
     if (t === 'messages') fetchMessages()
     if (t === 'subs') fetchSubscriptions()
-    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats() }
+    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats(); fetchRuntime() }
     if (t === 'logs') fetchLogsFiltered()
     if (t === 'audit' && !auditEntries.value.length) fetchAuditLog()
 })
@@ -1063,6 +1079,8 @@ const lastActive = ref('')
 const inactiveUsers = ref<AdminUser[]>([])
 const inactiveDays = ref(30)
 const domainStatsData = ref<any[]>([])
+const runtimeInfo = ref<any>(null)
+const userQuota = ref<any>(null)
 const fetchSubStats = async () => { try { subStats.value = await adminApi.subscriptionStats() } catch { /* */ } }
 const fetchDailyActivity = async () => { try { const r = await adminApi.dailyActivity(); dailyActivity.value = r.activity } catch { /* */ } }
 const fetchPlanDist = async () => { try { planDist.value = await adminApi.planDistribution() } catch { /* */ } }
@@ -1070,6 +1088,8 @@ const fetchDomainHealth = async () => { try { domHealth.value = await adminApi.d
 const fetchInactiveUsers = async () => { try { const r = await adminApi.inactiveUsers(inactiveDays.value); inactiveUsers.value = r.users } catch { /* */ } }
 const purgeSessions = async () => { if (!confirm('Purge all expired sessions?')) return; try { const r = await adminApi.purgeExpiredSessions(); alert(r.message); fetchSessions() } catch { /* */ } }
 const fetchDomainStats = async () => { try { const r = await adminApi.domainStats(); domainStatsData.value = r.domains } catch { /* */ } }
+const fetchRuntime = async () => { try { runtimeInfo.value = await adminApi.runtimeStats() } catch { /* */ } }
+const formatUptime = (s: number) => { const d = Math.floor(s/86400); const h = Math.floor((s%86400)/3600); const m = Math.floor((s%3600)/60); return d ? `${d}d ${h}h` : `${h}h ${m}m` }
 const bulkToggleRecipients = async (active: boolean) => {
     const selected = recipients.value.filter(r => (r as any)._selected)
     if (!selected.length) { alert('Select recipients first'); return }

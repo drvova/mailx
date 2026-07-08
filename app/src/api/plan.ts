@@ -243,6 +243,10 @@ export const adminApi = {
     bulkCreateAliases: async (userId: string, names?: string[], count?: number) => (await api.post('/admin/aliases/bulk-create', { user_id: userId, ...(names ? { names } : {}), ...(count ? { count } : {}) })).data as { message: string },
     // Bulk recipient toggle
     bulkToggleRecipients: async (ids: string[], isActive: boolean) => (await api.post('/admin/recipients/bulk-toggle', { ids, is_active: isActive })).data as { message: string },
+    // System runtime
+    runtimeStats: async () => (await api.get('/admin/system/runtime')).data as Record<string, any>,
+    // User quota
+    userQuota: async (id: string) => (await api.get(`/admin/user/${id}/quota`)).data as { user_id: string; tier: string; alias_count: number; recipient_count: number; credential_count: number; session_count: number; max_aliases: number; max_recipients: number; max_credentials: number; max_sessions: number },
 }
 
 export interface AdminAlias {
