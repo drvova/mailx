@@ -20,7 +20,7 @@
                     Temp Mail
                 </router-link>
                 <router-link v-bind:class="{ 'active': route == '/account/recipients' }" :aria-current="route == '/account/recipients' ? 'page' : undefined" to="/account/recipients">
-                    <i class="icon inbox icon-primary"></i>
+                    <i class="icon user icon-primary"></i>
                     Recipients
                 </router-link>
                 <!-- <router-link v-bind:class="{ 'active': route == '/account/domains' }" to="/account/domains">
@@ -71,6 +71,7 @@ import { userApi } from '../api/user.ts'
 import events from '../events.ts'
 import ThemeSwitch from './ThemeSwitch.vue'
 import { appConfirm } from '../composables/useConfirm.ts'
+import { toast } from '../composables/useToast.ts'
 
 const route = ref('/')
 const currentRoute = useRoute()
@@ -80,8 +81,11 @@ const logout = async () => {
     if (!await appConfirm('End your session?')) return
     try {
         await userApi.logout()
+    } catch {
+        toast('Failed to log out', 'error')
+    } finally {
         userApi.clearSession()
-    } catch { }
+    }
 }
 
 const onUpdateEmail = (event: any) => {

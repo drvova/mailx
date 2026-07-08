@@ -19,6 +19,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { userApi } from '../api/user.ts'
 import events from '../events.ts'
 import { appConfirm } from '../composables/useConfirm.ts'
+import { toast } from '../composables/useToast.ts'
 
 const email = ref(localStorage.getItem('email'))
 
@@ -26,8 +27,11 @@ const logout = async () => {
     if (!await appConfirm('End your session?')) return
     try {
         await userApi.logout()
+    } catch {
+        toast('Failed to log out', 'error')
+    } finally {
         userApi.clearSession()
-    } catch { }
+    }
 }
 
 const onUpdateEmail = (event: any) => {
