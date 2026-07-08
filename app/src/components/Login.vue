@@ -52,6 +52,7 @@
                                     placeholder="Email address"
                                     aria-label="Email address"
                                     class="email"
+                                    @blur="validateEmail"
                                     @keypress.enter.prevent
                                 >
                                 <p v-if="emailError" class="error" role="alert">Required</p>
@@ -65,6 +66,7 @@
                                     placeholder="Password"
                                     aria-label="Password"
                                     class="password"
+                                    @blur="validatePassword"
                                     @keypress.enter.prevent
                                 />
                                 <p v-if="passwordError" class="error mb-2" role="alert">Required</p>

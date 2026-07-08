@@ -6,7 +6,7 @@
                 Add or remove Passkeys associated with your account.<br>
             </p>
             <div class="flex justify-start items-center gap-x-3 mb-3">
-                <button @click="addPasskey" class="cta">
+                <button @click="addPasskey" :disabled="adding" :aria-busy="adding" class="cta">
                     New Passkey
                 </button>
             </div>
@@ -80,6 +80,7 @@ const credential = {
 const list = ref([] as typeof credential[])
 const error = ref('')
 const passkeySupported = ref(false)
+const adding = ref(false)
 
 const getList = async () => {
     try {
@@ -110,6 +111,7 @@ const deleteCred = async (id: string) => {
 
 const addPasskey = async () => {
     try {
+        adding.value = true
         var res = await userApi.registerAdd()
         startAddPasskey(res)
     } catch (err) {
@@ -120,6 +122,8 @@ const addPasskey = async () => {
                 error.value = 'Too many requests, please try again later.'
             }
         }
+    } finally {
+        adding.value = false
     }
 }
 

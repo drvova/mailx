@@ -28,6 +28,7 @@
                                 id="recipient_email"
                                 placeholder="name@example.net"
                                 type="text"
+                                @blur="validateEmail"
                             >
                             <p v-if="emailError" class="error" role="alert">Required</p>
                         </div>

@@ -41,11 +41,11 @@
                             <p>Send message to this email:</p>
                             <div class="hs-tooltip [--strategy:absolute] mb-3">
                                 <span class="hs-tooltip-toggle">
-                                    <button @click="copy(generatedEmail)" class="plain break-all">
+                                    <button @click="copyAlias(generatedEmail)" class="plain break-all">
                                         {{ generatedEmail }}
                                     </button>
                                     <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                        {{ copyText }}
+                                        {{ copied === generatedEmail ? 'Copied' : 'Click to copy' }}
                                     </span>
                                 </span>
                             </div>
@@ -72,13 +72,14 @@
 import { ref, onMounted } from 'vue'
 import overlay from '@preline/overlay'
 import tooltip from '@preline/tooltip'
+import { useClipboard } from '../composables/useClipboard.ts'
 
 const props = defineProps(['alias'])
 const alias = ref(props.alias)
 const toEmail = ref('')
 const generatedEmail = ref('')
 const emailError = ref(false)
-const copyText = ref('Click to copy')
+const { copied, copy } = useClipboard(2000)
 
 const isValidEmail = (email: string) => {
     const re = /\S+@\S+\.\S+/
@@ -107,12 +108,8 @@ const close = () => {
     overlay.close(modal)
 }
 
-const copy = (text: string) => {
-    navigator.clipboard.writeText(text)
-    copyText.value = 'Copied!'
-    setTimeout(() => {
-        copyText.value = 'Click to copy'
-    }, 2000)
+const copyAlias = (text: string) => {
+    copy(text).catch(() => {})
 }
 
 const addEvents = () => {

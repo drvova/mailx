@@ -64,7 +64,8 @@
                             <button
                                 v-if="!success"
                                 @click="updateAlias"
-                                v-bind:disabled="errorRecipients.length > 0"
+                                v-bind:disabled="errorRecipients.length > 0 || saving"
+                                :aria-busy="saving"
                                 class="cta">
                                 Save
                             </button>
@@ -96,6 +97,7 @@ const selectRecipients = ref(props.alias.recipients)
 const success = ref('')
 const error = ref('')
 const errorRecipients = ref('')
+const saving = ref(false)
 
 const updateAlias = async () => {
     alias.value.recipients = selectRecipients.value.toString()
@@ -103,6 +105,7 @@ const updateAlias = async () => {
     if (!validate(alias.value.recipients)) return
 
     try {
+        saving.value = true
         const res = await aliasApi.update(alias.value.id, alias.value)
         success.value = res.data.message
         error.value = ''
@@ -114,6 +117,8 @@ const updateAlias = async () => {
             success.value = ''
             error.value = err.message
         }
+    } finally {
+        saving.value = false
     }
 }
 

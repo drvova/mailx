@@ -55,6 +55,7 @@
                                     autocomplete="email"
                                     class="email"
                                     :disabled="!!rotateSessionError"
+                                    @blur="validateEmail"
                                     @keypress.enter.prevent
                                 >
                                 <p v-if="emailError" class="error" role="alert">Required</p>
@@ -69,6 +70,7 @@
                                     autocomplete="new-password"
                                     class="password"
                                     :disabled="!!rotateSessionError"
+                                    @blur="validatePassword"
                                     @keypress.enter.prevent
                                 />
                                 <p v-if="passwordError" class="error" role="alert">Required</p>

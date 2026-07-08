@@ -35,6 +35,8 @@
                         <nav>
                             <button
                                 @click="updateDomain"
+                                :disabled="saving"
+                                :aria-busy="saving"
                                 class="cta">
                                 Save
                             </button>
@@ -62,6 +64,7 @@ const recipients = ref(props.recipients)
 const error = ref('')
 import events from '../events.ts'
 import { toast } from '../composables/useToast.ts'
+const saving = ref(false)
 
 const updateDomain = async () => {
     const payload = {
@@ -70,6 +73,7 @@ const updateDomain = async () => {
     }
 
     try {
+        saving.value = true
         await domainApi.update(domain.value.id, payload)
         error.value = ''
         toast('Domain updated')
@@ -82,6 +86,8 @@ const updateDomain = async () => {
                 ? 'Too many requests, please try again later.'
                 : errorMsg
         }
+    } finally {
+        saving.value = false
     }
 }
 
