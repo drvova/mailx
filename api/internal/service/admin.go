@@ -118,6 +118,8 @@ type AdminStore interface {
 	AdminTransferDomain(context.Context, string, string) error
 	AdminPurgeLogs(context.Context, int, string) (int64, error)
 	AdminPurgeAllInbox(context.Context) (int64, error)
+	AdminGetInboxRaw(context.Context, uint) ([]byte, error)
+	AdminSetAliasExpiry(context.Context, string, *time.Time) error
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -530,4 +532,24 @@ func (s *Service) AdminPurgeLogs(ctx context.Context, days int, logType string) 
 
 func (s *Service) AdminPurgeAllInbox(ctx context.Context) (int64, error) {
 	return s.Store.AdminPurgeAllInbox(ctx)
+}
+
+func (s *Service) AdminCreateUser(ctx context.Context, email string, password string) (model.User, error) {
+	user, err := s.CreateUserSelfSignup(ctx, model.User{Email: email, PasswordPlain: &password})
+	if err != nil {
+		return model.User{}, err
+	}
+	user.IsActive = true
+	if err := s.Store.AdminUpdateUser(ctx, user); err != nil {
+		return model.User{}, err
+	}
+	return user, nil
+}
+
+func (s *Service) AdminGetInboxRaw(ctx context.Context, msgID uint) ([]byte, error) {
+	return s.Store.AdminGetInboxRaw(ctx, msgID)
+}
+
+func (s *Service) AdminSetAliasExpiry(ctx context.Context, aliasID string, expiresAt *time.Time) error {
+	return s.Store.AdminSetAliasExpiry(ctx, aliasID, expiresAt)
 }

@@ -71,7 +71,7 @@ export const adminApi = {
     deleteUser: async (id: string) => api.delete(`/admin/user/${id}`),
     assignPlan: async (userId: string, planId: string) => api.post('/admin/user/assign-plan', { user_id: userId, plan_id: planId }),
     // Alias moderation
-    aliases: async (search?: string) => (await api.get('/admin/aliases', { params: search ? { search } : undefined })).data as { aliases: AdminAlias[]; total: number },
+    aliases: async (search?: string, offset = 0) => (await api.get('/admin/aliases', { params: { offset, ...(search ? { search } : {}) } })).data as { aliases: AdminAlias[]; total: number },
     deleteAlias: async (id: string) => api.delete(`/admin/alias/${id}`),
     toggleAlias: async (id: string, enabled: boolean) => api.put(`/admin/alias/${id}/toggle`, { enabled }),
     // Domain moderation
@@ -79,7 +79,7 @@ export const adminApi = {
     deleteDomain: async (id: string) => api.delete(`/admin/domain/${id}`),
     toggleDomain: async (id: string, enabled: boolean) => api.put(`/admin/domain/${id}/toggle`, { enabled }),
     // Recipient moderation
-    recipients: async (search?: string) => (await api.get('/admin/recipients', { params: search ? { search } : undefined })).data as { recipients: AdminRecipient[]; total: number },
+    recipients: async (search?: string, offset = 0) => (await api.get('/admin/recipients', { params: { offset, ...(search ? { search } : {}) } })).data as { recipients: AdminRecipient[]; total: number },
     deleteRecipient: async (id: string) => api.delete(`/admin/recipient/${id}`),
     // Log filtering
     logsFiltered: async (type?: string) => (await api.get('/admin/logs/filter', { params: type ? { type } : undefined })).data as { logs: AdminLog[]; total: number },
@@ -101,7 +101,7 @@ export const adminApi = {
     // Bulk operations
     bulkUpdateUsers: async (userIds: string[], isActive: boolean) => api.post('/admin/users/bulk', { user_ids: userIds, is_active: isActive }),
     // Inbox moderation
-    inboxMessages: async () => (await api.get('/admin/inbox')).data as { messages: AdminInboxMessage[]; total: number },
+    inboxMessages: async (offset = 0) => (await api.get('/admin/inbox', { params: { offset } })).data as { messages: AdminInboxMessage[]; total: number },
     deleteInboxMessage: async (id: number) => api.delete(`/admin/inbox/message/${id}`),
     purgeInbox: async (userId: string) => api.delete(`/admin/inbox/purge/${userId}`),
     // TOTP and password management
@@ -190,6 +190,12 @@ export const adminApi = {
     // Purge operations
     purgeLogs: async (days: number, logType?: string) => (await api.post('/admin/logs/purge', { days, ...(logType ? { log_type: logType } : {}) })).data as { message: string },
     purgeAllInbox: async () => (await api.delete('/admin/inbox/purge-all')).data as { message: string },
+    // User creation
+    createUser: async (email: string, password: string) => (await api.post('/admin/user/create', { email, password })).data as { message: string; user: AdminUser },
+    // Inbox raw content
+    inboxRaw: async (id: number) => (await api.get(`/admin/inbox/message/${id}/raw`)).data as string,
+    // Alias expiry
+    setAliasExpiry: async (id: string, expiresAt: string) => api.put(`/admin/alias/${id}/expiry`, { expires_at: expiresAt }),
 }
 
 export interface AdminAlias {

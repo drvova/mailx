@@ -680,3 +680,13 @@ func (d *Database) AdminPurgeAllInbox(ctx context.Context) (int64, error) {
 	res := d.Client.Where("1 = 1").Delete(&model.InboxMessage{})
 	return res.RowsAffected, res.Error
 }
+
+func (d *Database) AdminGetInboxRaw(ctx context.Context, msgID uint) ([]byte, error) {
+	var msg model.InboxMessage
+	err := d.Client.Select("raw").First(&msg, "id = ?", msgID).Error
+	return msg.Raw, err
+}
+
+func (d *Database) AdminSetAliasExpiry(ctx context.Context, aliasID string, expiresAt *time.Time) error {
+	return d.Client.Model(&model.Alias{}).Where("id = ?", aliasID).Update("expires_at", expiresAt).Error
+}

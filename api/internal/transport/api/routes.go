@@ -275,6 +275,11 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Post("/logs/purge", h.AdminPurgeLogs)
 	admin.Delete("/inbox/purge-all", h.AdminPurgeAllInbox)
 
+	// Admin user creation, inbox raw view, alias expiry
+	admin.Post("/user/create", h.AdminCreateUser)
+	admin.Get("/inbox/message/:id/raw", h.AdminGetInboxRaw)
+	admin.Put("/alias/:id/expiry", h.AdminSetAliasExpiry)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

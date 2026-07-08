@@ -92,6 +92,9 @@ type AdminService interface {
 	AdminTransferDomain(context.Context, string, string) error
 	AdminPurgeLogs(context.Context, int, string) (int64, error)
 	AdminPurgeAllInbox(context.Context) (int64, error)
+	AdminCreateUser(context.Context, string, string) (model.User, error)
+	AdminGetInboxRaw(context.Context, uint) ([]byte, error)
+	AdminSetAliasExpiry(context.Context, string, *time.Time) error
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1193,4 +1196,63 @@ func (h *Handler) AdminPurgeAllInbox(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to purge inbox"})
 	}
 	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d inbox messages purged", count)})
+}
+
+type AdminCreateUserReq struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=12"`
+}
+
+func (h *Handler) AdminCreateUser(c *fiber.Ctx) error {
+	var req AdminCreateUserReq
+	if err := c.BodyParser(&req); err != nil || req.Email == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "email and password required"})
+	}
+	if len(req.Password) < 12 {
+		return c.Status(400).JSON(fiber.Map{"error": "Password must be at least 12 characters"})
+	}
+	user, err := h.Service.AdminCreateUser(c.Context(), req.Email, req.Password)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to create user"})
+	}
+	return c.JSON(fiber.Map{"message": "User created", "user": user})
+}
+
+func (h *Handler) AdminGetInboxRaw(c *fiber.Ctx) error {
+	id := c.Params("id")
+	msgID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid message ID"})
+	}
+	raw, err := h.Service.AdminGetInboxRaw(c.Context(), uint(msgID))
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Message not found"})
+	}
+	c.Set("Content-Type", "text/plain; charset=utf-8")
+	return c.Send(raw)
+}
+
+type AdminAliasExpiryReq struct {
+	ExpiresAt string `json:"expires_at"`
+}
+
+func (h *Handler) AdminSetAliasExpiry(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Alias ID required"})
+	}
+	var req AdminAliasExpiryReq
+	c.BodyParser(&req)
+	var expiresAt *time.Time
+	if req.ExpiresAt != "" {
+		t, err := time.Parse("2006-01-02", req.ExpiresAt)
+		if err != nil {
+			return c.Status(400).JSON(fiber.Map{"error": "Invalid date, use YYYY-MM-DD"})
+		}
+		expiresAt = &t
+	}
+	if err := h.Service.AdminSetAliasExpiry(c.Context(), id, expiresAt); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to set alias expiry"})
+	}
+	return c.JSON(fiber.Map{"message": "Alias expiry updated"})
 }

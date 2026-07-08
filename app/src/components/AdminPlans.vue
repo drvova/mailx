@@ -55,6 +55,7 @@
             <div v-if="tab === 'users'" role="tabpanel">
                 <div class="flex gap-2 mb-4">
                     <input v-model="userSearch" placeholder="Search by email..." @input="searchUsersDeb" class="flex-1" />
+                    <button class="cta cta-tertiary text-sm" @click="createUser">Create User</button>
                     <button class="cta cta-tertiary text-sm" @click="bulkSuspend">Bulk Suspend</button>
                     <button class="cta cta-tertiary text-sm" @click="bulkActivate">Bulk Activate</button>
                     <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteUsers">Bulk Delete</button>
@@ -177,11 +178,17 @@
                                     <button class="cta cta-tertiary text-sm" @click="toggleAlias(a)">{{ a.enabled ? 'Disable' : 'Enable' }}</button>
                                     <button class="cta cta-tertiary text-sm" @click="editAlias(a)">Edit</button>
                                     <button class="cta cta-tertiary text-sm" @click="transferAlias(a)">Transfer</button>
+                                    <button class="cta cta-tertiary text-sm" @click="setAliasExpiry(a)">Expiry</button>
                                     <button class="cta cta-tertiary text-sm text-red-500" @click="deleteAlias(a)">Delete</button>
                                 </div></td>
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="aliasesTotal > 50" class="flex items-center justify-between mt-4">
+                        <button class="cta cta-tertiary text-sm" :disabled="aliasesOffset === 0" @click="aliasesOffset = Math.max(0, aliasesOffset - 50); fetchAliases()">Prev</button>
+                        <span class="text-sm text-gray-500">{{ aliasesOffset + 1 }}-{{ Math.min(aliasesOffset + 50, aliasesTotal) }} of {{ aliasesTotal }}</span>
+                        <button class="cta cta-tertiary text-sm" :disabled="aliasesOffset + 50 >= aliasesTotal" @click="aliasesOffset += 50; fetchAliases()">Next</button>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="5" />
             </div>
@@ -242,6 +249,11 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="recipientsTotal > 50" class="flex items-center justify-between mt-4">
+                        <button class="cta cta-tertiary text-sm" :disabled="recipientsOffset === 0" @click="recipientsOffset = Math.max(0, recipientsOffset - 50); fetchRecipients()">Prev</button>
+                        <span class="text-sm text-gray-500">{{ recipientsOffset + 1 }}-{{ Math.min(recipientsOffset + 50, recipientsTotal) }} of {{ recipientsTotal }}</span>
+                        <button class="cta cta-tertiary text-sm" :disabled="recipientsOffset + 50 >= recipientsTotal" @click="recipientsOffset += 50; fetchRecipients()">Next</button>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="5" />
             </div>
@@ -363,12 +375,28 @@
                                 <td>{{ Math.round(m.size / 1024) }}KB</td>
                                 <td>{{ formatDate(m.created_at) }}</td>
                                 <td><div class="flex gap-1">
+                                    <button class="cta cta-tertiary text-sm" @click="viewInboxRaw(m)">View</button>
                                     <button class="cta cta-tertiary text-sm" @click="markInboxRead(m)">{{ m.read ? 'Unread' : 'Read' }}</button>
                                     <button class="cta cta-tertiary text-sm text-red-500" @click="deleteInboxMsg(m)">Delete</button>
                                 </div></td>
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="inboxTotal > 50" class="flex items-center justify-between mt-4">
+                        <button class="cta cta-tertiary text-sm" :disabled="inboxOffset === 0" @click="inboxOffset = Math.max(0, inboxOffset - 50); fetchInboxMessages()">Prev</button>
+                        <span class="text-sm text-gray-500">{{ inboxOffset + 1 }}-{{ Math.min(inboxOffset + 50, inboxTotal) }} of {{ inboxTotal }}</span>
+                        <button class="cta cta-tertiary text-sm" :disabled="inboxOffset + 50 >= inboxTotal" @click="inboxOffset += 50; fetchInboxMessages()">Next</button>
+                    </div>
+                </div>
+                <!-- Raw message modal -->
+                <div v-if="viewingRaw !== null" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="viewingRaw = null">
+                    <div class="card-container max-w-3xl w-full max-h-[80vh] overflow-y-auto">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3>Raw Message</h3>
+                            <button class="cta cta-tertiary" @click="viewingRaw = null">Close</button>
+                        </div>
+                        <pre class="text-xs whitespace-pre-wrap break-all">{{ viewingRaw }}</pre>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="5" />
             </div>
@@ -562,16 +590,16 @@ const fetchStats = async () => { try { stats.value = await adminApi.stats() } ca
 const fetchUsers = async () => { try { const r = await adminApi.usersPaginated(50, usersOffset.value, userSearch.value || undefined); users.value = r.users; usersTotal.value = r.total } catch { /* */ } }
 const nextUsers = () => { usersOffset.value += 50; fetchUsers() }
 const prevUsers = () => { usersOffset.value = Math.max(0, usersOffset.value - 50); fetchUsers() }
-const fetchAliases = async () => { try { const r = await adminApi.aliases(aliasSearch.value || undefined); aliases.value = r.aliases } catch { /* */ } }
+const fetchAliases = async () => { try { const r = await adminApi.aliases(aliasSearch.value || undefined, aliasesOffset.value); aliases.value = r.aliases; aliasesTotal.value = r.total } catch { /* */ } }
 const fetchDomains = async () => { try { domains.value = await adminApi.domains() } catch { /* */ } }
-const fetchRecipients = async () => { try { const r = await adminApi.recipients(recipientSearch.value || undefined); recipients.value = r.recipients } catch { /* */ } }
+const fetchRecipients = async () => { try { const r = await adminApi.recipients(recipientSearch.value || undefined, recipientsOffset.value); recipients.value = r.recipients; recipientsTotal.value = r.total } catch { /* */ } }
 const fetchPlans = async () => { loadingPlans.value = true; try { plans.value = await planApi.listAll() } catch { /* */ } finally { loadingPlans.value = false } }
 const fetchLogs = async () => { try { logs.value = await adminApi.logs() } catch { /* */ } }
 const fetchLogsFiltered = async () => { try { const r = await adminApi.logsFiltered(logFilter.value || undefined); logs.value = r.logs } catch { /* */ } }
 const fetchAccessKeys = async () => { try { const r = await adminApi.accessKeys(); accessKeys.value = r.keys } catch { /* */ } }
 const fetchSessions = async () => { try { const r = await adminApi.sessions(); sessions.value = r.sessions } catch { /* */ } }
 const fetchCredentials = async () => { try { const r = await adminApi.credentials(); credentials.value = r.credentials } catch { /* */ } }
-const fetchInboxMessages = async () => { try { const r = await adminApi.inboxMessages(); inboxMessages.value = r.messages } catch { /* */ } }
+const fetchInboxMessages = async () => { try { const r = await adminApi.inboxMessages(inboxOffset.value); inboxMessages.value = r.messages; inboxTotal.value = r.total } catch { /* */ } }
 const fetchSubscriptions = async () => { try { const r = await adminApi.subscriptions(subFilter.value || undefined); subscriptions.value = r.subscriptions } catch { /* */ } }
 const fetchTableSizes = async () => { try { tableSizes.value = await adminApi.tableSizes() } catch { /* */ } }
 const fetchRecentSignups = async () => { try { const r = await adminApi.recentSignups(7); recentSignups.value = r.users } catch { /* */ } }
@@ -647,14 +675,26 @@ const purgeAllInbox = async () => {
     if (!confirm('Delete ALL inbox messages for ALL users? This is irreversible.')) return
     if (!confirm('Are you absolutely sure? Every temp mail message will be permanently deleted.')) return
     try { const r = await adminApi.purgeAllInbox(); alert(r.message); inboxMessages.value = [] } catch { /* */ } }
+const createUser = async () => {
+    const email = prompt('Enter email address:')
+    if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) { alert('Invalid email'); return }
+    const password = prompt('Enter password (min 12 chars):')
+    if (!password || password.length < 12) { alert('Password must be 12+ characters'); return }
+    try { await adminApi.createUser(email, password); alert('User created'); usersOffset.value = 0; fetchUsers() } catch { /* */ } }
+const viewInboxRaw = async (m: AdminInboxMessage) => { try { viewingRaw.value = await adminApi.inboxRaw(m.id) } catch { alert('Unable to load message') } }
+const setAliasExpiry = async (a: AdminAlias) => {
+    const date = prompt('Expiry date (YYYY-MM-DD), empty to clear:', '')
+    if (date === null) return
+    if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) { alert('Use YYYY-MM-DD format'); return }
+    try { await adminApi.setAliasExpiry(a.id, date); alert(date ? `Expires ${date}` : 'Expiry cleared') } catch { /* */ } }
 let logSearchTimer: any
 const searchLogsDeb = () => { clearTimeout(logSearchTimer); logSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchLogs(logSearch.value, logFilter.value || undefined); logs.value = r.logs } catch { /* */ } }, 300) }
 let domainSearchTimer: any
 const searchDomainsDeb = () => { clearTimeout(domainSearchTimer); domainSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchDomains(domainSearch.value); domains.value = r.domains } catch { /* */ } }, 300) }
 
 const searchUsersDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { usersOffset.value = 0; fetchUsers() }, 300) }
-const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(fetchAliases, 300) }
-const searchRecipientsDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(fetchRecipients, 300) }
+const searchAliasesDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { aliasesOffset.value = 0; fetchAliases() }, 300) }
+const searchRecipientsDeb = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { recipientsOffset.value = 0; fetchRecipients() }, 300) }
 
 const viewUser = async (id: string) => { try { userDetail.value = await adminApi.userDetail(id); selectedPlan.value = userDetail.value.subscription?.plan_id || ''; userStats.value = await adminApi.userStats(id); userSettings.value = await adminApi.getSettings(id) } catch { /* */ } }
 const assignPlan = async (userId: string) => { if (!selectedPlan.value) return; try { await adminApi.assignPlan(userId, selectedPlan.value); viewUser(userId) } catch { /* */ } }
@@ -728,6 +768,13 @@ const msgTypeFilter = ref('')
 const msgSearch = ref('')
 const userStats = ref<any>(null)
 const userSettings = ref<any>(null)
+const aliasesTotal = ref(0)
+const aliasesOffset = ref(0)
+const recipientsTotal = ref(0)
+const recipientsOffset = ref(0)
+const inboxTotal = ref(0)
+const inboxOffset = ref(0)
+const viewingRaw = ref<string | null>(null)
 let msgSearchTimer: any
 const messages = ref<any[]>([])
 let inboxSearchTimer: any
