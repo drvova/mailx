@@ -11,18 +11,41 @@ export class ApiError extends Error {
     }
 }
 
+const REQUEST_TIMEOUT_MS = 15000
+
+// Human messages for failures the server cannot explain itself.
+// Server-provided error messages always take precedence.
+function friendlyFailure(status: number, data: any): string | undefined {
+    if (data && typeof data === 'object' && data.error) return undefined
+    if (status === 429) return 'Too many requests. Wait a moment and try again.'
+    if (status >= 500) return 'Something went wrong on our end. Try again in a moment.'
+    return undefined
+}
+
 async function request(method: string, path: string, body?: any): Promise<{ data: any; status: number }> {
     const opts: RequestInit = {
         method,
         credentials: 'include',
         headers: {} as Record<string, string>,
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     }
     if (body !== undefined) {
         ;(opts.headers as Record<string, string>)['Content-Type'] = 'application/json'
         opts.body = JSON.stringify(body)
     }
 
-    const res = await fetch(BASE + path, opts)
+    let res: Response
+    try {
+        res = await fetch(BASE + path, opts)
+    } catch (err) {
+        const timedOut = err instanceof DOMException && err.name === 'TimeoutError'
+        throw new ApiError(0, {
+            error: timedOut
+                ? 'The server is taking too long to respond. Try again.'
+                : "Can't reach the server. Check your connection and try again.",
+        })
+    }
+
     const text = await res.text()
     let data: any
     try { data = JSON.parse(text) } catch { data = text }
@@ -32,7 +55,8 @@ async function request(method: string, path: string, body?: any): Promise<{ data
             localStorage.removeItem('email')
             window.location.href = '/'
         }
-        throw new ApiError(res.status, data)
+        const friendly = friendlyFailure(res.status, data)
+        throw new ApiError(res.status, friendly ? { error: friendly } : data)
     }
     return { data, status: res.status }
 }

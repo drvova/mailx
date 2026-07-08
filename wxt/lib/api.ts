@@ -6,6 +6,19 @@ function clearSession() {
     store.clearAll()
 }
 
+// Network/timeout failures become human-readable errors; raw
+// "TypeError: Failed to fetch" never reaches the popup UI.
+async function safeFetch(url: string, opts: RequestInit = {}): Promise<Response> {
+    try {
+        return await fetch(url, { ...opts, signal: AbortSignal.timeout(15000) })
+    } catch (err) {
+        const timedOut = err instanceof DOMException && err.name === 'TimeoutError'
+        throw new Error(timedOut
+            ? 'The server is taking too long to respond. Try again.'
+            : "Can't reach the server. Check your connection and try again.")
+    }
+}
+
 async function parseBody(res: Response) {
     const text = await res.text()
     try {
@@ -16,12 +29,12 @@ async function parseBody(res: Response) {
 }
 
 async function livez() {
-    const res = await fetch(`${BASE_URL}/livez`)
+    const res = await safeFetch(`${BASE_URL}/livez`)
     return res.text()
 }
 
 async function authenticate(apiKey: string) {
-    const res = await fetch(`${BASE_URL}/v1/api/authenticate`, {
+    const res = await safeFetch(`${BASE_URL}/v1/api/authenticate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ access_key: apiKey }),
@@ -33,7 +46,7 @@ async function authenticate(apiKey: string) {
 }
 
 async function fetchAliases(apiToken: string, search = '') {
-    const res = await fetch(`${BASE_URL}/v1/api/aliases?search=${encodeURIComponent(search)}`, {
+    const res = await safeFetch(`${BASE_URL}/v1/api/aliases?search=${encodeURIComponent(search)}`, {
         headers: { Authorization: `Bearer ${apiToken}` },
     })
 
@@ -44,7 +57,7 @@ async function fetchAliases(apiToken: string, search = '') {
 }
 
 async function createAlias(apiToken: string, data: any) {
-    const res = await fetch(`${BASE_URL}/v1/api/alias`, {
+    const res = await safeFetch(`${BASE_URL}/v1/api/alias`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -60,7 +73,7 @@ async function createAlias(apiToken: string, data: any) {
 }
 
 async function updateAlias(apiToken: string, aliasId: string, data: any) {
-    const res = await fetch(`${BASE_URL}/v1/api/alias/${aliasId}`, {
+    const res = await safeFetch(`${BASE_URL}/v1/api/alias/${aliasId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -76,7 +89,7 @@ async function updateAlias(apiToken: string, aliasId: string, data: any) {
 }
 
 async function deleteAlias(apiToken: string, aliasId: string) {
-    const res = await fetch(`${BASE_URL}/v1/api/alias/${aliasId}`, {
+    const res = await safeFetch(`${BASE_URL}/v1/api/alias/${aliasId}`, {
         method: 'DELETE',
         headers: {
             Authorization: `Bearer ${apiToken}`,
@@ -90,7 +103,7 @@ async function deleteAlias(apiToken: string, aliasId: string) {
 }
 
 async function fetchDefaults(apiToken: string) {
-    const res = await fetch(`${BASE_URL}/v1/api/defaults`, {
+    const res = await safeFetch(`${BASE_URL}/v1/api/defaults`, {
         headers: { Authorization: `Bearer ${apiToken}` },
     })
 
@@ -101,7 +114,7 @@ async function fetchDefaults(apiToken: string) {
 }
 
 async function logout(apiToken: string) {
-    const res = await fetch(`${BASE_URL}/v1/api/logout`, {
+    const res = await safeFetch(`${BASE_URL}/v1/api/logout`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${apiToken}`,
