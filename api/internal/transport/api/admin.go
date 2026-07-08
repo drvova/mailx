@@ -100,6 +100,10 @@ type AdminService interface {
 	AdminGetAuditLog(context.Context, int, int) ([]model.AdminAudit, int64, error)
 	AdminGetSessionData(context.Context, string) ([]byte, error)
 	AdminGetLogsDateRange(context.Context, string, string, string, int, int) ([]model.Log, int64, error)
+	AdminBulkDeleteAccessKeys(context.Context, []string) error
+	AdminBulkDeleteCredentials(context.Context, []string) error
+	AdminBulkExtendSubscriptions(context.Context, []string, int) (int64, error)
+	AdminExportUsersEnriched(context.Context) ([]model.UserWithSub, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1314,6 +1318,52 @@ func (h *Handler) AdminGetSessionData(c *fiber.Ctx) error {
 	return c.Send(data)
 }
 
+type AdminBulkIDsReq struct {
+	IDs []string `json:"ids"`
+}
+
+func (h *Handler) AdminBulkDeleteAccessKeys(c *fiber.Ctx) error {
+	var req AdminBulkIDsReq
+	if err := c.BodyParser(&req); err != nil || len(req.IDs) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "ids required"})
+	}
+	if err := h.Service.AdminBulkDeleteAccessKeys(c.Context(), req.IDs); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk revoke keys"})
+	}
+	h.audit(c, "bulk_revoke_keys", fmt.Sprintf("%d keys", len(req.IDs)), "")
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d keys revoked", len(req.IDs))})
+}
+
+func (h *Handler) AdminBulkDeleteCredentials(c *fiber.Ctx) error {
+	var req AdminBulkIDsReq
+	if err := c.BodyParser(&req); err != nil || len(req.IDs) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "ids required"})
+	}
+	if err := h.Service.AdminBulkDeleteCredentials(c.Context(), req.IDs); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk remove credentials"})
+	}
+	h.audit(c, "bulk_remove_passkeys", fmt.Sprintf("%d creds", len(req.IDs)), "")
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d passkeys removed", len(req.IDs))})
+}
+
+type AdminBulkExtendReq struct {
+	IDs  []string `json:"ids"`
+	Days int      `json:"days"`
+}
+
+func (h *Handler) AdminBulkExtendSubscriptions(c *fiber.Ctx) error {
+	var req AdminBulkExtendReq
+	if err := c.BodyParser(&req); err != nil || len(req.IDs) == 0 || req.Days == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "ids and days required"})
+	}
+	count, err := h.Service.AdminBulkExtendSubscriptions(c.Context(), req.IDs, req.Days)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to bulk extend"})
+	}
+	h.audit(c, "bulk_extend_subs", fmt.Sprintf("%d subs", len(req.IDs)), fmt.Sprintf("%d days", req.Days))
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d subscriptions extended by %d days", count, req.Days)})
+}
+
 func (h *Handler) AdminGetLogsDateRange(c *fiber.Ctx) error {
 	logType := c.Query("type", "")
 	from := c.Query("from", "")
@@ -1325,6 +1375,22 @@ func (h *Handler) AdminGetLogsDateRange(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch logs"})
 	}
 	return c.JSON(fiber.Map{"logs": logs, "total": total})
+}
+
+func (h *Handler) AdminExportUsersEnriched(c *fiber.Ctx) error {
+	users, err := h.Service.AdminExportUsersEnriched(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to export users"})
+	}
+	var buf bytes.Buffer
+	buf.WriteString("id,email,is_active,is_admin,tier,sub_type,sub_active,active_until,created_at\n")
+	for _, u := range users {
+		au := ""; if u.ActiveUntil != nil { au = u.ActiveUntil.Format(time.RFC3339) };
+		buf.WriteString(fmt.Sprintf("%s,%s,%t,%t,%s,%s,%t,%s,%s\n", u.ID, u.Email, u.IsActive, u.IsAdmin, u.Tier, u.SubType, u.SubActive, au, u.CreatedAt.Format(time.RFC3339)))
+	}
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", "attachment; filename=users_enriched.csv")
+	return c.Send(buf.Bytes())
 }
 
 func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {

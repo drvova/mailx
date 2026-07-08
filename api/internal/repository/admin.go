@@ -713,6 +713,30 @@ func (d *Database) AdminGetSessionData(ctx context.Context, sessionID string) ([
 	return s.Data, err
 }
 
+func (d *Database) AdminBulkDeleteAccessKeys(ctx context.Context, keyIDs []string) error {
+	return d.Client.Where("id IN ?", keyIDs).Delete(&model.AccessKey{}).Error
+}
+
+func (d *Database) AdminBulkDeleteCredentials(ctx context.Context, credIDs []string) error {
+	return d.Client.Where("id IN ?", credIDs).Delete(&model.Credential{}).Error
+}
+
+func (d *Database) AdminBulkExtendSubscriptions(ctx context.Context, subIDs []string, days int) (int64, error) {
+	res := d.Client.Model(&model.Subscription{}).Where("id IN ?", subIDs).
+		Update("active_until", gorm.Expr("CASE WHEN active_until > NOW() THEN DATE_ADD(active_until, INTERVAL ? DAY) ELSE DATE_ADD(NOW(), INTERVAL ? DAY) END", days, days))
+	return res.RowsAffected, res.Error
+}
+
+func (d *Database) AdminExportUsersEnriched(ctx context.Context) ([]model.UserWithSub, error) {
+	var results []model.UserWithSub
+	err := d.Client.Model(&model.User{}).
+		Select("users.id, users.email, users.is_active, users.is_admin, users.created_at, subscriptions.tier, subscriptions.type as sub_type, subscriptions.is_active as sub_active, subscriptions.active_until").
+		Joins("left join subscriptions on subscriptions.user_id = users.id").
+		Order("users.created_at desc").
+		Scan(&results).Error
+	return results, err
+}
+
 func (d *Database) AdminGetLogsDateRange(ctx context.Context, logType, from, to string, limit, offset int) ([]model.Log, int64, error) {
 	q := d.Client.Model(&model.Log{})
 	if logType != "" {

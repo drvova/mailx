@@ -125,6 +125,10 @@ type AdminStore interface {
 	AdminGetAuditLog(context.Context, int, int) ([]model.AdminAudit, int64, error)
 	AdminGetSessionData(context.Context, string) ([]byte, error)
 	AdminGetLogsDateRange(context.Context, string, string, string, int, int) ([]model.Log, int64, error)
+	AdminBulkDeleteAccessKeys(context.Context, []string) error
+	AdminBulkDeleteCredentials(context.Context, []string) error
+	AdminBulkExtendSubscriptions(context.Context, []string, int) (int64, error)
+	AdminExportUsersEnriched(context.Context) ([]model.UserWithSub, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -582,4 +586,20 @@ func (s *Service) AdminGetSessionData(ctx context.Context, sessionID string) ([]
 func (s *Service) AdminGetLogsDateRange(ctx context.Context, logType, from, to string, limit, offset int) ([]model.Log, int64, error) {
 	if limit <= 0 || limit > 200 { limit = 100 }
 	return s.Store.AdminGetLogsDateRange(ctx, logType, from, to, limit, offset)
+}
+
+func (s *Service) AdminBulkDeleteAccessKeys(ctx context.Context, keyIDs []string) error {
+	return s.Store.AdminBulkDeleteAccessKeys(ctx, keyIDs)
+}
+
+func (s *Service) AdminBulkDeleteCredentials(ctx context.Context, credIDs []string) error {
+	return s.Store.AdminBulkDeleteCredentials(ctx, credIDs)
+}
+
+func (s *Service) AdminBulkExtendSubscriptions(ctx context.Context, subIDs []string, days int) (int64, error) {
+	return s.Store.AdminBulkExtendSubscriptions(ctx, subIDs, days)
+}
+
+func (s *Service) AdminExportUsersEnriched(ctx context.Context) ([]model.UserWithSub, error) {
+	return s.Store.AdminExportUsersEnriched(ctx)
 }

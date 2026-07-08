@@ -290,6 +290,14 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	// Date range logs
 	admin.Get("/logs/date-range", h.AdminGetLogsDateRange)
 
+	// Bulk operations on keys, credentials, subscriptions
+	admin.Post("/accesskeys/bulk-revoke", h.AdminBulkDeleteAccessKeys)
+	admin.Post("/credentials/bulk-remove", h.AdminBulkDeleteCredentials)
+	admin.Post("/subscriptions/bulk-extend", h.AdminBulkExtendSubscriptions)
+
+	// Enriched user export with subscription data
+	admin.Get("/export/users-enriched", h.AdminExportUsersEnriched)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

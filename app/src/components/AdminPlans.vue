@@ -47,6 +47,7 @@
                         <button class="cta cta-tertiary text-sm" @click="exportLogs">Export Logs CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportInbox">Export Inbox CSV</button>
                         <button class="cta cta-tertiary text-sm" @click="exportMessages">Export Messages CSV</button>
+                        <button class="cta cta-tertiary text-sm" @click="exportUsersEnriched">Export Users + Subs CSV</button>
                     </div>
                 </div>
                 <SkeletonRows v-else :rows="3" />
@@ -307,11 +308,15 @@
 
             <!-- API KEYS -->
             <div v-if="tab === 'keys'" role="tabpanel">
+                <div class="flex gap-2 mb-4">
+                    <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteKeys">Bulk Revoke Selected</button>
+                </div>
                 <div v-if="accessKeys.length" class="overflow-x-auto">
                     <table class="table">
-                        <thead><tr><th>Name</th><th>User ID</th><th>Expires</th><th>Created</th><th></th></tr></thead>
+                        <thead><tr><th><input type="checkbox" @click="toggleAllKeys($event)" /></th><th>Name</th><th>User ID</th><th>Expires</th><th>Created</th><th></th></tr></thead>
                         <tbody>
                             <tr v-for="k in accessKeys" :key="k.id">
+                                <td><input type="checkbox" v-model="(k as any)._selected" /></td>
                                 <td>{{ k.name }}</td>
                                 <td class="text-xs text-gray-500">{{ k.user_id.slice(0,8) }}...</td>
                                 <td>{{ k.expires_at ? formatDate(k.expires_at) : 'Never' }}</td>
@@ -360,11 +365,15 @@
 
             <!-- PASSKEYS -->
             <div v-if="tab === 'passkeys'" role="tabpanel">
+                <div class="flex gap-2 mb-4">
+                    <button class="cta cta-tertiary text-sm text-red-500" @click="bulkDeleteCredentials">Bulk Remove Selected</button>
+                </div>
                 <div v-if="credentials.length" class="overflow-x-auto">
                     <table class="table">
-                        <thead><tr><th>User ID</th><th>Created</th><th></th></tr></thead>
+                        <thead><tr><th><input type="checkbox" @click="toggleAllCredentials($event)" /></th><th>User ID</th><th>Created</th><th></th></tr></thead>
                         <tbody>
                             <tr v-for="cr in credentials" :key="cr.id">
+                                <td><input type="checkbox" v-model="(cr as any)._selected" /></td>
                                 <td class="text-xs text-gray-500">{{ cr.user_id.slice(0,8) }}...</td>
                                 <td>{{ formatDate(cr.created_at) }}</td>
                                 <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteCredential(cr)">Remove</button></td>
@@ -470,12 +479,14 @@
                         <option value="pro">Pro</option>
                         <option value="free">Free</option>
                     </select>
+                    <button class="cta cta-tertiary text-sm" @click="bulkExtendSubs">Bulk Extend</button>
                 </div>
                 <div v-if="subscriptions.length" class="overflow-x-auto">
                     <table class="table">
-                        <thead><tr><th>User ID</th><th>Tier</th><th>Type</th><th>Active</th><th>Active Until</th><th>Created</th><th></th></tr></thead>
+                        <thead><tr><th><input type="checkbox" @click="toggleAllSubs($event)" /></th><th>User ID</th><th>Tier</th><th>Type</th><th>Active</th><th>Active Until</th><th>Created</th><th></th></tr></thead>
                         <tbody>
                             <tr v-for="s in subscriptions" :key="s.id">
+                                <td><input type="checkbox" v-model="(s as any)._selected" /></td>
                                 <td class="text-xs text-gray-500">{{ s.user_id.slice(0,8) }}...</td>
                                 <td><span class="badge">{{ s.tier || 'none' }}</span></td>
                                 <td>{{ s.type }}</td>
@@ -739,6 +750,27 @@ const setKeyExpiry = async (k: AdminAccessKey) => {
     if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) { alert('Use YYYY-MM-DD format'); return }
     try { await adminApi.setAccessKeyExpiry(k.id, date); k.expires_at = date || null; alert(date ? `Expires ${date}` : 'Expiry cleared') } catch { /* */ } }
 const toggleAllInbox = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; inboxMessages.value.forEach(m => { (m as any)._selected = checked }) }
+const toggleAllKeys = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; accessKeys.value.forEach(k => { (k as any)._selected = checked }) }
+const toggleAllCredentials = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; credentials.value.forEach(c => { (c as any)._selected = checked }) }
+const toggleAllSubs = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; subscriptions.value.forEach(s => { (s as any)._selected = checked }) }
+const bulkDeleteKeys = async () => {
+    const selected = accessKeys.value.filter(k => (k as any)._selected)
+    if (!selected.length) { alert('Select keys first'); return }
+    if (!confirm(`Revoke ${selected.length} keys?`)) return
+    try { await adminApi.bulkDeleteAccessKeys(selected.map(k => k.id)); accessKeys.value = accessKeys.value.filter(k => !selected.includes(k)) } catch { /* */ } }
+const bulkDeleteCredentials = async () => {
+    const selected = credentials.value.filter(c => (c as any)._selected)
+    if (!selected.length) { alert('Select passkeys first'); return }
+    if (!confirm(`Remove ${selected.length} passkeys?`)) return
+    try { await adminApi.bulkDeleteCredentials(selected.map(c => c.id)); credentials.value = credentials.value.filter(c => !selected.includes(c)) } catch { /* */ } }
+const bulkExtendSubs = async () => {
+    const selected = subscriptions.value.filter(s => (s as any)._selected)
+    if (!selected.length) { alert('Select subscriptions first'); return }
+    const days = parseInt(prompt('Extend by how many days?', '30') || '0')
+    if (!days) return
+    if (!confirm(`Extend ${selected.length} subscriptions by ${days} days?`)) return
+    try { await adminApi.bulkExtendSubscriptions(selected.map(s => s.id), days); subscriptions.value = selected; fetchSubscriptions() } catch { /* */ } }
+const exportUsersEnriched = () => { window.open(`${import.meta.env.VITE_API_URL}/v1/admin/export/users-enriched`, '_blank') }
 const bulkDeleteInbox = async () => {
     const selected = inboxMessages.value.filter(m => (m as any)._selected)
     if (!selected.length) { alert('Select messages first'); return }

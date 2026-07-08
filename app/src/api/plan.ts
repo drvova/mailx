@@ -173,6 +173,14 @@ export const adminApi = {
     // CSV exports for inbox and messages
     exportInbox: async () => (await api.get('/admin/export/inbox')).data as string,
     exportMessages: async () => (await api.get('/admin/export/messages')).data as string,
+    // Enriched export
+    exportUsersEnriched: async () => (await api.get('/admin/export/users-enriched')).data as string,
+    // Bulk revoke keys
+    bulkDeleteAccessKeys: async (ids: string[]) => api.post('/admin/accesskeys/bulk-revoke', { ids }),
+    // Bulk remove credentials
+    bulkDeleteCredentials: async (ids: string[]) => api.post('/admin/credentials/bulk-remove', { ids }),
+    // Bulk extend subscriptions
+    bulkExtendSubscriptions: async (ids: string[], days: number) => (await api.post('/admin/subscriptions/bulk-extend', { ids, days })).data as { message: string },
     // Alias creation
     createAlias: async (userId: string, name: string, enabled: boolean) => api.post('/admin/alias', { user_id: userId, name, enabled }),
     // Recipient edit
