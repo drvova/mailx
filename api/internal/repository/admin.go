@@ -897,6 +897,28 @@ func (d *Database) AdminExportUserData(ctx context.Context, userID string) (*mod
 	return &user, &sub, aliases, domains, recipients, keys, &settings, nil
 }
 
+func (d *Database) AdminPurgeExpiredSessions(ctx context.Context) (int64, error) {
+	res := d.Client.Where("expires_at < ?", time.Now()).Delete(&model.Session{})
+	return res.RowsAffected, res.Error
+}
+
+func (d *Database) AdminGetDomainWithAliasCounts(ctx context.Context) ([]model.DomainStats, error) {
+	var domains []model.Domain
+	d.Client.Order("created_at desc").Find(&domains)
+	var results []model.DomainStats
+	for _, dm := range domains {
+		var count int64
+		d.Client.Model(&model.Alias{}).Where("name LIKE ?", "%@"+dm.Name).Count(&count)
+		results = append(results, model.DomainStats{
+			Domain:    dm.Name,
+			Enabled:   dm.Enabled,
+			Verified:  dm.MXVerifiedAt != nil && dm.MXVerifiedAt.After(time.Time{}),
+			AliasCount: count,
+		})
+	}
+	return results, nil
+}
+
 func (d *Database) AdminGetLogsDateRange(ctx context.Context, logType, from, to string, limit, offset int) ([]model.Log, int64, error) {
 	q := d.Client.Model(&model.Log{})
 	if logType != "" {

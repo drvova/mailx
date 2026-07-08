@@ -142,6 +142,8 @@ type AdminStore interface {
 	AdminGetInactiveUsers(context.Context, int) ([]model.User, int64, error)
 	AdminToggleAliasCatchAll(context.Context, string, bool) error
 	AdminExportUserData(context.Context, string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, []model.AccessKey, *model.Settings, error)
+	AdminPurgeExpiredSessions(context.Context) (int64, error)
+	AdminGetDomainWithAliasCounts(context.Context) ([]model.DomainStats, error)
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -669,4 +671,12 @@ func (s *Service) AdminToggleAliasCatchAll(ctx context.Context, aliasID string, 
 
 func (s *Service) AdminExportUserData(ctx context.Context, userID string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, []model.AccessKey, *model.Settings, error) {
 	return s.Store.AdminExportUserData(ctx, userID)
+}
+
+func (s *Service) AdminPurgeExpiredSessions(ctx context.Context) (int64, error) {
+	return s.Store.AdminPurgeExpiredSessions(ctx)
+}
+
+func (s *Service) AdminGetDomainWithAliasCounts(ctx context.Context) ([]model.DomainStats, error) {
+	return s.Store.AdminGetDomainWithAliasCounts(ctx)
 }

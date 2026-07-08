@@ -317,6 +317,10 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Put("/alias/:id/catch-all", h.AdminToggleAliasCatchAll)
 	admin.Get("/user/:id/export-data", h.AdminExportUserData)
 
+	// Session cleanup and domain stats
+	admin.Delete("/sessions/expired", h.AdminPurgeExpiredSessions)
+	admin.Get("/domain-stats", h.AdminGetDomainWithAliasCounts)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

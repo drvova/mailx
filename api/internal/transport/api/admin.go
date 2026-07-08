@@ -117,6 +117,8 @@ type AdminService interface {
 	AdminGetInactiveUsers(context.Context, int) ([]model.User, int64, error)
 	AdminToggleAliasCatchAll(context.Context, string, bool) error
 	AdminExportUserData(context.Context, string) (*model.User, *model.Subscription, []model.Alias, []model.Domain, []model.Recipient, []model.AccessKey, *model.Settings, error)
+	AdminPurgeExpiredSessions(context.Context) (int64, error)
+	AdminGetDomainWithAliasCounts(context.Context) ([]model.DomainStats, error)
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1572,6 +1574,23 @@ func (h *Handler) AdminExportUserData(c *fiber.Ctx) error {
 		"recipients": recipients, "access_keys": keys,
 		"settings": settings,
 	})
+}
+
+func (h *Handler) AdminPurgeExpiredSessions(c *fiber.Ctx) error {
+	count, err := h.Service.AdminPurgeExpiredSessions(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to purge sessions"})
+	}
+	h.audit(c, "purge_expired_sessions", "", fmt.Sprintf("count=%d", count))
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("%d expired sessions purged", count)})
+}
+
+func (h *Handler) AdminGetDomainWithAliasCounts(c *fiber.Ctx) error {
+	stats, err := h.Service.AdminGetDomainWithAliasCounts(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Unable to fetch domain stats"})
+	}
+	return c.JSON(fiber.Map{"domains": stats})
 }
 
 func (h *Handler) audit(c *fiber.Ctx, action, target, details string) {

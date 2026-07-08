@@ -235,6 +235,10 @@ export const adminApi = {
     inactiveUsers: async (days = 30) => (await api.get('/admin/inactive-users', { params: { days } })).data as { users: AdminUser[]; total: number },
     toggleAliasCatchAll: async (id: string, catchAll: boolean) => api.put(`/admin/alias/${id}/catch-all`, { catch_all: catchAll }),
     exportUserData: async (id: string) => (await api.get(`/admin/user/${id}/export-data`)).data as any,
+    // Session cleanup
+    purgeExpiredSessions: async () => (await api.delete('/admin/sessions/expired')).data as { message: string },
+    // Domain stats with alias counts
+    domainStats: async () => (await api.get('/admin/domain-stats')).data as { domains: { domain: string; enabled: boolean; verified: boolean; alias_count: number }[] },
 }
 
 export interface AdminAlias {

@@ -408,6 +408,9 @@
 
             <!-- SESSIONS -->
             <div v-if="tab === 'sessions'" role="tabpanel">
+                <div class="flex gap-2 mb-4">
+                    <button class="cta cta-tertiary text-sm text-red-500" @click="purgeSessions">Purge Expired</button>
+                </div>
                 <div v-if="sessions.length" class="overflow-x-auto">
                     <table class="table">
                         <thead><tr><th>Token</th><th>Expires</th><th>Created</th><th></th></tr></thead>
@@ -1032,7 +1035,7 @@ watch(tab, (t) => {
     if (t === 'inbox' && !inboxMessages.value.length) fetchInboxMessages()
     if (t === 'messages') fetchMessages()
     if (t === 'subs') fetchSubscriptions()
-    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers() }
+    if (t === 'system') { fetchTableSizes(); fetchRecentSignups(); fetchConfig(); fetchInactiveUsers(); fetchDomainStats() }
     if (t === 'logs') fetchLogsFiltered()
     if (t === 'audit' && !auditEntries.value.length) fetchAuditLog()
 })
@@ -1056,11 +1059,14 @@ const globalResult = ref<any>(null)
 const lastActive = ref('')
 const inactiveUsers = ref<AdminUser[]>([])
 const inactiveDays = ref(30)
+const domainStatsData = ref<any[]>([])
 const fetchSubStats = async () => { try { subStats.value = await adminApi.subscriptionStats() } catch { /* */ } }
 const fetchDailyActivity = async () => { try { const r = await adminApi.dailyActivity(); dailyActivity.value = r.activity } catch { /* */ } }
 const fetchPlanDist = async () => { try { planDist.value = await adminApi.planDistribution() } catch { /* */ } }
 const fetchDomainHealth = async () => { try { domHealth.value = await adminApi.domainHealth() } catch { /* */ } }
 const fetchInactiveUsers = async () => { try { const r = await adminApi.inactiveUsers(inactiveDays.value); inactiveUsers.value = r.users } catch { /* */ } }
+const purgeSessions = async () => { if (!confirm('Purge all expired sessions?')) return; try { const r = await adminApi.purgeExpiredSessions(); alert(r.message); fetchSessions() } catch { /* */ } }
+const fetchDomainStats = async () => { try { const r = await adminApi.domainStats(); domainStatsData.value = r.domains } catch { /* */ } }
 const globalSearch = async () => { if (!globalQuery.value) return; try { globalResult.value = await adminApi.globalSearch(globalQuery.value) } catch { alert('User not found') } }
 const toggleCatchAll = async (a: AdminAlias) => { try { await adminApi.toggleAliasCatchAll(a.id, !a.catch_all); a.catch_all = !a.catch_all } catch { /* */ } }
 const exportUserDataFull = async (u: AdminUser) => { try { const d = await adminApi.exportUserData(u.id); alert(JSON.stringify(d, null, 2)) } catch { alert('Unable to export') } }
