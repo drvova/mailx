@@ -35,7 +35,7 @@
                             {{ cred.id }}
                         </td>
                         <td>
-                            <button @click.stop="deleteCred(cred.id)" class="delete w-full flex items-center gap-x-2 py-2 place-content-end">
+                            <button @click.stop="deleteCred(cred.id)" :disabled="deleting" :aria-busy="deleting" class="delete w-full flex items-center gap-x-2 py-2 place-content-end">
                                 <i class="icon icon-error trash text-xs"></i>
                                 Delete
                             </button>
@@ -52,7 +52,7 @@
                                 </div>
                             </div>
                             <div class="text-end">
-                                    <button @click.stop="deleteCred(cred.id)" class="delete w-full flex items-center gap-x-2 py-2 place-content-end">
+                                    <button @click.stop="deleteCred(cred.id)" :disabled="deleting" :aria-busy="deleting" class="delete w-full flex items-center gap-x-2 py-2 place-content-end">
                                         <i class="icon icon-error trash text-xs"></i>
                                     </button>
                             </div>
@@ -82,6 +82,7 @@ const list = ref([] as typeof credential[])
 const error = ref('')
 const passkeySupported = ref(false)
 const adding = ref(false)
+const deleting = ref(false)
 
 const getList = async () => {
     try {
@@ -98,6 +99,7 @@ const getList = async () => {
 const deleteCred = async (id: string) => {
     if (!(await appConfirm('You will no longer be able to log in with this passkey.', { title: 'Delete this passkey?', confirmLabel: 'Delete passkey' }))) return
 
+    deleting.value = true
     try {
         await userApi.deleteCredential(id)
         list.value = list.value.filter((cred: any) => cred.id !== id)
@@ -107,6 +109,8 @@ const deleteCred = async (id: string) => {
         if (err instanceof ApiError) {
             error.value = err.message
         }
+    } finally {
+        deleting.value = false
     }
 }
 

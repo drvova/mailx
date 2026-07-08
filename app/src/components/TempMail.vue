@@ -71,7 +71,7 @@
                                 · {{ fullDate(openMessage.created_at) }}
                             </p>
                         </div>
-                        <button class="hy-btn hy-btn--danger hy-btn--sm" @click="deleteMsg(openMessage.id)">Delete</button>
+                        <button class="hy-btn hy-btn--danger hy-btn--sm" :disabled="deleting" :aria-busy="deleting" @click="deleteMsg(openMessage.id)">Delete</button>
                     </div>
                     <div v-if="openMessage.attachments?.length" class="flex flex-wrap gap-2 mb-3">
                         <span v-for="a in openMessage.attachments" :key="a.name" class="hy-badge">
@@ -133,6 +133,7 @@ const openMessage = ref<RenderedMessage | null>(null)
 const newDomain = ref(domains[0])
 const newTTL = ref(24)
 const creating = ref(false)
+const deleting = ref(false)
 const loaded = ref(false)
 const messagesLoaded = ref(false)
 const error = ref('')
@@ -207,6 +208,7 @@ const openMsg = async (id: number) => {
 }
 
 const deleteMsg = async (id: number) => {
+    deleting.value = true
     try {
         await inboxApi.deleteMessage(id)
         messages.value = messages.value.filter((m) => m.id !== id)
@@ -215,6 +217,8 @@ const deleteMsg = async (id: number) => {
         toast('Message deleted')
     } catch (err) {
         handle(err)
+    } finally {
+        deleting.value = false
     }
 }
 
