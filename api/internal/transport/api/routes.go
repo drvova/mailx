@@ -119,6 +119,14 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Put("/plan/:id", h.UpdatePlan)
 	admin.Delete("/plan/:id", h.DeletePlan)
 
+	// Admin user management
+	admin.Get("/users", h.AdminGetUsers)
+	admin.Get("/stats", h.AdminGetStats)
+	admin.Get("/logs", h.AdminGetLogs)
+	admin.Put("/user", h.AdminUpdateUser)
+	admin.Delete("/user/:id", h.AdminDeleteUser)
+	admin.Post("/user/assign-plan", h.AdminAssignPlan)
+
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
 	h.Server.Post("/v1/billing/webhook", h.StripeWebhook)

@@ -27,3 +27,41 @@ export const planApi = {
 export const billingApi = {
     checkout: async (planId: string) => (await api.post('/billing/checkout', { plan_id: planId })).data as { url: string },
 }
+
+export interface SystemStats {
+    total_users: number
+    active_users: number
+    total_aliases: number
+    total_domains: number
+    total_logs: number
+    active_plans: number
+}
+
+export interface AdminUser {
+    id: string
+    email: string
+    is_active: boolean
+    is_admin: boolean
+    created_at: string
+}
+
+export interface AdminLog {
+    id: string
+    created_at: string
+    attempted_at: string
+    log_type: string
+    from: string
+    destination: string
+    message: string
+    status: string
+    remote_mta: string
+}
+
+export const adminApi = {
+    users: async () => (await api.get('/admin/users')).data as AdminUser[],
+    stats: async () => (await api.get('/admin/stats')).data as SystemStats,
+    logs: async () => (await api.get('/admin/logs')).data as AdminLog[],
+    updateUser: async (data: { id: string; is_active?: boolean; is_admin?: boolean }) => api.put('/admin/user', data),
+    deleteUser: async (id: string) => api.delete(`/admin/user/${id}`),
+    assignPlan: async (userId: string, planId: string) => api.post('/admin/user/assign-plan', { user_id: userId, plan_id: planId }),
+}

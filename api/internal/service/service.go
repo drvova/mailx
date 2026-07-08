@@ -23,6 +23,7 @@ type Store interface {
 	AccessKeyStore
 	DomainStore
 	PlanStore
+	AdminStore
 }
 
 type Cache interface {

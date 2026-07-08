@@ -26,6 +26,7 @@ type Service interface {
 	DomainService
 	PlanService
 	BillingService
+	AdminService
 }
 
 type Handler struct {
