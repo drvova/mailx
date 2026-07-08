@@ -27,7 +27,8 @@
                                 v-bind:class="{ 'error': emailError }"
                                 id="recipient_email"
                                 placeholder="name@example.net"
-                                type="text"
+                                type="email"
+                                autocomplete="email"
                                 @blur="validateEmail"
                             >
                             <p v-if="emailError" class="error" role="alert">Required</p>

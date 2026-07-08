@@ -9,7 +9,5 @@
         <p class="text-sm">
             <router-link to="/faq">FAQ</router-link>
         </p>
-        <p class="text-sm">
-        </p>
     </div>
 </template>

@@ -42,7 +42,7 @@
                                                             @
                                                         </button>
                                                         <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                            {{ copyText }}
+                                                            {{ copied === '@' ? 'Copied' : 'Click to copy' }}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -54,7 +54,7 @@
                                                             mailx-verify={{ config.verify }}
                                                         </button>
                                                         <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                            {{ copyText }}
+                                                            {{ copied === 'mailx-verify=' + config.verify ? 'Copied' : 'Click to copy' }}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -138,7 +138,7 @@
                                                                     @
                                                                 </button>
                                                                 <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                                    {{ copyText }}
+                                                                    {{ copied === '@' ? 'Copied' : 'Click to copy' }}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -150,7 +150,7 @@
                                                                     {{ mx_host }}.
                                                                 </button>
                                                                 <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                                    {{ copyText }}
+                                                                    {{ copied === mx_host + '.' ? 'Copied' : 'Click to copy' }}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -166,7 +166,7 @@
                                                                 @
                                                             </button>
                                                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                                {{ copyText }}
+                                                                {{ copied === '@' ? 'Copied' : 'Click to copy' }}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -178,7 +178,7 @@
                                                                 v=spf1 include:spf.{{ config.domain }} -all
                                                             </button>
                                                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                                {{ copyText }}
+                                                                {{ copied === 'v=spf1 include:spf.' + config.domain + ' -all' ? 'Copied' : 'Click to copy' }}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -194,7 +194,7 @@
                                                                     {{ selector }}._domainkey
                                                                 </button>
                                                                 <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                                    {{ copyText }}
+                                                                    {{ copied === selector + '._domainkey' ? 'Copied' : 'Click to copy' }}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -206,7 +206,7 @@
                                                                     {{ selector }}._domainkey.{{ config.domain }}.
                                                                 </button>
                                                                 <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                                    {{ copyText }}
+                                                                    {{ copied === selector + '._domainkey.' + config.domain + '.' ? 'Copied' : 'Click to copy' }}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -222,7 +222,7 @@
                                                                 _dmarc
                                                             </button>
                                                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                                {{ copyText }}
+                                                                {{ copied === '_dmarc' ? 'Copied' : 'Click to copy' }}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -234,7 +234,7 @@
                                                                 v=DMARC1; p=quarantine; adkim=s
                                                             </button>
                                                             <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible" role="tooltip">
-                                                                {{ copyText }}
+                                                                {{ copied === 'v=DMARC1; p=quarantine; adkim=s' ? 'Copied' : 'Click to copy' }}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -283,6 +283,7 @@ import { domainApi } from '../api/domain.ts'
 import events from '../events.ts'
 import { toast } from '../composables/useToast.ts'
 import tooltip from '@preline/tooltip'
+import { useClipboard } from '../composables/useClipboard.ts'
 
 const modalId = 'modal-create-domain-' + getCurrentInstance()!.uid
 
@@ -302,7 +303,7 @@ const error = ref('')
 const saving = ref(false)
 const step2Error = ref('')
 const nameError = ref(false)
-const copyText = ref('Click to copy')
+const { copied, copy } = useClipboard(2000)
 
 const validateName = () => {
     nameError.value = !domain.value.name
@@ -414,11 +415,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 const copyToClipboard = (txt: string) => {
-    navigator.clipboard.writeText(txt)
-    copyText.value = 'Copied'
-    setTimeout(() => {
-        copyText.value = 'Click to copy'
-    }, 2000)
+    copy(txt).catch(() => {})
 }
 
 onMounted(() => {

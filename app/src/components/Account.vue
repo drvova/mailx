@@ -4,25 +4,27 @@
             <h2>Account Settings</h2>
         </header>
         <div class="card-primary">
-            <nav aria-label="Account sections" role="tablist" aria-orientation="horizontal" class="tabs-router mb-2">
+            <nav aria-label="Account sections" role="tablist" aria-orientation="horizontal" class="tabs-router mb-2"
+                @keydown.left.prevent="focusTab(-1)" @keydown.right.prevent="focusTab(1)"
+                @keydown.home.prevent="focusTab(0, true)" @keydown.end.prevent="focusTab(0, false, true)">
                 <button id="account-tab-1" aria-selected="true" data-hs-tab="#account-panel-1"
-                    aria-controls="account-panel-1" role="tab">
+                    aria-controls="account-panel-1" role="tab" tabindex="0">
                     Profile
                 </button>
                 <button id="account-tab-2" aria-selected="false" data-hs-tab="#account-panel-2"
-                    aria-controls="account-panel-2" role="tab">
+                    aria-controls="account-panel-2" role="tab" tabindex="-1">
                     Security
                 </button>
                 <button id="account-tab-3" aria-selected="false" data-hs-tab="#account-panel-3"
-                    aria-controls="account-panel-3" role="tab">
+                    aria-controls="account-panel-3" role="tab" tabindex="-1">
                     Encryption
                 </button>
                 <button id="account-tab-4" aria-selected="false" data-hs-tab="#account-panel-4"
-                    aria-controls="account-panel-4" role="tab">
+                    aria-controls="account-panel-4" role="tab" tabindex="-1">
                     Data
                 </button>
                 <button id="account-tab-5" aria-selected="false" data-hs-tab="#account-panel-5"
-                    aria-controls="account-panel-5" role="tab">
+                    aria-controls="account-panel-5" role="tab" tabindex="-1">
                     Danger
                 </button>
             </nav>
@@ -63,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUpdated } from 'vue'
+import { onMounted, onUpdated, ref } from 'vue'
 import tabs from '@preline/tabs'
 import AccountVerify from './AccountVerify.vue'
 import AccountSubscription from './AccountSubscription.vue'
@@ -75,6 +77,38 @@ import AccountAccessKeys from './AccountAccessKeys.vue'
 import AccountAliasExport from './AccountAliasExport.vue'
 import AccountDelete from './AccountDelete.vue'
 
-onMounted(() => tabs.autoInit())
-onUpdated(() => tabs.autoInit())
+const activeTab = ref(0)
+
+// ARIA tablist keyboard navigation (WCAG 2.1.1)
+const focusTab = (dir: number, home = false, end = false) => {
+    const tabsEls = [...document.querySelectorAll('[role="tab"]')] as HTMLButtonElement[]
+    const current = tabsEls.findIndex(t => t.id === `account-tab-${activeTab.value + 1}`)
+    let next: number
+    if (home) next = 0
+    else if (end) next = tabsEls.length - 1
+    else next = (current + dir + tabsEls.length) % tabsEls.length
+    tabsEls[next]?.focus()
+}
+
+onMounted(() => {
+    tabs.autoInit()
+    // Track which tab is active for tabindex management
+    document.querySelectorAll('[role="tab"]').forEach((tab, i) => {
+        tab.addEventListener('click', () => {
+            activeTab.value = i
+            updateTabindex()
+        })
+    })
+})
+
+const updateTabindex = () => {
+    document.querySelectorAll('[role="tab"]').forEach((tab, i) => {
+        (tab as HTMLButtonElement).tabIndex = i === activeTab.value ? 0 : -1
+    })
+}
+
+onUpdated(() => {
+    tabs.autoInit()
+    updateTabindex()
+})
 </script>
