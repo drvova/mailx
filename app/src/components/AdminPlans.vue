@@ -98,6 +98,8 @@
                             <div><p class="text-sm text-gray-500">Role</p><span :class="userDetail.user.is_admin ? 'badge badge-success' : 'badge'">{{ userDetail.user.is_admin ? 'Admin' : 'User' }}</span></div>
                             <div><p class="text-sm text-gray-500">Subscription Tier</p><p>{{ userDetail.subscription.tier || 'self-hosted' }}</p></div>
                             <div><p class="text-sm text-gray-500">Active Until</p><p>{{ userDetail.subscription.active_until ? formatDate(userDetail.subscription.active_until) : 'N/A' }}</p></div>
+                            <div><p class="text-sm text-gray-500">2FA</p><span :class="userDetail.user.totp_enabled ? 'badge badge-success' : 'badge'">{{ userDetail.user.totp_enabled ? 'Enabled' : 'Disabled' }}</span></div>
+                            <div><p class="text-sm text-gray-500">Created</p><p>{{ formatDate(userDetail.user.created_at) }}</p></div>
                         </div>
                         <div v-if="userStats" class="grid grid-cols-5 gap-2 mb-4 text-center">
                             <div class="card-secondary"><p class="text-lg font-bold">{{ userStats.forwards }}</p><p class="text-xs text-gray-500">Forwards</p></div>
@@ -313,10 +315,18 @@
                                 <td class="text-xs text-gray-500">{{ k.user_id.slice(0,8) }}...</td>
                                 <td>{{ k.expires_at ? formatDate(k.expires_at) : 'Never' }}</td>
                                 <td>{{ formatDate(k.created_at) }}</td>
-                                <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteAccessKey(k)">Revoke</button></td>
+                                <td><div class="flex gap-1">
+                                    <button class="cta cta-tertiary text-sm" @click="setKeyExpiry(k)">Expiry</button>
+                                    <button class="cta cta-tertiary text-sm text-red-500" @click="deleteAccessKey(k)">Revoke</button>
+                                </div></td>
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="keysTotal > 50" class="flex items-center justify-between mt-4">
+                        <button class="cta cta-tertiary text-sm" :disabled="keysOffset === 0" @click="keysOffset = Math.max(0, keysOffset - 50); fetchAccessKeys()">Prev</button>
+                        <span class="text-sm text-gray-500">{{ keysOffset + 1 }}-{{ Math.min(keysOffset + 50, keysTotal) }} of {{ keysTotal }}</span>
+                        <button class="cta cta-tertiary text-sm" :disabled="keysOffset + 50 >= keysTotal" @click="keysOffset += 50; fetchAccessKeys()">Next</button>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="5" />
             </div>
@@ -335,6 +345,11 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="sessionsTotal > 50" class="flex items-center justify-between mt-4">
+                        <button class="cta cta-tertiary text-sm" :disabled="sessionsOffset === 0" @click="sessionsOffset = Math.max(0, sessionsOffset - 50); fetchSessions()">Prev</button>
+                        <span class="text-sm text-gray-500">{{ sessionsOffset + 1 }}-{{ Math.min(sessionsOffset + 50, sessionsTotal) }} of {{ sessionsTotal }}</span>
+                        <button class="cta cta-tertiary text-sm" :disabled="sessionsOffset + 50 >= sessionsTotal" @click="sessionsOffset += 50; fetchSessions()">Next</button>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="5" />
             </div>
@@ -352,6 +367,11 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="passkeysTotal > 50" class="flex items-center justify-between mt-4">
+                        <button class="cta cta-tertiary text-sm" :disabled="passkeysOffset === 0" @click="passkeysOffset = Math.max(0, passkeysOffset - 50); fetchCredentials()">Prev</button>
+                        <span class="text-sm text-gray-500">{{ passkeysOffset + 1 }}-{{ Math.min(passkeysOffset + 50, passkeysTotal) }} of {{ passkeysTotal }}</span>
+                        <button class="cta cta-tertiary text-sm" :disabled="passkeysOffset + 50 >= passkeysTotal" @click="passkeysOffset += 50; fetchCredentials()">Next</button>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="5" />
             </div>
@@ -427,6 +447,11 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="messagesTotal > 50" class="flex items-center justify-between mt-4">
+                        <button class="cta cta-tertiary text-sm" :disabled="messagesOffset === 0" @click="messagesOffset = Math.max(0, messagesOffset - 50); fetchMessages()">Prev</button>
+                        <span class="text-sm text-gray-500">{{ messagesOffset + 1 }}-{{ Math.min(messagesOffset + 50, messagesTotal) }} of {{ messagesTotal }}</span>
+                        <button class="cta cta-tertiary text-sm" :disabled="messagesOffset + 50 >= messagesTotal" @click="messagesOffset += 50; fetchMessages()">Next</button>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="5" />
             </div>
@@ -460,6 +485,11 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="subsTotal > 50" class="flex items-center justify-between mt-4">
+                        <button class="cta cta-tertiary text-sm" :disabled="subsOffset === 0" @click="subsOffset = Math.max(0, subsOffset - 50); fetchSubscriptions()">Prev</button>
+                        <span class="text-sm text-gray-500">{{ subsOffset + 1 }}-{{ Math.min(subsOffset + 50, subsTotal) }} of {{ subsTotal }}</span>
+                        <button class="cta cta-tertiary text-sm" :disabled="subsOffset + 50 >= subsTotal" @click="subsOffset += 50; fetchSubscriptions()">Next</button>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="5" />
             </div>
@@ -532,12 +562,40 @@
                                 <td>{{ log.status }}</td>
                                 <td class="max-w-xs truncate">{{ log.message }}</td>
                                 <td>{{ formatDate(log.created_at) }}</td>
-                                <td><button class="cta cta-tertiary text-sm text-red-500" @click="deleteLog(log)">Delete</button></td>
+                                <td><div class="flex gap-1">
+                                    <button class="cta cta-tertiary text-sm" @click="viewLog(log)">View</button>
+                                    <button class="cta cta-tertiary text-sm text-red-500" @click="deleteLog(log)">Delete</button>
+                                </div></td>
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="logsTotal > 100" class="flex items-center justify-between mt-4">
+                        <button class="cta cta-tertiary text-sm" :disabled="logsOffset === 0" @click="logsOffset = Math.max(0, logsOffset - 100); (logSearch ? searchLogsDeb() : fetchLogsFiltered())">Prev</button>
+                        <span class="text-sm text-gray-500">{{ logsOffset + 1 }}-{{ Math.min(logsOffset + 100, logsTotal) }} of {{ logsTotal }}</span>
+                        <button class="cta cta-tertiary text-sm" :disabled="logsOffset + 100 >= logsTotal" @click="logsOffset += 100; (logSearch ? searchLogsDeb() : fetchLogsFiltered())">Next</button>
+                    </div>
                 </div>
                 <SkeletonRows v-else :rows="5" />
+                <!-- Log detail modal -->
+                <div v-if="logDetail" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="logDetail = null">
+                    <div class="card-container max-w-2xl w-full">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3>Log Detail</h3>
+                            <button class="cta cta-tertiary" @click="logDetail = null">Close</button>
+                        </div>
+                        <div class="grid grid-cols-1 gap-2 text-sm">
+                            <div><span class="text-gray-500">ID:</span> {{ logDetail.id }}</div>
+                            <div><span class="text-gray-500">Type:</span> <span class="badge">{{ logDetail.log_type }}</span></div>
+                            <div><span class="text-gray-500">From:</span> {{ logDetail.from }}</div>
+                            <div><span class="text-gray-500">To:</span> {{ logDetail.destination }}</div>
+                            <div><span class="text-gray-500">Status:</span> {{ logDetail.status }}</div>
+                            <div><span class="text-gray-500">Remote MTA:</span> {{ logDetail.remote_mta || 'N/A' }}</div>
+                            <div><span class="text-gray-500">Date:</span> {{ formatDate(logDetail.created_at) }}</div>
+                            <div><span class="text-gray-500">Attempted:</span> {{ formatDate(logDetail.attempted_at) }}</div>
+                            <div class="mt-2"><span class="text-gray-500">Message:</span><pre class="mt-1 text-xs bg-gray-50 p-2 rounded whitespace-pre-wrap">{{ logDetail.message }}</pre></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -595,16 +653,16 @@ const fetchDomains = async () => { try { domains.value = await adminApi.domains(
 const fetchRecipients = async () => { try { const r = await adminApi.recipients(recipientSearch.value || undefined, recipientsOffset.value); recipients.value = r.recipients; recipientsTotal.value = r.total } catch { /* */ } }
 const fetchPlans = async () => { loadingPlans.value = true; try { plans.value = await planApi.listAll() } catch { /* */ } finally { loadingPlans.value = false } }
 const fetchLogs = async () => { try { logs.value = await adminApi.logs() } catch { /* */ } }
-const fetchLogsFiltered = async () => { try { const r = await adminApi.logsFiltered(logFilter.value || undefined); logs.value = r.logs } catch { /* */ } }
-const fetchAccessKeys = async () => { try { const r = await adminApi.accessKeys(); accessKeys.value = r.keys } catch { /* */ } }
-const fetchSessions = async () => { try { const r = await adminApi.sessions(); sessions.value = r.sessions } catch { /* */ } }
-const fetchCredentials = async () => { try { const r = await adminApi.credentials(); credentials.value = r.credentials } catch { /* */ } }
+const fetchLogsFiltered = async () => { try { const r = await adminApi.logsFiltered(logFilter.value || undefined, logsOffset.value); logs.value = r.logs; logsTotal.value = r.total } catch { /* */ } }
+const fetchAccessKeys = async () => { try { const r = await adminApi.accessKeys(keysOffset.value); accessKeys.value = r.keys; keysTotal.value = r.total } catch { /* */ } }
+const fetchSessions = async () => { try { const r = await adminApi.sessions(sessionsOffset.value); sessions.value = r.sessions; sessionsTotal.value = r.total } catch { /* */ } }
+const fetchCredentials = async () => { try { const r = await adminApi.credentials(passkeysOffset.value); credentials.value = r.credentials; passkeysTotal.value = r.total } catch { /* */ } }
+const fetchSubscriptions = async () => { try { const r = await adminApi.subscriptions(subFilter.value || undefined, subsOffset.value); subscriptions.value = r.subscriptions; subsTotal.value = r.total } catch { /* */ } }
+const fetchMessages = async () => { try { const r = await adminApi.messages(msgTypeFilter.value || undefined, messagesOffset.value); messages.value = r.messages; messagesTotal.value = r.total } catch { /* */ } }
 const fetchInboxMessages = async () => { try { const r = await adminApi.inboxMessages(inboxOffset.value); inboxMessages.value = r.messages; inboxTotal.value = r.total } catch { /* */ } }
-const fetchSubscriptions = async () => { try { const r = await adminApi.subscriptions(subFilter.value || undefined); subscriptions.value = r.subscriptions } catch { /* */ } }
 const fetchTableSizes = async () => { try { tableSizes.value = await adminApi.tableSizes() } catch { /* */ } }
 const fetchRecentSignups = async () => { try { const r = await adminApi.recentSignups(7); recentSignups.value = r.users } catch { /* */ } }
 const fetchConfig = async () => { try { configInfo.value = await adminApi.getConfig() } catch { /* */ } }
-const fetchMessages = async () => { try { const r = await adminApi.messages(msgTypeFilter.value || undefined); messages.value = r.messages } catch { /* */ } }
 const searchMessagesDeb = () => { clearTimeout(msgSearchTimer); msgSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchMessages(msgSearch.value || undefined, msgTypeFilter.value || undefined); messages.value = r.messages } catch { /* */ } }, 300) }
 const toggleRecipientPGP = async (r: AdminRecipient) => { if (!confirm('Disable PGP for this recipient?')) return; try { await adminApi.toggleRecipientPGP(r.id, false); r.pgp_enabled = false } catch { /* */ } }
 const removePGPKey = async (r: AdminRecipient) => { if (!confirm('Permanently remove PGP key?')) return; try { await adminApi.removeRecipientPGPKey(r.id); r.pgp_enabled = false } catch { /* */ } }
@@ -641,7 +699,13 @@ const editRecipient = async (r: AdminRecipient) => {
     const email = prompt('Enter new email:', r.email)
     if (!email || email === r.email) return
     try { await adminApi.updateRecipient(r.id, email); r.email = email } catch { /* */ } }
+const viewLog = (log: AdminLog) => { logDetail.value = log }
 const deleteLog = async (log: AdminLog) => { if (!confirm('Delete this log entry?')) return; try { await adminApi.deleteLog(log.id); logs.value = logs.value.filter(x => x.id !== log.id) } catch { /* */ } }
+const setKeyExpiry = async (k: AdminAccessKey) => {
+    const date = prompt('Expiry date (YYYY-MM-DD), empty to clear:', k.expires_at ? k.expires_at.slice(0,10) : '')
+    if (date === null) return
+    if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) { alert('Use YYYY-MM-DD format'); return }
+    try { await adminApi.setAccessKeyExpiry(k.id, date); k.expires_at = date || null; alert(date ? `Expires ${date}` : 'Expiry cleared') } catch { /* */ } }
 const toggleAllInbox = (e: Event) => { const checked = (e.target as HTMLInputElement).checked; inboxMessages.value.forEach(m => { (m as any)._selected = checked }) }
 const bulkDeleteInbox = async () => {
     const selected = inboxMessages.value.filter(m => (m as any)._selected)
@@ -688,7 +752,7 @@ const setAliasExpiry = async (a: AdminAlias) => {
     if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) { alert('Use YYYY-MM-DD format'); return }
     try { await adminApi.setAliasExpiry(a.id, date); alert(date ? `Expires ${date}` : 'Expiry cleared') } catch { /* */ } }
 let logSearchTimer: any
-const searchLogsDeb = () => { clearTimeout(logSearchTimer); logSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchLogs(logSearch.value, logFilter.value || undefined); logs.value = r.logs } catch { /* */ } }, 300) }
+const searchLogsDeb = () => { clearTimeout(logSearchTimer); logSearchTimer = setTimeout(async () => { logsOffset.value = 0; try { const r = await adminApi.searchLogs(logSearch.value, logFilter.value || undefined, logsOffset.value); logs.value = r.logs; logsTotal.value = r.total } catch { /* */ } }, 300) }
 let domainSearchTimer: any
 const searchDomainsDeb = () => { clearTimeout(domainSearchTimer); domainSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchDomains(domainSearch.value); domains.value = r.domains } catch { /* */ } }, 300) }
 
@@ -776,6 +840,19 @@ const inboxTotal = ref(0)
 const inboxOffset = ref(0)
 const viewingRaw = ref<string | null>(null)
 let msgSearchTimer: any
+const keysOffset = ref(0)
+const sessionsOffset = ref(0)
+const passkeysOffset = ref(0)
+const subsOffset = ref(0)
+const messagesOffset = ref(0)
+const logsOffset = ref(0)
+const keysTotal = ref(0)
+const sessionsTotal = ref(0)
+const passkeysTotal = ref(0)
+const subsTotal = ref(0)
+const messagesTotal = ref(0)
+const logsTotal = ref(0)
+const logDetail = ref<AdminLog | null>(null)
 const messages = ref<any[]>([])
 let inboxSearchTimer: any
 const searchInboxDeb = () => { clearTimeout(inboxSearchTimer); inboxSearchTimer = setTimeout(async () => { try { const r = await adminApi.searchInbox(inboxSearch.value); inboxMessages.value = r.messages } catch { /* */ } }, 300) }

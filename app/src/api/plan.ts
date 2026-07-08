@@ -82,19 +82,19 @@ export const adminApi = {
     recipients: async (search?: string, offset = 0) => (await api.get('/admin/recipients', { params: { offset, ...(search ? { search } : {}) } })).data as { recipients: AdminRecipient[]; total: number },
     deleteRecipient: async (id: string) => api.delete(`/admin/recipient/${id}`),
     // Log filtering
-    logsFiltered: async (type?: string) => (await api.get('/admin/logs/filter', { params: type ? { type } : undefined })).data as { logs: AdminLog[]; total: number },
+    logsFiltered: async (type?: string, offset = 0) => (await api.get('/admin/logs/filter', { params: { offset, ...(type ? { type } : {}) } })).data as { logs: AdminLog[]; total: number },
     // User search + detail
     searchUsers: async (search: string) => (await api.get('/admin/users/search', { params: { search } })).data as { users: AdminUser[]; total: number },
     userDetail: async (id: string) => (await api.get(`/admin/user/${id}/detail`)).data as { user: AdminUser; subscription: any; aliases: AdminAlias[]; recipients: AdminRecipient[]; domains: AdminDomain[] },
     // Access key moderation
-    accessKeys: async () => (await api.get('/admin/accesskeys')).data as { keys: AdminAccessKey[]; total: number },
+    accessKeys: async (offset = 0) => (await api.get('/admin/accesskeys', { params: { offset } })).data as { keys: AdminAccessKey[]; total: number },
     deleteAccessKey: async (id: string) => api.delete(`/admin/accesskey/${id}`),
     // Session moderation
-    sessions: async () => (await api.get('/admin/sessions')).data as { sessions: AdminSession[]; total: number },
+    sessions: async (offset = 0) => (await api.get('/admin/sessions', { params: { offset } })).data as { sessions: AdminSession[]; total: number },
     deleteSession: async (id: string) => api.delete(`/admin/session/${id}`),
     forceLogout: async (userId: string) => api.delete(`/admin/user/${userId}/sessions`),
     // Credential moderation
-    credentials: async () => (await api.get('/admin/credentials')).data as { credentials: AdminCredential[]; total: number },
+    credentials: async (offset = 0) => (await api.get('/admin/credentials', { params: { offset } })).data as { credentials: AdminCredential[]; total: number },
     deleteCredential: async (id: string) => api.delete(`/admin/credential/${id}`),
     // Subscription override
     updateSubscription: async (data: { user_id: string; tier?: string; is_active: boolean; active_until?: string }) => api.put('/admin/subscription', data),
@@ -114,7 +114,7 @@ export const adminApi = {
     exportUsers: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/users`,
     exportAliases: () => `${import.meta.env.VITE_API_URL}/v1/admin/export/aliases`,
     // Subscription management
-    subscriptions: async (tier?: string) => (await api.get('/admin/subscriptions', { params: tier ? { tier } : undefined })).data as { subscriptions: AdminSubscription[]; total: number },
+    subscriptions: async (tier?: string, offset = 0) => (await api.get('/admin/subscriptions', { params: { offset, ...(tier ? { tier } : {}) } })).data as { subscriptions: AdminSubscription[]; total: number },
     deleteSubscription: async (id: string) => api.delete(`/admin/subscription/${id}`),
     // Bulk delete
     bulkDeleteAliases: async (ids: string[]) => api.post('/admin/aliases/bulk-delete', { ids }),
@@ -132,11 +132,11 @@ export const adminApi = {
     searchSessions: async (userId?: string) => (await api.get('/admin/sessions/search', { params: userId ? { user_id: userId } : undefined })).data as { sessions: AdminSession[]; total: number },
     searchInbox: async (search?: string) => (await api.get('/admin/inbox/search', { params: search ? { search } : undefined })).data as { messages: AdminInboxMessage[]; total: number },
     // Messages
-    messages: async (type?: string) => (await api.get('/admin/messages', { params: type ? { type } : undefined })).data as { messages: any[]; total: number },
+    messages: async (type?: string, offset = 0) => (await api.get('/admin/messages', { params: { offset, ...(type ? { type } : {}) } })).data as { messages: any[]; total: number },
     // User stats
     userStats: async (id: string) => (await api.get(`/admin/user/${id}/stats`)).data as { forwards: number; blocks: number; replies: number; sends: number; aliases: number },
     // Log search (text + type)
-    searchLogs: async (search: string, type?: string) => (await api.get('/admin/logs/search', { params: { search, ...(type ? { type } : {}) } })).data as { logs: AdminLog[]; total: number },
+    searchLogs: async (search: string, type?: string, offset = 0) => (await api.get('/admin/logs/search', { params: { offset, search, ...(type ? { type } : {}) } })).data as { logs: AdminLog[]; total: number },
     // Recipient toggle
     toggleRecipient: async (id: string, isActive: boolean) => api.put(`/admin/recipient/${id}/toggle`, { is_active: isActive }),
     // Domain search
@@ -196,6 +196,7 @@ export const adminApi = {
     inboxRaw: async (id: number) => (await api.get(`/admin/inbox/message/${id}/raw`)).data as string,
     // Alias expiry
     setAliasExpiry: async (id: string, expiresAt: string) => api.put(`/admin/alias/${id}/expiry`, { expires_at: expiresAt }),
+    setAccessKeyExpiry: async (id: string, expiresAt: string) => api.put(`/admin/accesskey/${id}/expiry`, { expires_at: expiresAt }),
 }
 
 export interface AdminAlias {

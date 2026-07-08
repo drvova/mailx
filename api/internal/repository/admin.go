@@ -690,3 +690,7 @@ func (d *Database) AdminGetInboxRaw(ctx context.Context, msgID uint) ([]byte, er
 func (d *Database) AdminSetAliasExpiry(ctx context.Context, aliasID string, expiresAt *time.Time) error {
 	return d.Client.Model(&model.Alias{}).Where("id = ?", aliasID).Update("expires_at", expiresAt).Error
 }
+
+func (d *Database) AdminSetAccessKeyExpiry(ctx context.Context, keyID string, expiresAt *time.Time) error {
+	return d.Client.Model(&model.AccessKey{}).Where("id = ?", keyID).Update("expires_at", expiresAt).Error
+}

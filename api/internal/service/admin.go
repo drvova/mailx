@@ -120,6 +120,7 @@ type AdminStore interface {
 	AdminPurgeAllInbox(context.Context) (int64, error)
 	AdminGetInboxRaw(context.Context, uint) ([]byte, error)
 	AdminSetAliasExpiry(context.Context, string, *time.Time) error
+	AdminSetAccessKeyExpiry(context.Context, string, *time.Time) error
 }
 
 func (s *Service) GetAllUsers(ctx context.Context) ([]model.User, error) {
@@ -552,4 +553,8 @@ func (s *Service) AdminGetInboxRaw(ctx context.Context, msgID uint) ([]byte, err
 
 func (s *Service) AdminSetAliasExpiry(ctx context.Context, aliasID string, expiresAt *time.Time) error {
 	return s.Store.AdminSetAliasExpiry(ctx, aliasID, expiresAt)
+}
+
+func (s *Service) AdminSetAccessKeyExpiry(ctx context.Context, keyID string, expiresAt *time.Time) error {
+	return s.Store.AdminSetAccessKeyExpiry(ctx, keyID, expiresAt)
 }

@@ -95,6 +95,7 @@ type AdminService interface {
 	AdminCreateUser(context.Context, string, string) (model.User, error)
 	AdminGetInboxRaw(context.Context, uint) ([]byte, error)
 	AdminSetAliasExpiry(context.Context, string, *time.Time) error
+	AdminSetAccessKeyExpiry(context.Context, string, *time.Time) error
 }
 
 func (h *Handler) AdminGetUsers(c *fiber.Ctx) error {
@@ -1255,4 +1256,25 @@ func (h *Handler) AdminSetAliasExpiry(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Unable to set alias expiry"})
 	}
 	return c.JSON(fiber.Map{"message": "Alias expiry updated"})
+}
+
+func (h *Handler) AdminSetAccessKeyExpiry(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Access key ID required"})
+	}
+	var req AdminAliasExpiryReq
+	c.BodyParser(&req)
+	var expiresAt *time.Time
+	if req.ExpiresAt != "" {
+		t, err := time.Parse("2006-01-02", req.ExpiresAt)
+		if err != nil {
+			return c.Status(400).JSON(fiber.Map{"error": "Invalid date, use YYYY-MM-DD"})
+		}
+		expiresAt = &t
+	}
+	if err := h.Service.AdminSetAccessKeyExpiry(c.Context(), id, expiresAt); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Unable to set access key expiry"})
+	}
+	return c.JSON(fiber.Map{"message": "Access key expiry updated"})
 }

@@ -279,6 +279,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	admin.Post("/user/create", h.AdminCreateUser)
 	admin.Get("/inbox/message/:id/raw", h.AdminGetInboxRaw)
 	admin.Put("/alias/:id/expiry", h.AdminSetAliasExpiry)
+	admin.Put("/accesskey/:id/expiry", h.AdminSetAccessKeyExpiry)
 
 	// Billing - Oxapay checkout + webhook
 	v1.Post("/billing/checkout", h.CreateCheckoutSession)
