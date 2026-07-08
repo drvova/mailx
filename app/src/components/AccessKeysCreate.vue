@@ -75,8 +75,8 @@
                         </article>
                         <footer>
                             <nav>
-                                <button @click="copyAccessKey" class="cta">
-                                    {{ copyText }}
+                                <button @click="copy(accessKey.token).catch(() => toast('Failed to copy', 'error'))" class="cta">
+                                    {{ copied === accessKey.token ? 'Copied' : 'Copy To Clipboard' }}
                                 </button>
                                 <button @click="close" class="cancel">
                                     Close
@@ -96,6 +96,8 @@ import { ApiError } from '../api/api.ts'
 import overlay from '@preline/overlay'
 import { userApi } from '../api/user.ts'
 import events from '../events.ts'
+import { useClipboard } from '../composables/useClipboard.ts'
+import { toast } from '../composables/useToast.ts'
 
 const accessKey = ref({
     name: '',
@@ -105,7 +107,7 @@ const accessKey = ref({
 const error = ref('')
 const nameError = ref(false)
 const isCreated = ref(false)
-const copyText = ref('Copy To Clipboard')
+const { copied, copy } = useClipboard(2000)
 
 const validateName = () => {
     nameError.value = !accessKey.value.name
@@ -190,13 +192,7 @@ const handleKeydown = (event: KeyboardEvent) => {
     }
 }
 
-const copyAccessKey = () => {
-    navigator.clipboard.writeText(accessKey.value.token)
-    copyText.value = 'Copied'
-    setTimeout(() => {
-        copyText.value = 'Copy To Clipboard'
-    }, 2000)
-}
+
 
 onMounted(() => {
     overlay.autoInit()

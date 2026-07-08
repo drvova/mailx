@@ -43,7 +43,7 @@
                     </article>
                     <footer>
                         <nav>
-                            <button @click.stop="promptDeleteAccount" class="cta delete">
+                            <button @click.stop="promptDeleteAccount" :disabled="deleting" :aria-busy="deleting" class="cta delete">
                                 Delete Account
                             </button>
                             <button @click="close" class="cancel">
@@ -70,6 +70,7 @@ const req = ref({ otp: '' })
 const otp = ref('')
 const otpError = ref(false)
 const error = ref('')
+const deleting = ref(false)
 
 const validateOtp = () => {
     otpError.value = !req.value.otp
@@ -83,6 +84,7 @@ const promptDeleteAccount = async () => {
 }
 
 const deleteAccount = async () => {
+    deleting.value = true
     try {
         await userApi.delete(req.value)
         toast('Account deleted. Logging you out...')
@@ -96,6 +98,8 @@ const deleteAccount = async () => {
                 error.value = 'Too many requests, please try again later.'
             }
         }
+    } finally {
+        deleting.value = false
     }
 }
 

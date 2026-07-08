@@ -29,6 +29,8 @@
         <div class="mb-3 max-w-xs">
             <button
                 @click="changePassword"
+                :disabled="saving"
+                :aria-busy="saving"
                 class="cta">
                 Change Password
             </button>
@@ -50,6 +52,7 @@ const passwordConfirm = ref('')
 const passwordError = ref('')
 const error = ref('')
 const success = ref('')
+const saving = ref(false)
 
 const validatePassword = () => {
     success.value = ''
@@ -73,6 +76,7 @@ const changePassword = async () => {
         password: password.value
     }
 
+    saving.value = true
     try {
         const res = await userApi.changePassword(req)
         success.value = res.data.message
@@ -88,6 +92,8 @@ const changePassword = async () => {
                 error.value = 'Too many requests, please try again later.'
             }
         }
+    } finally {
+        saving.value = false
     }
 }
 </script>

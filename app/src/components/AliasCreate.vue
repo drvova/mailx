@@ -158,6 +158,7 @@ import select from '@preline/select'
 import { aliasApi } from '../api/alias.ts'
 import events from '../events.ts'
 import { toast } from '../composables/useToast.ts'
+import { useClipboard } from '../composables/useClipboard.ts'
 import tooltip from '@preline/tooltip'
 import accordion from '@preline/accordion'
 
@@ -192,6 +193,7 @@ const error = ref('')
 const errorRecipients = ref('')
 const errorCatchAllSuffix = ref(false)
 const loading = ref(false)
+const { copy } = useClipboard(2000)
 
 const postAlias = async () => {
     if (loading.value) return
@@ -217,7 +219,7 @@ const postAlias = async () => {
     try {
         loading.value = true
         const res = await aliasApi.create(alias.value)
-        copyAlias(res.data.alias.name)
+        copy(res.data.alias.name).catch(() => toast('Failed to copy', 'error'))
         toast('Alias created')
         events.emit('alias.create', {})
         error.value = ''
@@ -310,9 +312,7 @@ const resetAlias = () => {
     }
 }
 
-const copyAlias = (alias: string) => {
-    navigator.clipboard.writeText(alias)
-}
+
 
 onMounted(() => {
     overlay.autoInit()
