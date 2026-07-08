@@ -34,7 +34,7 @@ type Subscription struct {
 	Status       SubscriptionStatus `gorm:"-" json:"status"`
 	Outage       bool               `gorm:"-" json:"outage"`
 	Terminated   bool               `json:"terminated"`
-	TerminatedAt time.Time          `json:"terminated_at"`
+	TerminatedAt *time.Time         `json:"terminated_at"`
 }
 
 func (s *Subscription) Active() bool {

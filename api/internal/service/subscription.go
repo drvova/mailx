@@ -47,9 +47,10 @@ func (s *Service) PostSubscription(ctx context.Context, userID string, preauth m
 	// Support for signup reset
 	existingSub, err := s.Store.GetSubscriptionByTokenHash(ctx, preauth.TokenHash)
 	if err == nil {
+		now := time.Now()
 		existingSub.TokenHash = nil
 		existingSub.Terminated = true
-		existingSub.TerminatedAt = time.Now()
+		existingSub.TerminatedAt = &now
 		err = s.Store.UpdateSubscription(ctx, existingSub)
 		if err != nil {
 			log.Printf("error clearing token hash for existing subscription: %s", err.Error())
